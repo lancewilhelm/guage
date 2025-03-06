@@ -1,0 +1,21 @@
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import { db } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
+
+export async function POST(req: Request) {
+  const { email, password, name } = await req.json();
+
+  // Check if user exists
+  const existingUser = await db.select().from(users).where(eq(users.email, email)).execute();
+  if (existingUser.length > 0) {
+    return NextResponse.json({ message: "User already exists" }, { status: 400 });
+  }
+
+  // Hash password and create user
+  const hashedPassword = await bcrypt.hash(password, 10);
+  await db.insert(users).values({ id: crypto.randomUUID(), email, name, passwordHash: hashedPassword });
+
+  return NextResponse.json({ message: "User registered successfully" }, { status: 201 });
+}

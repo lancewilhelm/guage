@@ -15,6 +15,62 @@
       "when": 1741234612077,
       "tag": "0001_lame_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1741268085956,
+      "tag": "0002_strong_wild_child",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1741268111645,
+      "tag": "0003_massive_the_twelve",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1741268423610,
+      "tag": "0004_unusual_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1741268964998,
+      "tag": "0005_broad_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1741269045158,
+      "tag": "0006_eager_iceman",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1741269731559,
+      "tag": "0007_handy_hercules",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1741272052949,
+      "tag": "0008_jazzy_slayback",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1741273913283,
+      "tag": "0009_sour_falcon",
+      "breakpoints": true
     }
   ]
 }

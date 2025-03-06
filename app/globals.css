@@ -35,13 +35,20 @@
 body {
   background: var(--bg-color);
   color: var(--text-color);
-  font-family: Arial, Helvetica, sans-serif;
 }
 
 .homeGrid {
   width: 100vw;
   height: 100dvh;
   display: grid;
-  grid-template-columns: [full-page-start] 40px [content-start] 1fr [content-end] 40px [full-page-end];
-  grid-template-rows: [full-page-start] 40px [content-start] 1fr [footer-start] 40px [full-page-end];
+  grid-template-columns: [full-page-start] var(--gutter) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
+  grid-template-rows: [full-page-start] var(--gutter) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
+}
+
+.pageGrid {
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  grid-template-columns: [full-page-start] var(--gutter) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
+  grid-template-rows: [full-page-start] min-content [padding-start] var(--gutter) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
 }

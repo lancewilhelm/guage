@@ -14,7 +14,6 @@ export default function Register() {
   const router = useRouter();
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,7 +25,6 @@ export default function Register() {
       return;
     }
 
-    setLoading(true);
     setError('');
 
     const res = await fetch('/api/register', {
@@ -38,10 +36,8 @@ export default function Register() {
       }),
     });
 
-    const data = await res.json();
-    setLoading(false);
-
     if (!res.ok) {
+      const data = await res.json();
       setError(data.message || 'Something went wrong');
       return;
     }
@@ -64,7 +60,7 @@ export default function Register() {
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="border border-(--sub-color) rounded px-2 py-1"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -74,7 +70,7 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              className="border border-(--sub-color) rounded px-2 py-1"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -84,16 +80,15 @@ export default function Register() {
               name="confirmPassword"
               value={form.confirmPassword}
               onChange={handleChange}
-              className="border border-(--sub-color) rounded px-2 py-1"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
-          {error && <div className="text-red-500">{error}</div>}
+          {error && <div className="text-red-500 text-[12pt]">{error}</div>}
           <button
             onClick={handleRegister}
-            disabled={loading}
             className='bg-(--main-color) text-(--bg-color) rounded px-2 py-1'
           >
-            {loading ? 'registering...' : 'register'}
+            register
           </button>
         </div>
       </div>
