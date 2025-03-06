@@ -1,0 +1,102 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { EB_Garamond } from 'next/font/google';
+
+const ebGaramond = EB_Garamond({
+  variable: '--font-eb-garamond-serif',
+  subsets: ['latin'],
+});
+
+export default function Register() {
+  const router = useRouter();
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = async () => {
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    const res = await fetch('/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: form.email,
+        password: form.password,
+      }),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (!res.ok) {
+      setError(data.message || 'Something went wrong');
+      return;
+    }
+
+    // Redirect to login or home page after successful registration
+    router.push('/login');
+  };
+
+  return (
+    <div className='homeGrid'>
+      <div className='flex flex-col items-center justify-center row-start-[content-start] col-start-[content-start]'>
+        <Link href='/'>
+          <div className={`text-7xl ${ebGaramond.className} mb-6 text-(--main-color)`}>Guage</div>
+        </Link>
+        <div className='flex flex-col gap-2 items-center'>
+          <div>
+            <div>email</div>
+            <input
+              type='text'
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              className="border border-(--sub-color) rounded px-2 py-1"
+            />
+          </div>
+          <div>
+            <div>password</div>
+            <input
+              type='password'
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              className="border border-(--sub-color) rounded px-2 py-1"
+            />
+          </div>
+          <div>
+            <div>confirm password</div>
+            <input
+              type='password'
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              className="border border-(--sub-color) rounded px-2 py-1"
+            />
+          </div>
+          {error && <div className="text-red-500">{error}</div>}
+          <button
+            onClick={handleRegister}
+            disabled={loading}
+            className='bg-(--main-color) text-(--bg-color) rounded px-2 py-1'
+          >
+            {loading ? 'registering...' : 'register'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
