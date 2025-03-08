@@ -25,7 +25,7 @@ export default function Header() {
   }
 
   return (
-    <div className="flex py-2 px-4 items-center gap-4 col-start-[full-page-start] col-end-[full-page-end]">
+    <div className="flex py-2 px-4 items-center gap-4 border-b">
       <Link href='/dashboard'>
         <div id="logo" className={`text-4xl text-(--main-color) ${ebGaramond.className} translate-y-[-3px]`}>Guage</div>
       </Link>

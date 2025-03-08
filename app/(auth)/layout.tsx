@@ -6,9 +6,9 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="pageGrid">
+    <div className="grid grid-rows-[auto_1fr] h-dvh overflow-hidden">
       <Header />
-      <div className='row-start-[content-start] col-start-[content-start]'>
+      <div className='h-full overflow-y-auto'>
         {children}
       </div>
     </div>

@@ -71,6 +71,13 @@
       "when": 1741273913283,
       "tag": "0009_sour_falcon",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1741396223610,
+      "tag": "0010_majestic_vance_astro",
+      "breakpoints": true
     }
   ]
 }
