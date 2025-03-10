@@ -3,6 +3,26 @@ import { useState, useRef } from "react"
 import AngleRightIcon from '@/components/icons/AngleRight'
 import AngleLeftIcon from '@/components/icons/AngleLeft'
 import ChatBox from '@/components/ChatBox'
+import { ChatMessage } from "@/components/ChatBubble"
+
+const fakeChatData: ChatMessage[] = [
+  { role: 'user', content: 'Hello!' },
+  { role: 'assistant', content: 'Hello! How can I help you today?' },
+  { role: 'user', content: 'I need help with my account.' },
+  { role: 'assistant', content: 'Sure! What seems to be the problem?' },
+  { role: 'user', content: 'Hello!' },
+  { role: 'assistant', content: 'Hello! How can I help you today?' },
+  { role: 'user', content: 'I need help with my account.' },
+  { role: 'assistant', content: 'Sure! What seems to be the problem?' },
+  { role: 'user', content: 'Hello!' },
+  { role: 'assistant', content: 'Hello! How can I help you today?' },
+  { role: 'user', content: 'I need help with my account.' },
+  { role: 'assistant', content: 'Sure! What seems to be the problem?' },
+  { role: 'user', content: 'Hello!' },
+  { role: 'assistant', content: 'Hello! How can I help you today?' },
+  { role: 'user', content: 'I need help with my account.' },
+  { role: 'assistant', content: 'Sure! What seems to be the problem?' },
+]
 
 export default function RolePlay() {
   const sidePanelMinWidth = 40
@@ -112,7 +132,7 @@ export default function RolePlay() {
         </div>
       </div>
       <div className="col-start-2 row-start-2 overflow-y-auto">
-        <ChatBox />
+        <ChatBox messages={fakeChatData} />
       </div>
 
       {/* Feedback Panel (Collapsible) */}

@@ -5,7 +5,7 @@ import { ebGaramond } from '@/utils/fonts'
 
 const navLinks = [
   { name: 'chat', href: '/chat' },
-  { name: 'role play', href: '/role-play' },
+  { name: 'role play', href: '/roleplay' },
 ]
 
 export default function Header() {
