@@ -19,6 +19,7 @@
     "drizzle-orm": "^0.40.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "jsonwebtoken": "^9.0.2",
+    "micromark": "^4.0.2",
     "next": "15.2.1",
     "openai": "^4.86.2",
     "pg": "^8.13.3",

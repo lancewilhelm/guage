@@ -14,7 +14,6 @@ export async function POST(req: Request) {
 
   // Parse the request body
   const { messages } = await req.json()
-  console.log('Messages:', messages)
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return new Response('Invalid request: messages are required', { status: 400 })
   }
