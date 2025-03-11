@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/db'
-import { chatSessions } from '@/db/schema'
+import { chatSessionsTable } from '@/db/schema'
 import { getSession } from '@/utils/auth'
 import { eq } from 'drizzle-orm'
 
@@ -18,15 +18,15 @@ export async function GET() {
     // Fetch chat sessions for the current user, ordered by most recent
     const userChatSessions = await db
       .select({
-        id: chatSessions.id,
-        title: chatSessions.title,
-        createdAt: chatSessions.createdAt,
-        updatedAt: chatSessions.updatedAt,
-        conversationType: chatSessions.conversationType
+        id: chatSessionsTable.id,
+        title: chatSessionsTable.title,
+        createdAt: chatSessionsTable.createdAt,
+        updatedAt: chatSessionsTable.updatedAt,
+        conversationType: chatSessionsTable.conversationType
       })
-      .from(chatSessions)
-      .where(eq(chatSessions.userId, userId))
-      .orderBy(chatSessions.updatedAt)
+      .from(chatSessionsTable)
+      .where(eq(chatSessionsTable.userId, userId))
+      .orderBy(chatSessionsTable.updatedAt)
 
     return NextResponse.json(userChatSessions)
   } catch (error) {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     // Create a new chat session in the database
     const [newSession] = await db
-      .insert(chatSessions)
+      .insert(chatSessionsTable)
       .values({
         title,
         userId,

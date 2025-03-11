@@ -5,7 +5,7 @@ import AngleLeftIcon from '@/components/icons/AngleLeft'
 import PlusIcon from '@/components/icons/Plus'
 import ChatBox from '@/components/ChatBox'
 import { ChatMessage } from "@/components/ChatBubble"
-import schema from '@/db/schema'
+import { selectChatSession } from '@/db/schema'
 
 export default function Chat() {
   const sidePanelMinWidth = 40
@@ -14,8 +14,8 @@ export default function Chat() {
   const minWidth = 300
   const maxWidth = 600
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [chatSessions, setChatSessions] = useState([])
-  const [currentChatSessionId, setCurrentChatSessionId] = useState(null)
+  const [chatSessions, setChatSessions] = useState<selectChatSession[]>([])
+  const [currentChatSessionId, setCurrentChatSessionId] = useState<string | undefined>(undefined)
   const [userInput, setUserInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -26,9 +26,23 @@ export default function Chat() {
       if (!response.ok) throw new Error('Failed to fetch chat sessions')
       const data = await response.json()
       setChatSessions(data)
-      console.log(data)
     } catch (error) {
       console.error('Error fetching chat sessions:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loadChatSession = async (sessionId: string) => {
+    setCurrentChatSessionId(sessionId)
+    try {
+      setIsLoading(true)
+      const response = await fetch(`/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`)
+      if (!response.ok) throw new Error('Failed to fetch chat messages')
+      const data = await response.json()
+      setMessages(data)
+    } catch (error) {
+      console.error('Error fetching chat messages:', error)
     } finally {
       setIsLoading(false)
     }
@@ -109,7 +123,7 @@ export default function Chat() {
   }, [messages])
 
   const handleSubmit = async () => {
-    if (!userInput.trim() || isLoading) return
+    if (!userInput.trim() || isLoading || currentChatSessionId === undefined) return
 
     // Add the user message to the list 
     const userMessage: ChatMessage = { role: 'user', content: userInput }
@@ -123,7 +137,7 @@ export default function Chat() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage] })
+        body: JSON.stringify({ messages: [...messages, userMessage], sessionId: currentChatSessionId })
       })
 
       if (!response.body) throw new Error('No response body')
@@ -162,12 +176,11 @@ export default function Chat() {
           {
             sessionWidth < minWidth ?
               <div className='flex flex-col w-full items-center'>
-                <div className='flex flex-col items-center mb-15'>
-                  <AngleRightIcon
-                    fill="var(--main-color)"
-                    className="cursor-pointer"
-                    onClick={() => togglePanel()}
-                  />
+                <div
+                  className='flex flex-col items-center mb-15 cursor-pointer'
+                  onClick={() => togglePanel()}
+                >
+                  <AngleRightIcon fill="var(--main-color)" />
                   <div className='rotate-270 translate-y-full'>Sessions</div>
                 </div>
               </div>
@@ -190,10 +203,10 @@ export default function Chat() {
                 />
                 <div className='flex flex-col w-full gap-2'>
                   {
-                    chatSessions.map((session: schema.chatSessions) => (
+                    chatSessions.map((session) => (
                       <div
                         key={session.id}
-                        onClick={() => setCurrentChatSessionId(session.id)}
+                        onClick={() => loadChatSession(session.id)}
                         className='cursor-pointer hover:opacity-80'
                       >
                         {session.title}
@@ -220,7 +233,7 @@ export default function Chat() {
 
       {/* Center: Chat */}
       <div className="col-start-2 row-start-1 overflow-y-auto chat-container">
-        <ChatBox messages={messages} isLoading={isLoading} isSessionLoaded={currentChatSessionId !== null} />
+        <ChatBox messages={messages} isLoading={isLoading} isSessionLoaded={!!currentChatSessionId} />
       </div>
 
       {/* Input & Buttons */}
@@ -238,7 +251,7 @@ export default function Chat() {
           }}
         ></textarea>
         <div
-          className={`border bg-(--text-color) text-(--bg-color) rounded-lg flex items-center p-2  ${(isLoading || !userInput.trim()) ? 'cursor-default opacity-60' : 'cursor-pointer hover:opacity-80 active:opacity-60'}`}
+          className={`border bg - (--text - color) text - (--bg - color) rounded - lg flex items - center p - 2  ${(isLoading || !userInput.trim()) ? 'cursor-default opacity-60' : 'cursor-pointer hover:opacity-80 active:opacity-60'}`}
           onClick={() => {
             if (!isLoading || userInput.trim()) {
               handleSubmit()

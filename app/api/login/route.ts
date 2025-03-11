@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { usersTable } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { createSession } from "@/utils/auth";
 
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const { email, password } = await req.json();
 
   // Find user
-  const user = await db.select().from(users).where(eq(users.email, email)).execute();
+  const user = await db.select().from(usersTable).where(eq(usersTable.email, email)).execute();
   if (!user || !user[0]) {
     return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
   }
