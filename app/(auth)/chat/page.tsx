@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react"
 import AngleRightIcon from '@/components/icons/AngleRight'
 import AngleLeftIcon from '@/components/icons/AngleLeft'
+import PlusIcon from '@/components/icons/Plus'
 import ChatBox from '@/components/ChatBox'
 import { ChatMessage } from "@/components/ChatBubble"
 
@@ -116,10 +117,10 @@ export default function Chat() {
           className="flex justify-center p-2 overflow-hidden"
           style={{ width: sessionWidth }}
         >
-          <div className='flex w-full justify-center'>
-            {
-              sessionWidth < minWidth ?
-                <div className='flex flex-col items-center'>
+          {
+            sessionWidth < minWidth ?
+              <div className='flex flex-col w-full items-center'>
+                <div className='flex flex-col items-center mb-15'>
                   <AngleRightIcon
                     fill="var(--main-color)"
                     className="cursor-pointer"
@@ -127,8 +128,10 @@ export default function Chat() {
                   />
                   <div className='rotate-270 translate-y-full'>Sessions</div>
                 </div>
-                :
-                <div className="flex w-full">
+              </div>
+              :
+              <div className='flex flex-col w-full items-center'>
+                <div className="flex w-full mb-2">
                   <div className='grow text-left'>
                     Sessions
                   </div>
@@ -138,22 +141,21 @@ export default function Chat() {
                     onClick={() => togglePanel()}
                   />
                 </div>
-            }
-          </div>
+                <PlusIcon fill="var(--main-color)" className="cursor-pointer" />
+              </div>
+          }
         </div>
-        <div className="w-[1px] bg-(--main-color) relative">
-          {/* Resizing handle */}
-          <div
-            className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--main-color) rounded cursor-ew-resize items-center justify-center"
-            onMouseDown={(e) => {
-              e.preventDefault()
-              startResizing()
-            }}
-          >
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-          </div>
+        <div
+          className="flex cursor-ew-resize"
+          onMouseDown={(e) => {
+            e.preventDefault()
+            startResizing()
+          }}
+        >
+          {/* Some trickery to create a 1px border with a wide hover range*/}
+          <div className="w-[2px] bg-(--bg-color)" />
+          <div className="w-[1px] bg-(--main-color)" />
+          <div className="w-[2px] bg-(--bg-color)" />
         </div>
       </div>
 
@@ -187,7 +189,7 @@ export default function Chat() {
           send
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
