@@ -145,7 +145,10 @@ export default function Chat() {
           {/* Resizing handle */}
           <div
             className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--main-color) rounded cursor-ew-resize items-center justify-center"
-            onMouseDown={startResizing}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              startResizing()
+            }}
           >
             <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
             <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
