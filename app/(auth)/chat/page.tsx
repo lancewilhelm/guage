@@ -5,16 +5,58 @@ import AngleLeftIcon from '@/components/icons/AngleLeft'
 import PlusIcon from '@/components/icons/Plus'
 import ChatBox from '@/components/ChatBox'
 import { ChatMessage } from "@/components/ChatBubble"
+import schema from '@/db/schema'
 
 export default function Chat() {
   const sidePanelMinWidth = 40
-  const [sessionWidth, setSessionWidth] = useState(sidePanelMinWidth); // 0 for mobile, 1 for desktop
-  const isResizing = useRef(false);
-  const minWidth = 300; // Minimum width for the feedback panel
-  const maxWidth = 600; // Maximum width for the feedback panel
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [userInput, setUserInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [sessionWidth, setSessionWidth] = useState(sidePanelMinWidth) // 0 for mobile, 1 for desktop
+  const isResizing = useRef(false)
+  const minWidth = 300
+  const maxWidth = 600
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [chatSessions, setChatSessions] = useState([])
+  const [currentChatSessionId, setCurrentChatSessionId] = useState(null)
+  const [userInput, setUserInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchChatSessions = async () => {
+    try {
+      setIsLoading(true)
+      const response = await fetch('/api/chat/sessions')
+      if (!response.ok) throw new Error('Failed to fetch chat sessions')
+      const data = await response.json()
+      setChatSessions(data)
+      console.log(data)
+    } catch (error) {
+      console.error('Error fetching chat sessions:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch chat sessions when the compnent mounts
+  useEffect(() => {
+    fetchChatSessions()
+  }, [currentChatSessionId])
+
+  // Function to create new chat session
+  const createChatSession = async () => {
+    try {
+      const response = await fetch('/api/chat/sessions', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'New Chat Session', conversationType: 'chat' })
+      })
+
+      if (!response.ok) throw new Error('Failed to create chat session')
+
+      const newChatSession = await response.json()
+      setChatSessions([newChatSession, ...chatSessions])
+      setCurrentChatSessionId(newChatSession.id)
+    } catch (error) {
+      console.error('Error creating chat session:', error)
+    }
+  }
 
   const startResizing = () => {
     isResizing.current = true;
@@ -130,8 +172,8 @@ export default function Chat() {
                 </div>
               </div>
               :
-              <div className='flex flex-col w-full items-center'>
-                <div className="flex w-full mb-2">
+              <div className='flex flex-col w-full items-center gap-2'>
+                <div className="flex w-full">
                   <div className='grow text-left'>
                     Sessions
                   </div>
@@ -141,7 +183,24 @@ export default function Chat() {
                     onClick={() => togglePanel()}
                   />
                 </div>
-                <PlusIcon fill="var(--main-color)" className="cursor-pointer" />
+                <PlusIcon
+                  fill="var(--main-color)"
+                  className="cursor-pointer"
+                  onClick={createChatSession}
+                />
+                <div className='flex flex-col w-full gap-2'>
+                  {
+                    chatSessions.map((session: schema.chatSessions) => (
+                      <div
+                        key={session.id}
+                        onClick={() => setCurrentChatSessionId(session.id)}
+                        className='cursor-pointer hover:opacity-80'
+                      >
+                        {session.title}
+                      </div>
+                    ))
+                  }
+                </div>
               </div>
           }
         </div>
@@ -161,7 +220,7 @@ export default function Chat() {
 
       {/* Center: Chat */}
       <div className="col-start-2 row-start-1 overflow-y-auto chat-container">
-        <ChatBox messages={messages} isLoading={isLoading} />
+        <ChatBox messages={messages} isLoading={isLoading} isSessionLoaded={currentChatSessionId !== null} />
       </div>
 
       {/* Input & Buttons */}

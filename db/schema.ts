@@ -21,8 +21,10 @@ export const users = pgTable("users", {
 // CHAT SESSIONS TABLE (Stores type of session)
 export const chatSessions = pgTable("chat_sessions", {
   id: uuid("id").primaryKey().$defaultFn(() => uuidv4()),
+  title: text("title").notNull(),
   userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { mode: "date" }).default(sql`now()`).notNull(),
+  updatedAt: timestamp("updated_at", { mode: "date" }).default(sql`now()`).notNull(),
   conversationType: text("conversation_type").notNull(), // "chat" or "role-play"
 });
 
