@@ -96,7 +96,7 @@ export default function RolePlay() {
                 <AngleRightIcon
                   fill="var(--main-color)"
                   className="cursor-pointer"
-                  onClick={() => togglePanel('session')}
+                  onMouseDown={() => togglePanel('session')}
                 /> :
                 <div className="flex w-full">
                   <div className='grow text-left'>
@@ -105,7 +105,7 @@ export default function RolePlay() {
                   <AngleLeftIcon
                     fill="var(--main-color)"
                     className="cursor-pointer"
-                    onClick={() => togglePanel('session')}
+                    onMouseDown={() => togglePanel('session')}
                   />
                 </div>
             }
@@ -160,13 +160,13 @@ export default function RolePlay() {
                   <AngleLeftIcon
                     fill="var(--main-color)"
                     className="cursor-pointer"
-                    onClick={() => togglePanel('feedback')}
+                    onMouseDown={() => togglePanel('feedback')}
                   /> :
                   <div className="flex w-full">
                     <AngleRightIcon
                       fill="var(--main-color)"
                       className="cursor-pointer"
-                      onClick={() => togglePanel('feedback')}
+                      onMouseDown={() => togglePanel('feedback')}
                     />
                     <div className='grow text-right'>
                       Feedback

@@ -1,18 +1,14 @@
 'use client'
-import { useState, useRef, useEffect } from "react"
-import AngleRightIcon from '@/components/icons/AngleRight'
-import AngleLeftIcon from '@/components/icons/AngleLeft'
-import PlusIcon from '@/components/icons/Plus'
+import { useState, useEffect } from "react"
 import ChatBox from '@/components/ChatBox'
+import InputRow from '@/components/InputRow'
+import SidePanel from '@/components/SidePanel'
 import { ChatMessage } from "@/components/ChatBubble"
+import Header from '@/components/Header'
+import PlusIcon from '@/components/icons/Plus'
 import { selectChatSession } from '@/db/schema'
 
 export default function Chat() {
-  const sidePanelMinWidth = 40
-  const [sessionWidth, setSessionWidth] = useState(sidePanelMinWidth) // 0 for mobile, 1 for desktop
-  const isResizing = useRef(false)
-  const minWidth = 300
-  const maxWidth = 600
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [chatSessions, setChatSessions] = useState<selectChatSession[]>([])
   const [currentChatSessionId, setCurrentChatSessionId] = useState<string | undefined>(undefined)
@@ -72,42 +68,7 @@ export default function Chat() {
     }
   }
 
-  const startResizing = () => {
-    isResizing.current = true;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      resize(e);
-    };
-
-    const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      isResizing.current = false;
-    };
-
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp, { once: true });
-  };
-
-  const resize = (event: MouseEvent) => {
-    if (!isResizing.current) return;
-
-    let width = 0;
-
-    width = event.clientX;
-
-    let newWidth = width;
-    if (width < (minWidth / 2)) {
-      newWidth = sidePanelMinWidth;
-    } else {
-      newWidth = Math.max(minWidth, Math.min(width, maxWidth));
-    }
-    setSessionWidth(newWidth);
-  };
-
-  const togglePanel = () => {
-    setSessionWidth(sessionWidth === sidePanelMinWidth ? minWidth : sidePanelMinWidth)
-  }
-
+  // Scroll the chatbax to the bottom as messages are added
   const scrollToBottom = () => {
     const chatContainer = document.querySelector('.chat-container');
     if (chatContainer) {
@@ -118,10 +79,14 @@ export default function Chat() {
     }
   }
 
+  // Call the scroll to the bottom function as messages are added
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
+  /**
+   * Handle the submission of new messages to the backend
+   */
   const handleSubmit = async () => {
     if (!userInput.trim() || isLoading || currentChatSessionId === undefined) return
 
@@ -166,101 +131,48 @@ export default function Chat() {
   }
 
   return (
-    <div className="grid h-full grid-rows-[1fr_min-content] grid-cols-[auto_1fr]">
+    <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
+      <div className='col-start-2'>
+        <Header />
+      </div>
+
       {/* Session Panel (Collapsible) */}
-      <div className="flex col-start-1 row-span-2">
-        <div
-          className="flex justify-center p-2 overflow-hidden"
-          style={{ width: sessionWidth }}
-        >
-          {
-            sessionWidth < minWidth ?
-              <div className='flex flex-col w-full items-center'>
+      <div className='col-start-1 row-start-1 row-span-3'>
+        <SidePanel >
+          <PlusIcon
+            fill="var(--main-color)"
+            className="cursor-pointer"
+            onClick={createChatSession}
+          />
+          <div className='flex flex-col w-full gap-2'>
+            {
+              chatSessions.map((session) => (
                 <div
-                  className='flex flex-col items-center mb-15 cursor-pointer'
-                  onClick={() => togglePanel()}
+                  key={session.id}
+                  onClick={() => loadChatSession(session.id)}
+                  className='cursor-pointer hover:opacity-80'
                 >
-                  <AngleRightIcon fill="var(--main-color)" />
-                  <div className='rotate-270 translate-y-full'>Sessions</div>
+                  {session.title}
                 </div>
-              </div>
-              :
-              <div className='flex flex-col w-full items-center gap-2'>
-                <div className="flex w-full">
-                  <div className='grow text-left'>
-                    Sessions
-                  </div>
-                  <AngleLeftIcon
-                    fill="var(--main-color)"
-                    className="cursor-pointer"
-                    onClick={() => togglePanel()}
-                  />
-                </div>
-                <PlusIcon
-                  fill="var(--main-color)"
-                  className="cursor-pointer"
-                  onClick={createChatSession}
-                />
-                <div className='flex flex-col w-full gap-2'>
-                  {
-                    chatSessions.map((session) => (
-                      <div
-                        key={session.id}
-                        onClick={() => loadChatSession(session.id)}
-                        className='cursor-pointer hover:opacity-80'
-                      >
-                        {session.title}
-                      </div>
-                    ))
-                  }
-                </div>
-              </div>
-          }
-        </div>
-        <div
-          className="flex cursor-ew-resize"
-          onMouseDown={(e) => {
-            e.preventDefault()
-            startResizing()
-          }}
-        >
-          {/* Some trickery to create a 1px border with a wide hover range*/}
-          <div className="w-[2px] bg-(--bg-color)" />
-          <div className="w-[1px] bg-(--main-color)" />
-          <div className="w-[2px] bg-(--bg-color)" />
-        </div>
+              ))
+            }
+          </div>
+        </SidePanel>
       </div>
 
       {/* Center: Chat */}
-      <div className="col-start-2 row-start-1 overflow-y-auto chat-container">
+      <div className="col-start-2 row-start-2 overflow-y-auto chat-container">
         <ChatBox messages={messages} isLoading={isLoading} isSessionLoaded={!!currentChatSessionId} />
       </div>
 
-      {/* Input & Buttons */}
-      <div className="col-start-2 row-start-2 flex gap-2 p-2 border-t border-(--main-color)">
-        <textarea
-          className="border border-(--main-color) rounded grow p-1"
-          placeholder="type a message here..."
-          value={userInput}
-          onChange={(e) => setUserInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault()
-              handleSubmit()
-            }
-          }}
-        ></textarea>
-        <div
-          className={`border bg - (--text - color) text - (--bg - color) rounded - lg flex items - center p - 2  ${(isLoading || !userInput.trim()) ? 'cursor-default opacity-60' : 'cursor-pointer hover:opacity-80 active:opacity-60'}`}
-          onClick={() => {
-            if (!isLoading || userInput.trim()) {
-              handleSubmit()
-            }
-          }}
-        >
-          send
-        </div>
-      </div>
+      <InputRow
+        submitHandler={handleSubmit}
+        inputValue={userInput}
+        setInputValue={setUserInput}
+        isLoading={isLoading}
+        buttonLabel="send"
+        disabled={!currentChatSessionId}
+      />
     </div >
   );
 }

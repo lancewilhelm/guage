@@ -67,7 +67,12 @@ export default function Login() {
               className="border border-(--sub-color) px-2 py-1 rounded text-[12pt] w-[250px]"
             />
           </div>
-          <div className='bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer' onClick={handleLogin}>login</div>
+          <div
+            className='bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer'
+            onClick={handleLogin}
+          >
+            login
+          </div>
         </div>
       </div>
     </div>
