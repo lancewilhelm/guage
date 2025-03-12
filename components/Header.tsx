@@ -1,30 +1,32 @@
-'use client'
-import { useRouter } from 'next/navigation'
-import ModeMenu from '@/components/ModeMenu'
+"use client";
+import ModeMenu from "@/components/ModeMenu";
+import GlobalMenu from "@/components/GlobalMenu";
+import TableListIcon from "@/components/icons/TableList";
 
-export default function Header() {
-  const router = useRouter()
-  const handleLogout = async () => {
-    const res = await fetch('/api/logout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
-
-    if (res.ok) {
-      router.push('/')
-    } else {
-      alert('Unable to logout')
-    }
-  }
-
+export default function Header({
+  isSessionButtonVisible = false,
+  toggleSessionPanel,
+}: {
+  isSessionButtonVisible?: boolean;
+  toggleSessionPanel?: () => void;
+}) {
   return (
-    <div className='flex py-2 px-4 items-center gap-4 border-b'>
-      <ModeMenu />
-      <div className="grow" />
-      <div className="flex gap-4">
-        <div className="cursor-pointer">settings</div>
-        <div className="cursor-pointer" onClick={handleLogout}>logout</div>
+    <div className="flex justify-between py-2 px-4 items-center gap-4">
+      <div className="flex gap-4 items-center">
+        {isSessionButtonVisible && (
+          <TableListIcon
+            fill="var(--main-color)"
+            className="cursor-pointer"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (toggleSessionPanel) toggleSessionPanel();
+            }}
+          />
+        )}
+        <ModeMenu />
       </div>
-    </div >
-  )
+      <GlobalMenu />
+    </div>
+  );
 }
