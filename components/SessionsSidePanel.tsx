@@ -8,12 +8,12 @@ export default function SessionsPanel({
   currentChatSessionId,
   setCurrentChatSessionId,
   isVisible,
-  togglePanel,
+  setIsVisible,
 }: {
   currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   isVisible: boolean;
-  togglePanel: () => void;
+  setIsVisible: (isVisible: boolean) => void;
 }) {
   const [chatSessions, setChatSessions] = useState<selectChatSession[]>([]);
   const minWidth = 250;
@@ -49,6 +49,7 @@ export default function SessionsPanel({
     let newWidth = width;
     if (width < minWidth / 2) {
       setIsVisible(false);
+      newWidth = minWidth;
     } else {
       newWidth = Math.max(minWidth, Math.min(width, maxWidth));
     }
@@ -110,7 +111,7 @@ export default function SessionsPanel({
             <TableListIcon
               fill="var(--main-color)"
               className="cursor-pointer"
-              onMouseDown={() => togglePanel()}
+              onMouseDown={() => setIsVisible(false)}
             />
             <div className="grow text-center">Sessions</div>
             <PlusIcon

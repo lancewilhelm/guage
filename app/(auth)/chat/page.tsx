@@ -124,7 +124,7 @@ export default function Chat() {
           currentChatSessionId={currentChatSessionId}
           setCurrentChatSessionId={setCurrentChatSessionId}
           isVisible={isSessionPanelVisible}
-          togglePanel={() => setIsSessionPanelVisible(!isSessionPanelVisible)}
+          setIsVisible={setIsSessionPanelVisible}
         />
       </div>
 
