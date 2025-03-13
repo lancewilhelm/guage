@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ChatBox from "@/components/ChatBox";
 import InputRow from "@/components/InputRow";
 import SessionsSidePanel from "@/components/SessionsSidePanel";
 import { ChatMessage } from "@/components/ChatBubble";
 import Header from "@/components/Header";
+import { streamLlmResponse } from "@/utils/apiHelpers";
 
 export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -13,7 +14,9 @@ export default function Chat() {
   >(undefined);
   const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const loadChatSession = async (sessionId: string) => {
     setCurrentChatSessionId(sessionId);
@@ -56,6 +59,17 @@ export default function Chat() {
   }, [messages]);
 
   /**
+   * Handle stopping the current response stream
+   */
+  const handleStopStream = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsStreaming(false);
+    }
+  };
+
+  /**
    * Handle the submission of new messages to the backend
    */
   const handleSubmit = async () => {
@@ -67,44 +81,37 @@ export default function Chat() {
     setMessages((prev) => [...prev, userMessage]);
 
     // Set some variables
-    setIsLoading(true);
+    setIsStreaming(true);
     setUserInput("");
 
+    // Create a new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
+    // Add an empty assistant message that will be filled with the streaming response
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+    let accumulatedResponse = "";
+
+    function handleMessageChunk(chunk: string) {
+      accumulatedResponse += chunk;
+      setMessages((prev) => [
+        ...prev.slice(0, -1),
+        { role: "assistant", content: accumulatedResponse },
+      ]);
+    }
+
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMessage],
-          sessionId: currentChatSessionId,
-        }),
-      });
-
-      if (!response.body) throw new Error("No response body");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-
-      // Add an empty assistant message that will be filled with the streaming response
-      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
-
-      let accumulatedResponse = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedResponse += chunk;
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          { role: "assistant", content: accumulatedResponse },
-        ]);
-      }
+      await streamLlmResponse(
+        [...messages, userMessage],
+        currentChatSessionId,
+        handleMessageChunk,
+        abortControllerRef.current,
+      );
     } catch (error) {
       console.error("Error connecting to the chat API:", error);
     } finally {
-      setIsLoading(false);
+      setIsStreaming(false);
+      abortControllerRef.current = null;
     }
   };
 
@@ -139,9 +146,11 @@ export default function Chat() {
 
       <InputRow
         submitHandler={handleSubmit}
+        stopHandler={handleStopStream}
         inputValue={userInput}
         setInputValue={setUserInput}
         isLoading={isLoading}
+        isStreaming={isStreaming}
         buttonLabel="send"
         disabled={!currentChatSessionId}
       />

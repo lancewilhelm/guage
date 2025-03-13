@@ -1,7 +1,7 @@
 /**
  * Create new chat session
  */
-export const createChatSession = async () => {
+export async function createChatSession() {
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "POST",
@@ -19,12 +19,12 @@ export const createChatSession = async () => {
   } catch (error) {
     console.error("Error creating chat session:", error);
   }
-};
+}
 
 /**
  * Fetch the chat sessions from the backend
  */
-export const fetchChatSessions = async () => {
+export async function fetchChatSessions() {
   try {
     const response = await fetch("/api/chat/sessions");
     if (!response.ok) throw new Error("Failed to fetch chat sessions");
@@ -34,15 +34,12 @@ export const fetchChatSessions = async () => {
     console.error("Error fetching chat sessions:", error);
     return null;
   }
-};
+}
 
 /**
  * Update a chat session by ID
  */
-export const updateChatSession = async (
-  sessionId: string,
-  updateData: object,
-) => {
+export async function updateChatSession(sessionId: string, updateData: object) {
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "PUT",
@@ -58,12 +55,12 @@ export const updateChatSession = async (
     console.error("Error updating chat session:", error);
     return null;
   }
-};
+}
 
 /**
  * Delete a chat session by ID
  */
-export const deleteChatSession = async (sessionId: string) => {
+export async function deleteChatSession(sessionId: string) {
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "DELETE",
@@ -78,4 +75,50 @@ export const deleteChatSession = async (sessionId: string) => {
     console.error("Error deleting chat session:", error);
     return false;
   }
-};
+}
+
+/**
+ * Stream message from LLM API and return chunks of the message as they are recieved
+ */
+export async function streamLlmResponse(
+  messages: {
+    role: string;
+    content: string;
+  }[],
+  chatSessionId: string,
+  onMessageChunk: (chunk: string) => void,
+  abortController: AbortController,
+) {
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: messages, sessionId: chatSessionId }),
+      signal: abortController.signal,
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error("Failed to fetch response");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      onMessageChunk(chunk);
+    }
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log("Stream aborted");
+    } else {
+      console.error("Error streaming message:", error);
+    }
+    return false;
+  }
+}

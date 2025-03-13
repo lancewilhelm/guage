@@ -1,20 +1,24 @@
-interface InputRowProps {
-  submitHandler: () => void;
-  inputValue: string;
-  setInputValue: (value: string) => void;
-  isLoading?: boolean;
-  buttonLabel?: string;
-  disabled?: boolean;
-}
+import StopIcon from "@/components/icons/StopCircle";
 
 export default function InputRow({
   submitHandler,
+  stopHandler,
   inputValue,
   setInputValue,
   isLoading = false,
+  isStreaming = false,
   buttonLabel = "submit",
   disabled = false,
-}: InputRowProps) {
+}: {
+  submitHandler: () => void;
+  stopHandler: () => void;
+  inputValue: string;
+  setInputValue: (value: string) => void;
+  isLoading?: boolean;
+  isStreaming?: boolean;
+  buttonLabel?: string;
+  disabled?: boolean;
+}) {
   return (
     <div className="col-start-2 row-start-3 flex gap-2 p-2 ">
       <textarea
@@ -31,14 +35,16 @@ export default function InputRow({
         }}
       ></textarea>
       <div
-        className={`border bg-(--text-color) text-(--bg-color) rounded-lg flex items-center p-2  ${isLoading || !inputValue.trim() ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}`}
+        className={`flex items-center justify-center border bg-(--text-color) text-(--bg-color) rounded-lg p-2 w-[50px]  ${isLoading || (!inputValue.trim() && !isStreaming) ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}`}
         onClick={() => {
-          if (!isLoading || inputValue.trim()) {
+          if (isStreaming) {
+            stopHandler();
+          } else if (!isLoading || inputValue.trim()) {
             submitHandler();
           }
         }}
       >
-        {buttonLabel}
+        {isStreaming ? <StopIcon fill="var(--bg-color)" /> : buttonLabel}
       </div>
     </div>
   );
