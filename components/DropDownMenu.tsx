@@ -96,7 +96,7 @@ export function DropDownMenuList({
 
   return isOpen ? (
     <div
-      className={`absolute bg-(--bg-color) mt-2 border rounded min-w-max ${align === "right" ? "right-0" : "left-0"}`}
+      className={`absolute bg-(--bg-color) mt-2 border rounded min-w-max z-10 ${align === "right" ? "right-0" : "left-0"}`}
     >
       {children}
     </div>

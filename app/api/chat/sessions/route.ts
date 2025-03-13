@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, chatSessionsTable } from "@/utils/db";
+import { db } from "@/utils/db";
+import { chatSessionsTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { eq } from "drizzle-orm";
 
@@ -102,6 +103,40 @@ export async function PUT(req: NextRequest) {
     console.error("Error updating chat session:", error);
     return NextResponse.json(
       { error: "Failed to update chat session" },
+      { status: 500 },
+    );
+  }
+}
+
+// DELETE handler for deleting a chat session by ID
+export async function DELETE(req: NextRequest) {
+  try {
+    // Check for authorized user
+    const session = await getSession();
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const userId = session.user.id;
+    const { sessionId } = await req.json();
+
+    // Delete the chat session from the database
+    const result = await db
+      .delete(chatSessionsTable)
+      .where(
+        eq(chatSessionsTable.id, sessionId) &&
+          eq(chatSessionsTable.userId, userId),
+      );
+
+    if (result.rowCount === 0) {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    return new Response("Chat session deleted", { status: 200 });
+  } catch (error) {
+    console.error("Error deleting chat session:", error);
+    return NextResponse.json(
+      { error: "Failed to delete chat session" },
       { status: 500 },
     );
   }

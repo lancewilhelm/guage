@@ -1,5 +1,3 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
 import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 import { InferInsertModel, InferSelectModel, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
@@ -85,17 +83,3 @@ export type insertRolePlaySession = InferInsertModel<
   typeof rolePlaySessionsTable
 >;
 export type insertMessage = InferInsertModel<typeof messagesTable>;
-
-// Create the database
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-export const db = drizzle(pool, {
-  schema: {
-    usersTable,
-    chatSessionsTable,
-    rolePlaySessionsTable,
-    messagesTable,
-  },
-});

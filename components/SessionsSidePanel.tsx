@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import TableListIcon from "@/components/icons/TableList";
 import PlusIcon from "@/components/icons/Plus";
-import { selectChatSession } from "@/utils/db";
+import { selectChatSession } from "@/utils/db/schema";
 import {
   fetchChatSessions,
   createChatSession,

@@ -129,7 +129,7 @@ export default function Chat() {
       </div>
 
       {/* Center: Chat */}
-      <div className="col-start-2 row-start-2 overflow-y-auto chat-container">
+      <div className="col-start-2 row-start-2 overflow-y-auto overflow-x-hidden chat-container">
         <ChatBox
           messages={messages}
           isLoading={isLoading}

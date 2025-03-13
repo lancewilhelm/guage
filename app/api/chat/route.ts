@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { db, messagesTable, type insertMessage } from "@/utils/db";
+import { db } from "@/utils/db";
+import { messagesTable, type insertMessage } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 
 const openai = new OpenAI({
@@ -14,7 +15,6 @@ export async function saveAssistantMessage(
   content: string,
   parentMessageId: string | null,
 ) {
-  console.log("Saving assistant message:", content);
   try {
     let threadPath = "0";
     let depth = 0;

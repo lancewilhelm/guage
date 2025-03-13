@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { db, messagesTable, type selectMessage } from "@/utils/db";
+import { db } from "@/utils/db";
+import { messagesTable, type selectMessage } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { eq } from "drizzle-orm";
 

@@ -96,10 +96,18 @@ li {
 
 pre {
   overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid var(--main-color);
+  border-radius: var(--border-radius);
+  padding: 5px;
 }
 
-code {
-  overflow-x: auto;
+math {
+  padding: 5px 0;
+}
+
+.katex-html {
+  display: none;
 }
 
 .homeGrid {

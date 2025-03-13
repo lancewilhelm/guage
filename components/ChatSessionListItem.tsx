@@ -9,7 +9,7 @@ import DropDownMenu, {
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
-import { selectChatSession } from "@/utils/db";
+import { selectChatSession } from "@/utils/db/schema";
 
 export default function ChatSessionListItem({
   session,
