@@ -110,29 +110,27 @@ export async function POST(req: Request) {
     const completion = await openai.chat.completions.create(params);
 
     const encoder = new TextEncoder();
+    let fullAsssistantResponse = "";
     const stream = new ReadableStream({
       async start(controller) {
-        let fullAsssistantResponse = "";
-
         try {
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
             fullAsssistantResponse += text;
             controller.enqueue(encoder.encode(text));
           }
-
-          await saveAssistantMessage(
-            sessionId,
-            userId,
-            fullAsssistantResponse,
-            parentId,
-          );
         } catch (error) {
           controller.enqueue(
             encoder.encode("Error: Failed to stream response."),
           );
           console.error("Error streaming response:", error);
         } finally {
+          await saveAssistantMessage(
+            sessionId,
+            userId,
+            fullAsssistantResponse,
+            parentId,
+          );
           controller.close();
         }
       },
