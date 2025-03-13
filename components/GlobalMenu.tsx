@@ -1,21 +1,25 @@
-import { useRouter } from 'next/navigation'
-import MenuIcon from '@/components/icons/Menu'
-import DropDownMenu, { DropDownMenuButton, DropDownMenuItem, DropDownMenuList } from '@/components/DropDownMenu'
+import { useRouter } from "next/navigation";
+import MenuIcon from "@/components/icons/Menu";
+import DropDownMenu, {
+  DropDownMenuButton,
+  DropDownMenuItem,
+  DropDownMenuList,
+} from "@/components/DropDownMenu";
 
 export default function GlobalMenu() {
-  const router = useRouter()
+  const router = useRouter();
   const handleLogout = async () => {
-    const res = await fetch('/api/logout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-    })
+    const res = await fetch("/api/logout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
 
     if (res.ok) {
-      router.push('/')
+      router.push("/");
     } else {
-      alert('Unable to logout')
+      alert("Unable to logout");
     }
-  }
+  };
 
   return (
     <DropDownMenu>
@@ -24,10 +28,8 @@ export default function GlobalMenu() {
           <MenuIcon fill="var(--main-color)" />
         </div>
       </DropDownMenuButton>
-      <DropDownMenuList align='right'>
-        <DropDownMenuItem onClick={() => null}>
-          Settings
-        </DropDownMenuItem>
+      <DropDownMenuList align="right">
+        <DropDownMenuItem onClick={() => null}>Settings</DropDownMenuItem>
         <DropDownMenuItem onClick={() => handleLogout()}>
           Logout
         </DropDownMenuItem>

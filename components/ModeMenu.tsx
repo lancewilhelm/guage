@@ -1,16 +1,20 @@
-import { useRouter, usePathname } from 'next/navigation'
-import AngleDownIcon from '@/components/icons/AngleDown'
-import DropDownMenu, { DropDownMenuButton, DropDownMenuItem, DropDownMenuList } from '@/components/DropDownMenu'
+import { useRouter, usePathname } from "next/navigation";
+import AngleDownIcon from "@/components/icons/AngleDown";
+import DropDownMenu, {
+  DropDownMenuButton,
+  DropDownMenuItem,
+  DropDownMenuList,
+} from "@/components/DropDownMenu";
 
 const routes = [
-  { path: '/chat', label: 'Chat' },
-  { path: '/roleplay', label: 'Role Play' },
-]
+  { path: "/chat", label: "Chat" },
+  { path: "/roleplay", label: "Role Play" },
+];
 
 export default function ModeMenu() {
   const router = useRouter();
   const pathname = usePathname();
-  const currentRoute = routes.find(route => route.path === pathname);
+  const currentRoute = routes.find((route) => route.path === pathname);
 
   const handleRouteChange = (path: string) => {
     router.push(path);
@@ -20,15 +24,18 @@ export default function ModeMenu() {
     <DropDownMenu>
       <DropDownMenuButton>
         <div className="flex items-center gap-2">
-          {currentRoute ? currentRoute.label : 'Select a page'}
+          {currentRoute ? currentRoute.label : "Select a page"}
           <AngleDownIcon fill="var(--main-color)" />
         </div>
       </DropDownMenuButton>
       <DropDownMenuList>
         {routes
-          .filter(route => route.path !== pathname)
+          .filter((route) => route.path !== pathname)
           .map((route, index) => (
-            <DropDownMenuItem key={index} onClick={() => handleRouteChange(route.path)}>
+            <DropDownMenuItem
+              key={index}
+              onClick={() => handleRouteChange(route.path)}
+            >
               {route.label}
             </DropDownMenuItem>
           ))}

@@ -3,13 +3,12 @@ import { getSession } from "@/utils/auth";
 
 export async function middleware(req: NextRequest) {
   const session = await getSession();
-  const isProtectedRoute = (
+  const isProtectedRoute =
     req.nextUrl.pathname.startsWith("/dashboard") ||
     req.nextUrl.pathname.startsWith("/chat") ||
-    req.nextUrl.pathname.startsWith('/roleplay')
-  )
+    req.nextUrl.pathname.startsWith("/roleplay");
 
-  console.log('route', req.nextUrl.pathname, 'session?', session)
+  console.log("route", req.nextUrl.pathname, "session?", session);
 
   if (isProtectedRoute && !session) {
     return NextResponse.redirect(new URL("/login", req.url));
@@ -20,5 +19,5 @@ export async function middleware(req: NextRequest) {
 
 // Protect dashboard routes
 export const config = {
-  matcher: ['/dashboard', '/chat', '/roleplay'],
+  matcher: ["/dashboard", "/chat", "/roleplay"],
 };

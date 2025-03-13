@@ -9,15 +9,25 @@ export async function POST(req: Request) {
   const { email, password } = await req.json();
 
   // Find user
-  const user = await db.select().from(usersTable).where(eq(usersTable.email, email)).execute();
+  const user = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, email))
+    .execute();
   if (!user || !user[0]) {
-    return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Invalid credentials" },
+      { status: 401 },
+    );
   }
 
   // Check password
   const passwordValid = await bcrypt.compare(password, user[0].passwordHash);
   if (!passwordValid) {
-    return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Invalid credentials" },
+      { status: 401 },
+    );
   }
 
   // Create session

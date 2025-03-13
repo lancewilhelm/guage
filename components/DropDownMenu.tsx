@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 
 interface DropDownMenuContextProps {
   isOpen: boolean;
@@ -6,7 +12,9 @@ interface DropDownMenuContextProps {
   menuRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const DropDownMenuContext = createContext<DropDownMenuContextProps | undefined>(undefined);
+const DropDownMenuContext = createContext<DropDownMenuContextProps | undefined>(
+  undefined,
+);
 
 interface DropDownMenuProps {
   children: React.ReactNode;
@@ -24,17 +32,17 @@ export default function DropDownMenu({ children }: DropDownMenuProps) {
     };
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
@@ -47,10 +55,14 @@ export default function DropDownMenu({ children }: DropDownMenuProps) {
   );
 }
 
-export function DropDownMenuButton({ children }: { children: React.ReactNode }) {
+export function DropDownMenuButton({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const context = useContext(DropDownMenuContext);
   if (!context) {
-    throw new Error('DropDownMenuButton must be used within a DropDownMenu');
+    throw new Error("DropDownMenuButton must be used within a DropDownMenu");
   }
 
   const { setIsOpen, isOpen } = context;
@@ -68,22 +80,36 @@ export function DropDownMenuButton({ children }: { children: React.ReactNode }) 
   );
 }
 
-export function DropDownMenuList({ children, align = 'left' }: { children: React.ReactNode, align?: 'left' | 'right' }) {
+export function DropDownMenuList({
+  children,
+  align = "left",
+}: {
+  children: React.ReactNode;
+  align?: "left" | "right";
+}) {
   const context = useContext(DropDownMenuContext);
   if (!context) {
-    throw new Error('DropDownMenuList must be used within a DropDownMenu');
+    throw new Error("DropDownMenuList must be used within a DropDownMenu");
   }
 
   const { isOpen } = context;
 
   return isOpen ? (
-    <div className={`absolute bg-(--bg-color) mt-2 border rounded min-w-max ${align === 'right' ? 'right-0' : 'left-0'}`}>
+    <div
+      className={`absolute bg-(--bg-color) mt-2 border rounded min-w-max ${align === "right" ? "right-0" : "left-0"}`}
+    >
       {children}
-    </div >
+    </div>
   ) : null;
 }
 
-export function DropDownMenuItem({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
+export function DropDownMenuItem({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
   return (
     <div
       className="cursor-pointer bg-(--bg-color) rounded p-2 hover:opacity-80 active:opacity-60"

@@ -98,16 +98,24 @@ li {
   width: 100vw;
   height: 100dvh;
   display: grid;
-  grid-template-columns: [full-page-start] var(--gutter) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
-  grid-template-rows: [full-page-start] var(--gutter) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
+  grid-template-columns: [full-page-start] var(
+      --gutter
+    ) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
+  grid-template-rows: [full-page-start] var(
+      --gutter
+    ) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
 }
 
 .pageGrid {
   width: 100vw;
   height: 100dvh;
   display: grid;
-  grid-template-columns: [full-page-start] var(--gutter) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
-  grid-template-rows: [full-page-start] min-content [padding-start] var(--gutter) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
+  grid-template-columns: [full-page-start] var(
+      --gutter
+    ) [content-start] 1fr [content-end] var(--gutter) [full-page-end];
+  grid-template-rows: [full-page-start] min-content [padding-start] var(
+      --gutter
+    ) [content-start] 1fr [footer-start] var(--gutter) [full-page-end];
 }
 
 ::-webkit-scrollbar {

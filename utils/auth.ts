@@ -4,9 +4,9 @@ import { JwtPayload } from "jsonwebtoken";
 
 interface Session extends JwtPayload {
   user: {
-    id: string
-    email: string
-  }
+    id: string;
+    email: string;
+  };
 }
 
 const SECRET = process.env.AUTH_SECRET!; // Define in .env.local
@@ -22,7 +22,7 @@ export async function getSession(): Promise<Session | null> {
   try {
     return jwt.verify(token, SECRET) as Session;
   } catch (error) {
-    console.log('Error verifying token:', error)
+    console.log("Error verifying token:", error);
     return null;
   }
 }
