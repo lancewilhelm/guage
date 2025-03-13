@@ -69,8 +69,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE handler for deleting a chat session by ID
-export async function DELETE(req: NextRequest) {
+// PUT handler for updating a chat session by ID
+export async function PUT(req: NextRequest) {
   try {
     // Check for authorized user
     const session = await getSession();
@@ -79,11 +79,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     const userId = session.user.id;
-    const { sessionId } = await req.json();
+    const { sessionId, ...updateData } = await req.json();
 
-    // Delete the chat session from the database
+    // Update the chat session in the database
     const result = await db
-      .delete(chatSessionsTable)
+      .update(chatSessionsTable)
+      .set(updateData)
       .where(
         eq(chatSessionsTable.id, sessionId) &&
           eq(chatSessionsTable.userId, userId),
@@ -93,11 +94,14 @@ export async function DELETE(req: NextRequest) {
       return new Response("Not Found", { status: 404 });
     }
 
-    return new Response("Chat session deleted", { status: 200 });
-  } catch (error) {
-    console.error("Error deleting chat session:", error);
     return NextResponse.json(
-      { error: "Failed to delete chat session" },
+      { message: "Chat session updated" },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error updating chat session:", error);
+    return NextResponse.json(
+      { error: "Failed to update chat session" },
       { status: 500 },
     );
   }

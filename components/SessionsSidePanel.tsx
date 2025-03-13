@@ -7,6 +7,7 @@ import {
   fetchChatSessions,
   createChatSession,
   deleteChatSession,
+  updateChatSession,
 } from "@/utils/apiHelpers";
 import ChatSessionListItem from "./ChatSessionListItem";
 
@@ -63,6 +64,15 @@ export default function SessionsPanel({
   };
 
   /**
+   * Create a new chat session
+   */
+  const createSession = async () => {
+    const newChatSession = await createChatSession();
+    setChatSessions([newChatSession, ...chatSessions]);
+    setCurrentChatSessionId(newChatSession.id);
+  };
+
+  /**
    * Fetch the chat sessions from the backend
    */
   const fetchSessions = async () => {
@@ -73,12 +83,19 @@ export default function SessionsPanel({
   };
 
   /**
-   * Create a new chat session
+   * Update the chat session title
    */
-  const createSession = async () => {
-    const newChatSession = await createChatSession();
-    setChatSessions([newChatSession, ...chatSessions]);
-    setCurrentChatSessionId(newChatSession.id);
+  const renameSession = async (sessionId: string, title: string) => {
+    const updatedSession = await updateChatSession(sessionId, { title });
+    if (updatedSession) {
+      setChatSessions(
+        chatSessions.map((session) =>
+          session.id === sessionId ? { ...session, title } : session,
+        ),
+      );
+    } else {
+      console.error("Failed to update chat session");
+    }
   };
 
   /**
@@ -128,6 +145,7 @@ export default function SessionsPanel({
                 session={session}
                 setCurrentChatSessionId={setCurrentChatSessionId}
                 deleteHandler={deleteSession}
+                renameHandler={renameSession}
               />
             ))}
           </div>

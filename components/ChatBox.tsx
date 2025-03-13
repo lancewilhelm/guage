@@ -12,7 +12,7 @@ export default function ChatBox({
   isSessionLoaded = false,
 }: ChatBoxProps) {
   return (
-    <div className="flex flex-col w-full h-full p-2">
+    <div className="flex flex-col w-full h-full p-2 overflow-x-hidden">
       {messages.length === 0 ? (
         <div className="flex flex-col grow text-center text-(--sub-color) justify-center">
           <div className="text-3xl">
