@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
-import { usersTable } from "@/db/schema";
+import { db, usersTable } from "@/utils/db";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -22,14 +21,12 @@ export async function POST(req: Request) {
 
   // Hash password and create user
   const hashedPassword = await bcrypt.hash(password, 10);
-  await db
-    .insert(usersTable)
-    .values({
-      id: crypto.randomUUID(),
-      email,
-      name,
-      passwordHash: hashedPassword,
-    });
+  await db.insert(usersTable).values({
+    id: crypto.randomUUID(),
+    email,
+    name,
+    passwordHash: hashedPassword,
+  });
 
   return NextResponse.json(
     { message: "User registered successfully" },

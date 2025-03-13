@@ -1,7 +1,6 @@
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { db } from "@/db";
-import { messagesTable, type insertMessage } from "@/db/schema";
+import { db, messagesTable, type insertMessage } from "@/utils/db";
 import { eq } from "drizzle-orm";
 
 const openai = new OpenAI({

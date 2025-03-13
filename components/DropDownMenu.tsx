@@ -110,10 +110,19 @@ export function DropDownMenuItem({
   children: React.ReactNode;
   onClick: () => void;
 }) {
+  const context = useContext(DropDownMenuContext);
+  if (!context) {
+    throw new Error("DropDownMenuItem must be used within a DropDownMenu");
+  }
+
+  const { setIsOpen } = context;
   return (
     <div
       className="cursor-pointer bg-(--bg-color) rounded p-2 hover:opacity-80 active:opacity-60"
-      onClick={onClick}
+      onClick={() => {
+        onClick();
+        setIsOpen(false);
+      }}
     >
       {children}
     </div>

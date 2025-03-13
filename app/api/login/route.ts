@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/db";
-import { usersTable } from "@/db/schema";
+import { db, usersTable } from "@/utils/db";
 import { eq } from "drizzle-orm";
 import { createSession } from "@/utils/auth";
 
