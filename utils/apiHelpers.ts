@@ -15,7 +15,6 @@ export async function createChatSession() {
     if (!response.ok) throw new Error("Failed to create chat session");
 
     const newChatSession = await response.json();
-    console.log(newChatSession.id);
     return newChatSession;
   } catch (error) {
     console.error("Error creating chat session:", error);
@@ -26,12 +25,10 @@ export async function createChatSession() {
  * Fetch the chat sessions from the backend
  */
 export async function fetchChatSessions() {
-  console.log("Fetching chat sessions");
   try {
     const response = await fetch("/api/chat/sessions");
     if (!response.ok) throw new Error("Failed to fetch chat sessions");
     const data = await response.json();
-    console.log("Chat sessions recieved:", data);
     return data;
   } catch (error) {
     console.error("Error fetching chat sessions:", error);
@@ -43,7 +40,6 @@ export async function fetchChatSessions() {
  * Update a chat session by ID
  */
 export async function updateChatSession(sessionId: string, updateData: object) {
-  console.log("Updating chat session:", sessionId, updateData);
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "PUT",
@@ -65,7 +61,6 @@ export async function updateChatSession(sessionId: string, updateData: object) {
  * Delete a chat session by ID
  */
 export async function deleteChatSession(sessionId: string) {
-  console.log("Deleting chat session:", sessionId);
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "DELETE",
@@ -121,7 +116,6 @@ export async function streamLlmResponse(
   shouldGenerateTitle: boolean = false,
 ) {
   let fullResponse = "";
-  console.log(chatSessionId);
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -157,7 +151,6 @@ export async function streamLlmResponse(
     return true;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      console.log("Stream aborted");
       // Generate title if this is the first assistant response
       if (shouldGenerateTitle && fullResponse.trim().length > 0) {
         const title = await generateSessionTitle(messages);

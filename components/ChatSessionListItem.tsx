@@ -13,11 +13,13 @@ import { selectChatSession } from "@/utils/db/schema";
 
 export default function ChatSessionListItem({
   session,
+  currentChatSessionId,
   setCurrentChatSessionId,
   deleteHandler,
   renameHandler,
 }: {
   session: selectChatSession;
+  currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   deleteHandler: (sessionId: string) => void;
   renameHandler: (sessionId: string, newTitle: string) => void;
@@ -33,7 +35,9 @@ export default function ChatSessionListItem({
   }, [isRenaming]);
 
   return (
-    <div className="flex justify-between items-center">
+    <div
+      className={`flex justify-between items-center rounded border p-1 ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
+    >
       <div
         onClick={() => setCurrentChatSessionId(session.id)}
         className="cursor-pointer hover:opacity-80"

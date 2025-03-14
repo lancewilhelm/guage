@@ -7,6 +7,7 @@ import { selectChatSession } from "@/utils/db/schema";
 
 export default function SessionsPanel({
   chatSessions,
+  currentChatSessionId,
   setCurrentChatSessionId,
   isVisible,
   setIsVisible,
@@ -15,6 +16,7 @@ export default function SessionsPanel({
   renameHandler,
 }: {
   chatSessions: selectChatSession[];
+  currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   isVisible: boolean;
   setIsVisible: (isVisible: boolean) => void;
@@ -88,6 +90,7 @@ export default function SessionsPanel({
               <ChatSessionListItem
                 key={session.id}
                 session={session}
+                currentChatSessionId={currentChatSessionId}
                 setCurrentChatSessionId={setCurrentChatSessionId}
                 deleteHandler={deleteHandler}
                 renameHandler={renameHandler}

@@ -200,6 +200,7 @@ export default function Chat() {
       <div className="col-start-1 row-start-1 row-span-3">
         <SessionsSidePanel
           chatSessions={chatSessions}
+          currentChatSessionId={currentChatSessionId}
           setCurrentChatSessionId={setCurrentChatSessionId}
           isVisible={isSessionPanelVisible}
           setIsVisible={setIsSessionPanelVisible}
