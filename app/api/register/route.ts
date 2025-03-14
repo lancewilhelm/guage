@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db, usersTable } from "@/utils/db";
+import { db } from "@/utils/db";
+import { usersTable } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {

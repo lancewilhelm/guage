@@ -1,4 +1,4 @@
-import StopIcon from "@/components/icons/StopCircle";
+import StopIcon from "@/components/Icon/StopCircle";
 
 export default function InputRow({
   submitHandler,

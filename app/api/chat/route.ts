@@ -9,7 +9,7 @@ const openai = new OpenAI({
 });
 
 // Helper function to save assistant's response after streaming completes
-export async function saveAssistantMessage(
+async function saveAssistantMessage(
   sessionId: string,
   userId: string,
   content: string,

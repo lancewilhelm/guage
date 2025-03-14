@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import DotsIcon from "@/components/icons/Dots";
-import TrashCanIcon from "@/components/icons/TrashCan";
-import PencilIcon from "@/components/icons/Pencil";
-import CheckIcon from "@/components/icons/Check";
-import XMarkIcon from "@/components/icons/XMark";
+import DotsIcon from "@/components/Icon/Dots";
+import TrashCanIcon from "@/components/Icon/TrashCan";
+import PencilIcon from "@/components/Icon/Pencil";
+import CheckIcon from "@/components/Icon/Check";
+import XMarkIcon from "@/components/Icon/XMark";
 import DropDownMenu, {
   DropDownMenuButton,
   DropDownMenuItem,
@@ -25,6 +25,7 @@ export default function ChatSessionListItem({
   renameHandler: (sessionId: string, newTitle: string) => void;
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
+  const [isMenuButtonVisible, setIsMenuButtonVisible] = useState(false);
   const [newTitle, setNewTitle] = useState(session.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -37,10 +38,12 @@ export default function ChatSessionListItem({
   return (
     <div
       className={`flex justify-between items-center rounded border p-1 ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
+      onMouseEnter={() => setIsMenuButtonVisible(true)}
+      onMouseLeave={() => setIsMenuButtonVisible(false)}
     >
       <div
-        onClick={() => setCurrentChatSessionId(session.id)}
         className="cursor-pointer hover:opacity-80"
+        onClick={() => setCurrentChatSessionId(session.id)}
       >
         {isRenaming ? (
           <input
@@ -91,7 +94,11 @@ export default function ChatSessionListItem({
       ) : (
         <DropDownMenu>
           <DropDownMenuButton>
-            <DotsIcon fill="var(--main-color)" />
+            {isMenuButtonVisible ? (
+              <DotsIcon fill="var(--main-color)" />
+            ) : (
+              <DotsIcon fill="var(--bg-color)" />
+            )}
           </DropDownMenuButton>
           <DropDownMenuList align="right">
             <DropDownMenuItem

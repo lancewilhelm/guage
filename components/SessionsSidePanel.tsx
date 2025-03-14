@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
-import TableListIcon from "@/components/icons/TableList";
-import PlusIcon from "@/components/icons/Plus";
+import TableListIcon from "@/components/Icon/TableList";
+import PlusIcon from "@/components/Icon/Plus";
 import ChatSessionListItem from "./ChatSessionListItem";
 import { selectChatSession } from "@/utils/db/schema";
 

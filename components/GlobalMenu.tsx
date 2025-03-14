@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import MenuIcon from "@/components/icons/Menu";
+import MenuIcon from "@/components/Icon/Menu";
 import DropDownMenu, {
   DropDownMenuButton,
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
+import Settings from "@/components/Settings/Main";
 
 export default function GlobalMenu() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const router = useRouter();
   const handleLogout = async () => {
     const res = await fetch("/api/logout", {
@@ -22,18 +25,26 @@ export default function GlobalMenu() {
   };
 
   return (
-    <DropDownMenu>
-      <DropDownMenuButton>
-        <div className="flex items-center gap-2">
-          <MenuIcon fill="var(--main-color)" />
-        </div>
-      </DropDownMenuButton>
-      <DropDownMenuList align="right">
-        <DropDownMenuItem onClick={() => null}>Settings</DropDownMenuItem>
-        <DropDownMenuItem onClick={() => handleLogout()}>
-          Logout
-        </DropDownMenuItem>
-      </DropDownMenuList>
-    </DropDownMenu>
+    <div>
+      <DropDownMenu>
+        <DropDownMenuButton>
+          <div className="flex items-center gap-2">
+            <MenuIcon fill="var(--main-color)" />
+          </div>
+        </DropDownMenuButton>
+        <DropDownMenuList align="right">
+          <DropDownMenuItem onClick={() => setIsSettingsOpen(true)}>
+            Settings
+          </DropDownMenuItem>
+          <DropDownMenuItem onClick={() => handleLogout()}>
+            Logout
+          </DropDownMenuItem>
+        </DropDownMenuList>
+      </DropDownMenu>
+      <Settings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
+    </div>
   );
 }

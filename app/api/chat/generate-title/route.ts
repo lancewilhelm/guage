@@ -14,7 +14,9 @@ export async function POST(req: Request) {
   }
 
   // Parse the request body
-  const { messages }: { messages: { role: string; content: string }[] } =
+  const {
+    messages,
+  }: { messages: Array<OpenAI.Chat.ChatCompletionMessageParam> } =
     await req.json();
   if (!messages || messages.length === 0) {
     return new Response("Invalid request: meessages are required", {
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
     });
   }
 
-  const systemPrompt = {
+  const systemPrompt: OpenAI.Chat.ChatCompletionMessageParam = {
     role: "system",
     content:
       "Generate a short title for a chat with the following text. Please do not put quotes around the title.",

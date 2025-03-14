@@ -1,7 +1,7 @@
 "use client";
 import ModeMenu from "@/components/ModeMenu";
 import GlobalMenu from "@/components/GlobalMenu";
-import TableListIcon from "@/components/icons/TableList";
+import TableListIcon from "@/components/Icon/TableList";
 
 export default function Header({
   isSessionButtonVisible = false,

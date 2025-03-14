@@ -72,6 +72,7 @@ export function DropDownMenuButton({
       className="cursor-pointer"
       onMouseDown={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setIsOpen(!isOpen);
       }}
     >

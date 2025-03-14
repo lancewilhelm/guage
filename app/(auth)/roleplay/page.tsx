@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
-import AngleRightIcon from "@/components/icons/AngleRight";
-import AngleLeftIcon from "@/components/icons/AngleLeft";
+import AngleRightIcon from "@/components/Icon/AngleRight";
+import AngleLeftIcon from "@/components/Icon/AngleLeft";
 import ChatBox from "@/components/ChatBox";
 import { ChatMessage } from "@/components/ChatBubble";
 
