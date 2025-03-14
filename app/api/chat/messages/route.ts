@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/utils/db";
 import { messagesTable, type selectMessage } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // GET handler for fetching all chat sessions for the current user
 export async function GET(req: Request) {
@@ -37,8 +37,10 @@ export async function GET(req: Request) {
       })
       .from(messagesTable)
       .where(
-        eq(messagesTable.userId, userId) &&
+        and(
+          eq(messagesTable.userId, userId),
           eq(messagesTable.sessionId, sessionId),
+        ),
       )
       .orderBy(messagesTable.createdAt);
 

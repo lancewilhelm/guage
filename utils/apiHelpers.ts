@@ -15,6 +15,7 @@ export async function createChatSession() {
     if (!response.ok) throw new Error("Failed to create chat session");
 
     const newChatSession = await response.json();
+    console.log(newChatSession.id);
     return newChatSession;
   } catch (error) {
     console.error("Error creating chat session:", error);
@@ -25,10 +26,12 @@ export async function createChatSession() {
  * Fetch the chat sessions from the backend
  */
 export async function fetchChatSessions() {
+  console.log("Fetching chat sessions");
   try {
     const response = await fetch("/api/chat/sessions");
     if (!response.ok) throw new Error("Failed to fetch chat sessions");
     const data = await response.json();
+    console.log("Chat sessions recieved:", data);
     return data;
   } catch (error) {
     console.error("Error fetching chat sessions:", error);
@@ -40,6 +43,7 @@ export async function fetchChatSessions() {
  * Update a chat session by ID
  */
 export async function updateChatSession(sessionId: string, updateData: object) {
+  console.log("Updating chat session:", sessionId, updateData);
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "PUT",
@@ -61,6 +65,7 @@ export async function updateChatSession(sessionId: string, updateData: object) {
  * Delete a chat session by ID
  */
 export async function deleteChatSession(sessionId: string) {
+  console.log("Deleting chat session:", sessionId);
   try {
     const response = await fetch("/api/chat/sessions", {
       method: "DELETE",
@@ -73,63 +78,6 @@ export async function deleteChatSession(sessionId: string) {
     return true;
   } catch (error) {
     console.error("Error deleting chat session:", error);
-    return false;
-  }
-}
-
-/**
- * Stream message from LLM API and return chunks of the message as they are recieved
- */
-export async function streamLlmResponse(
-  messages: {
-    role: string;
-    content: string;
-  }[],
-  chatSessionId: string,
-  onMessageChunk: (chunk: string) => void,
-  abortController: AbortController,
-  shouldGenerateTitle: boolean = false,
-) {
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: messages, sessionId: chatSessionId }),
-      signal: abortController.signal,
-    });
-
-    if (!response.ok || !response.body) {
-      throw new Error("Failed to fetch response");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let fullResponse = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      fullResponse += chunk;
-      onMessageChunk(chunk);
-    }
-
-    // Generate title if this is the first assistant response
-    if (shouldGenerateTitle && fullResponse.trim().length > 0) {
-      const title = await generateSessionTitle(messages);
-      if (title) {
-        await updateChatSession(chatSessionId, { title });
-      }
-    }
-
-    return true;
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      console.log("Stream aborted");
-    } else {
-      console.error("Error streaming message:", error);
-    }
     return false;
   }
 }
@@ -156,5 +104,70 @@ export async function generateSessionTitle(
   } catch (error) {
     console.error("Error generating title:", error);
     return null;
+  }
+}
+
+/**
+ * Stream message from LLM API and return chunks of the message as they are recieved
+ */
+export async function streamLlmResponse(
+  messages: {
+    role: string;
+    content: string;
+  }[],
+  chatSessionId: string,
+  onMessageChunk: (chunk: string) => void,
+  abortController: AbortController,
+  shouldGenerateTitle: boolean = false,
+) {
+  let fullResponse = "";
+  console.log(chatSessionId);
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: messages, sessionId: chatSessionId }),
+      signal: abortController.signal,
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error("Failed to fetch response");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      fullResponse += chunk;
+      onMessageChunk(chunk);
+    }
+
+    // Generate title if this is the first assistant response
+    if (shouldGenerateTitle && fullResponse.trim().length > 0) {
+      const title = await generateSessionTitle(messages);
+      if (title) {
+        await updateChatSession(chatSessionId, { title });
+      }
+    }
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      console.log("Stream aborted");
+      // Generate title if this is the first assistant response
+      if (shouldGenerateTitle && fullResponse.trim().length > 0) {
+        const title = await generateSessionTitle(messages);
+        if (title) {
+          await updateChatSession(chatSessionId, { title });
+        }
+      }
+    } else {
+      console.error("Error streaming message:", error);
+    }
+    return false;
   }
 }

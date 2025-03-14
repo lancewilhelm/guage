@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/utils/db";
 import { chatSessionsTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
-import { eq } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 
 // GET handler for fetching all chat sessions for the current user
 export async function GET() {
@@ -26,7 +26,7 @@ export async function GET() {
       })
       .from(chatSessionsTable)
       .where(eq(chatSessionsTable.userId, userId))
-      .orderBy(chatSessionsTable.updatedAt);
+      .orderBy(desc(chatSessionsTable.updatedAt));
 
     return NextResponse.json(userChatSessions);
   } catch (error) {
@@ -81,14 +81,17 @@ export async function PUT(req: NextRequest) {
 
     const userId = session.user.id;
     const { sessionId, ...updateData } = await req.json();
+    console.log("Updating chat session:", sessionId, updateData);
 
     // Update the chat session in the database
     const result = await db
       .update(chatSessionsTable)
       .set(updateData)
       .where(
-        eq(chatSessionsTable.id, sessionId) &&
+        and(
+          eq(chatSessionsTable.id, sessionId),
           eq(chatSessionsTable.userId, userId),
+        ),
       );
 
     if (result.rowCount === 0) {
@@ -124,8 +127,10 @@ export async function DELETE(req: NextRequest) {
     const result = await db
       .delete(chatSessionsTable)
       .where(
-        eq(chatSessionsTable.id, sessionId) &&
+        and(
+          eq(chatSessionsTable.id, sessionId),
           eq(chatSessionsTable.userId, userId),
+        ),
       );
 
     if (result.rowCount === 0) {

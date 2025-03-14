@@ -173,6 +173,9 @@ export default function Chat() {
       setChatSessions(
         chatSessions.filter((session) => session.id !== sessionId),
       );
+      if (sessionId === currentChatSessionId) {
+        setMessages([]);
+      }
     } else {
       console.error("Failed to delete chat session");
     }
