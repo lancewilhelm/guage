@@ -5,9 +5,17 @@ import InputRow from "@/components/InputRow";
 import SessionsSidePanel from "@/components/SessionsSidePanel";
 import { ChatMessage } from "@/components/ChatBubble";
 import Header from "@/components/Header";
-import { streamLlmResponse } from "@/utils/apiHelpers";
+import { selectChatSession } from "@/utils/db/schema";
+import {
+  fetchChatSessions,
+  createChatSession,
+  deleteChatSession,
+  updateChatSession,
+  streamLlmResponse,
+} from "@/utils/apiHelpers";
 
 export default function Chat() {
+  const [chatSessions, setChatSessions] = useState<selectChatSession[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentChatSessionId, setCurrentChatSessionId] = useState<
     string | undefined
@@ -91,6 +99,8 @@ export default function Chat() {
     setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
     let accumulatedResponse = "";
+    const isFirstResponse =
+      messages.filter((msg) => msg.role === "assistant").length === 0;
 
     function handleMessageChunk(chunk: string) {
       accumulatedResponse += chunk;
@@ -106,14 +116,72 @@ export default function Chat() {
         currentChatSessionId,
         handleMessageChunk,
         abortControllerRef.current,
+        isFirstResponse,
       );
     } catch (error) {
       console.error("Error connecting to the chat API:", error);
     } finally {
       setIsStreaming(false);
       abortControllerRef.current = null;
+      if (isFirstResponse) {
+        await fetchSessions();
+      }
     }
   };
+
+  /**
+   * Create a new chat session
+   */
+  async function createSession() {
+    const newChatSession = await createChatSession();
+    setChatSessions([newChatSession, ...chatSessions]);
+    setCurrentChatSessionId(newChatSession.id);
+  }
+
+  /**
+   * Fetch the chat sessions from the backend
+   */
+  async function fetchSessions() {
+    const data = await fetchChatSessions();
+    if (data) {
+      setChatSessions(data);
+    }
+  }
+
+  /**
+   * Update the chat session title
+   */
+  async function renameSession(sessionId: string, title: string) {
+    const updatedSession = await updateChatSession(sessionId, { title });
+    if (updatedSession) {
+      setChatSessions(
+        chatSessions.map((session) =>
+          session.id === sessionId ? { ...session, title } : session,
+        ),
+      );
+    } else {
+      console.error("Failed to update chat session");
+    }
+  }
+
+  /**
+   * Delete a chat session
+   */
+  async function deleteSession(sessionId: string) {
+    const result = await deleteChatSession(sessionId);
+    if (result) {
+      setChatSessions(
+        chatSessions.filter((session) => session.id !== sessionId),
+      );
+    } else {
+      console.error("Failed to delete chat session");
+    }
+  }
+
+  // Fetch chat sessions when the compnent mounts
+  useEffect(() => {
+    fetchSessions();
+  }, [currentChatSessionId]);
 
   return (
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
@@ -128,10 +196,13 @@ export default function Chat() {
 
       <div className="col-start-1 row-start-1 row-span-3">
         <SessionsSidePanel
-          currentChatSessionId={currentChatSessionId}
+          chatSessions={chatSessions}
           setCurrentChatSessionId={setCurrentChatSessionId}
           isVisible={isSessionPanelVisible}
           setIsVisible={setIsSessionPanelVisible}
+          createHandler={createSession}
+          deleteHandler={deleteSession}
+          renameHandler={renameSession}
         />
       </div>
 

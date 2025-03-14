@@ -36,8 +36,8 @@ importers:
         specifier: 15.2.1
         version: 15.2.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       openai:
-        specifier: ^4.86.2
-        version: 4.86.2
+        specifier: ^4.87.3
+        version: 4.87.3
       pg:
         specifier: ^8.13.3
         version: 8.13.3
@@ -2085,8 +2085,8 @@ packages:
   obuf@1.1.2:
     resolution: {integrity: sha512-PX1wu0AmAdPqOL1mWhqmlOd8kOIZQwGZw6rh7uby9fTc5lhaOWFLX3I6R1hrF9k3zUY40e6igsLGkDXK92LJNg==}
 
-  openai@4.86.2:
-    resolution: {integrity: sha512-nvYeFjmjdSu6/msld+22JoUlCICNk/lUFpSMmc6KNhpeNLpqL70TqbD/8Vura/tFmYqHKW0trcjgPwUpKSPwaA==}
+  openai@4.87.3:
+    resolution: {integrity: sha512-d2D54fzMuBYTxMW8wcNmhT1rYKcTfMJ8t+4KjH2KtvYenygITiGBgHoIrzHwnDQWW+C5oCA+ikIR2jgPCFqcKQ==}
     hasBin: true
     peerDependencies:
       ws: ^8.18.0
@@ -4532,7 +4532,7 @@ snapshots:
 
   obuf@1.1.2: {}
 
-  openai@4.86.2:
+  openai@4.87.3:
     dependencies:
       '@types/node': 18.19.80
       '@types/node-fetch': 2.6.12

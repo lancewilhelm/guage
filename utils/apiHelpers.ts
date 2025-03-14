@@ -88,6 +88,7 @@ export async function streamLlmResponse(
   chatSessionId: string,
   onMessageChunk: (chunk: string) => void,
   abortController: AbortController,
+  shouldGenerateTitle: boolean = false,
 ) {
   try {
     const response = await fetch("/api/chat", {
@@ -103,13 +104,23 @@ export async function streamLlmResponse(
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let fullResponse = "";
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
       const chunk = decoder.decode(value);
+      fullResponse += chunk;
       onMessageChunk(chunk);
+    }
+
+    // Generate title if this is the first assistant response
+    if (shouldGenerateTitle && fullResponse.trim().length > 0) {
+      const title = await generateSessionTitle(messages);
+      if (title) {
+        await updateChatSession(chatSessionId, { title });
+      }
     }
 
     return true;
@@ -120,5 +131,30 @@ export async function streamLlmResponse(
       console.error("Error streaming message:", error);
     }
     return false;
+  }
+}
+
+/**
+ * Generate a title from the assistant's response
+ */
+export async function generateSessionTitle(
+  messages: { role: string; content: string }[],
+) {
+  try {
+    const response = await fetch("/api/chat/generate-title", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages,
+      }),
+    });
+
+    if (!response.ok) throw new Error("Failed to generate title");
+
+    const title = await response.json();
+    return title;
+  } catch (error) {
+    console.error("Error generating title:", error);
+    return null;
   }
 }

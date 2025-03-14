@@ -1,28 +1,27 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import TableListIcon from "@/components/icons/TableList";
 import PlusIcon from "@/components/icons/Plus";
-import { selectChatSession } from "@/utils/db/schema";
-import {
-  fetchChatSessions,
-  createChatSession,
-  deleteChatSession,
-  updateChatSession,
-} from "@/utils/apiHelpers";
 import ChatSessionListItem from "./ChatSessionListItem";
+import { selectChatSession } from "@/utils/db/schema";
 
 export default function SessionsPanel({
-  currentChatSessionId,
+  chatSessions,
   setCurrentChatSessionId,
   isVisible,
   setIsVisible,
+  createHandler,
+  deleteHandler,
+  renameHandler,
 }: {
-  currentChatSessionId: string | undefined;
+  chatSessions: selectChatSession[];
   setCurrentChatSessionId: (sessionId: string) => void;
   isVisible: boolean;
   setIsVisible: (isVisible: boolean) => void;
+  createHandler: () => void;
+  deleteHandler: (sessionId: string) => void;
+  renameHandler: (sessionId: string, newName: string) => void;
 }) {
-  const [chatSessions, setChatSessions] = useState<selectChatSession[]>([]);
   const minWidth = 250;
   const maxWidth = 600;
   const [sessionPanelWidth, setSessionPanelWidth] = useState(minWidth); // 0 for mobile, 1 for desktop
@@ -63,60 +62,6 @@ export default function SessionsPanel({
     setSessionPanelWidth(newWidth);
   };
 
-  /**
-   * Create a new chat session
-   */
-  const createSession = async () => {
-    const newChatSession = await createChatSession();
-    setChatSessions([newChatSession, ...chatSessions]);
-    setCurrentChatSessionId(newChatSession.id);
-  };
-
-  /**
-   * Fetch the chat sessions from the backend
-   */
-  const fetchSessions = async () => {
-    const data = await fetchChatSessions();
-    if (data) {
-      setChatSessions(data);
-    }
-  };
-
-  /**
-   * Update the chat session title
-   */
-  const renameSession = async (sessionId: string, title: string) => {
-    const updatedSession = await updateChatSession(sessionId, { title });
-    if (updatedSession) {
-      setChatSessions(
-        chatSessions.map((session) =>
-          session.id === sessionId ? { ...session, title } : session,
-        ),
-      );
-    } else {
-      console.error("Failed to update chat session");
-    }
-  };
-
-  /**
-   * Delete a chat session
-   */
-  const deleteSession = async (sessionId: string) => {
-    const result = await deleteChatSession(sessionId);
-    if (result) {
-      setChatSessions(
-        chatSessions.filter((session) => session.id !== sessionId),
-      );
-    } else {
-      console.error("Failed to delete chat session");
-    }
-  };
-
-  // Fetch chat sessions when the compnent mounts
-  useEffect(() => {
-    fetchSessions();
-  }, [currentChatSessionId]);
-
   return (
     <div className={`h-full ${isVisible ? "flex" : "hidden"}`}>
       <div
@@ -134,7 +79,7 @@ export default function SessionsPanel({
             <PlusIcon
               fill="var(--main-color)"
               className="cursor-pointer"
-              onClick={createSession}
+              onClick={createHandler}
             />
           </div>
           {/* Sessions List */}
@@ -144,8 +89,8 @@ export default function SessionsPanel({
                 key={session.id}
                 session={session}
                 setCurrentChatSessionId={setCurrentChatSessionId}
-                deleteHandler={deleteSession}
-                renameHandler={renameSession}
+                deleteHandler={deleteHandler}
+                renameHandler={renameHandler}
               />
             ))}
           </div>
