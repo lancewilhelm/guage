@@ -72,16 +72,16 @@ export const messagesTable = pgTable("messages", {
 });
 
 // Define the types
-export type selectUser = InferSelectModel<typeof usersTable>;
-export type selectChatSession = InferSelectModel<typeof chatSessionsTable>;
-export type selectRolePlaySession = InferSelectModel<
+export type SelectUser = InferSelectModel<typeof usersTable>;
+export type SelectChatSession = InferSelectModel<typeof chatSessionsTable>;
+export type SelectRolePlaySession = InferSelectModel<
   typeof rolePlaySessionsTable
 >;
-export type selectMessage = InferSelectModel<typeof messagesTable>;
+export type SelectMessage = InferSelectModel<typeof messagesTable>;
 
-export type insertUser = InferInsertModel<typeof usersTable>;
-export type insertChatSession = InferInsertModel<typeof chatSessionsTable>;
-export type insertRolePlaySession = InferInsertModel<
+export type InsertUser = InferInsertModel<typeof usersTable>;
+export type InsertChatSession = InferInsertModel<typeof chatSessionsTable>;
+export type InsertRolePlaySession = InferInsertModel<
   typeof rolePlaySessionsTable
 >;
-export type insertMessage = InferInsertModel<typeof messagesTable>;
+export type InsertMessage = InferInsertModel<typeof messagesTable>;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
+import { SelectMessage } from "@/utils/db/schema";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -14,10 +15,7 @@ export async function POST(req: Request) {
   }
 
   // Parse the request body
-  const {
-    messages,
-  }: { messages: Array<OpenAI.Chat.ChatCompletionMessageParam> } =
-    await req.json();
+  const { messages }: { messages: SelectMessage[] } = await req.json();
   if (!messages || messages.length === 0) {
     return new Response("Invalid request: meessages are required", {
       status: 400,
@@ -29,11 +27,15 @@ export async function POST(req: Request) {
     content:
       "Generate a short title for a chat with the following text. Please do not put quotes around the title.",
   };
+  const parsedMessages = messages.map((message) => ({
+    role: message.role as "user" | "assistant",
+    content: message.content,
+  })) as OpenAI.Chat.ChatCompletionMessageParam[];
 
   try {
     // Start the OpenAI completion
     const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
-      messages: [systemPrompt, ...messages],
+      messages: [systemPrompt, ...parsedMessages],
       model: "gpt-4o-mini",
     };
     const completion = await openai.chat.completions.create(params);

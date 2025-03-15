@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/utils/db";
-import { usersTable, type selectUser } from "@/utils/db/schema";
+import { usersTable, type SelectUser } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { eq, and } from "drizzle-orm";
 

@@ -1,16 +1,13 @@
 import ChatBubble from "@/components/ChatBubble";
-import { ChatMessage } from "@/components/ChatBubble";
-
-interface ChatBoxProps {
-  messages: ChatMessage[];
-  isLoading?: boolean;
-  isSessionLoaded?: boolean;
-}
+import { DisplayMessage } from "@/app/(auth)/chat/page";
 
 export default function ChatBox({
   messages,
   isSessionLoaded = false,
-}: ChatBoxProps) {
+}: {
+  messages: DisplayMessage[];
+  isSessionLoaded?: boolean;
+}) {
   return (
     <div className="flex flex-col gap-2 w-full h-full p-2 overflow-x-hidden">
       {messages.length === 0 ? (
@@ -25,8 +22,8 @@ export default function ChatBox({
           </div>
         </div>
       ) : (
-        messages.map((chat, index) => (
-          <ChatBubble key={index} role={chat.role} content={chat.content} />
+        messages.map((message, index) => (
+          <ChatBubble key={index} message={message} />
         ))
       )}
     </div>

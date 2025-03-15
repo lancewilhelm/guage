@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/utils/db";
-import { messagesTable, type selectMessage } from "@/utils/db/schema";
+import { messagesTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { eq, and } from "drizzle-orm";
 
@@ -26,15 +26,7 @@ export async function GET(req: Request) {
 
     // Fetch chat sessions for the current user, ordered by most recent
     const messages = await db
-      .select({
-        id: messagesTable.id,
-        role: messagesTable.role,
-        createdAt: messagesTable.createdAt,
-        parentId: messagesTable.parentId,
-        depth: messagesTable.depth,
-        threadPath: messagesTable.threadPath,
-        content: messagesTable.content,
-      })
+      .select()
       .from(messagesTable)
       .where(
         and(
@@ -44,7 +36,7 @@ export async function GET(req: Request) {
       )
       .orderBy(messagesTable.createdAt);
 
-    return NextResponse.json(messages as selectMessage[]);
+    return NextResponse.json(messages);
   } catch (error) {
     console.error("Error fetching chat sessions:", error);
     return NextResponse.json(

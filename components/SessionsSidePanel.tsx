@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
 import ChatSessionListItem from "./ChatSessionListItem";
-import { selectChatSession } from "@/utils/db/schema";
+import { SelectChatSession } from "@/utils/db/schema";
 
 export default function SessionsPanel({
   chatSessions,
@@ -15,7 +15,7 @@ export default function SessionsPanel({
   deleteHandler,
   renameHandler,
 }: {
-  chatSessions: selectChatSession[];
+  chatSessions: SelectChatSession[];
   currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   isVisible: boolean;

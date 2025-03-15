@@ -3,20 +3,29 @@ import { useState, useEffect, useRef } from "react";
 import ChatBox from "@/components/ChatBox";
 import InputRow from "@/components/InputRow";
 import SessionsSidePanel from "@/components/SessionsSidePanel";
-import { ChatMessage } from "@/components/ChatBubble";
 import Header from "@/components/Header";
-import { selectChatSession } from "@/utils/db/schema";
+import { SelectChatSession, SelectMessage } from "@/utils/db/schema";
 import {
   fetchChatSessions,
   createChatSession,
   deleteChatSession,
   updateChatSession,
   streamLlmResponse,
+  SSEChunk,
 } from "@/utils/apiHelpers";
 
+export interface TempMessage {
+  role: "user" | "assistant";
+  content: string;
+  parentId?: string;
+  id?: string;
+}
+
+export type DisplayMessage = SelectMessage | TempMessage;
+
 export default function Chat() {
-  const [chatSessions, setChatSessions] = useState<selectChatSession[]>([]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [chatSessions, setChatSessions] = useState<SelectChatSession[]>([]);
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [currentChatSessionId, setCurrentChatSessionId] = useState<
     string | undefined
   >(undefined);
@@ -34,7 +43,7 @@ export default function Chat() {
         `/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`,
       );
       if (!response.ok) throw new Error("Failed to fetch chat messages");
-      const data = await response.json();
+      const data: SelectMessage[] = await response.json();
       setMessages(data);
     } catch (error) {
       console.error("Error fetching chat messages:", error);
@@ -80,12 +89,23 @@ export default function Chat() {
   /**
    * Handle the submission of new messages to the backend
    */
-  const handleSubmit = async () => {
+  async function handleSubmit() {
     if (!userInput.trim() || isLoading || currentChatSessionId === undefined)
       return;
 
     // Add the user message to the list
-    const userMessage: ChatMessage = { role: "user", content: userInput };
+    let parentId: string | undefined;
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "assistant") {
+        parentId = lastMessage.id;
+      }
+    }
+    const userMessage: TempMessage = {
+      role: "user",
+      content: userInput,
+      parentId: parentId,
+    };
     setMessages((prev) => [...prev, userMessage]);
 
     // Set some variables
@@ -96,23 +116,48 @@ export default function Chat() {
     abortControllerRef.current = new AbortController();
 
     // Add an empty assistant message that will be filled with the streaming response
-    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+    const assistantMessage: TempMessage = { role: "assistant", content: "" };
+    setMessages((prev) => [...prev, assistantMessage]);
 
     let accumulatedResponse = "";
     const isFirstResponse =
       messages.filter((msg) => msg.role === "assistant").length === 0;
 
-    function handleMessageChunk(chunk: string) {
-      accumulatedResponse += chunk;
-      setMessages((prev) => [
-        ...prev.slice(0, -1),
-        { role: "assistant", content: accumulatedResponse },
-      ]);
+    function handleMessageChunk({ eventType, data }: SSEChunk) {
+      // Replace the messages with their database versions or append chunks to the temporary assistant message
+      if (eventType === "userMessage") {
+        const insertUserMessageResult = JSON.parse(data);
+        console.log("insertUserMessageResult", insertUserMessageResult);
+        setMessages((prev) => [
+          ...prev.slice(0, -2),
+          insertUserMessageResult,
+          assistantMessage,
+        ]);
+      } else if (eventType === "assistantMessage") {
+        const insertAsssistantMessageResult = JSON.parse(data);
+        console.log(
+          "insertAsssistantMessageResult",
+          insertAsssistantMessageResult,
+        );
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          insertAsssistantMessageResult,
+        ]);
+      } else if (eventType === "messageChunk") {
+        accumulatedResponse += data;
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", content: accumulatedResponse },
+        ]);
+      } else if (eventType === "error") {
+        console.error("Error streaming response:", data);
+      }
     }
 
     try {
       await streamLlmResponse(
-        [...messages, userMessage],
+        messages,
+        userMessage,
         currentChatSessionId,
         handleMessageChunk,
         abortControllerRef.current,
@@ -127,7 +172,7 @@ export default function Chat() {
         await fetchSessions();
       }
     }
-  };
+  }
 
   /**
    * Create a new chat session
@@ -214,11 +259,10 @@ export default function Chat() {
 
       {/* Center: Chat & InputRow */}
       <div className="col-start-2 row-start-2 row-span-2 h-full flex flex-col">
-        <div className="flex-grow overflow-y-auto overflow-x-hidden chat-container">
+        <div className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container">
           <div className="mx-auto w-full max-w-[1000px]">
             <ChatBox
               messages={messages}
-              isLoading={isLoading}
               isSessionLoaded={!!currentChatSessionId}
             />
           </div>

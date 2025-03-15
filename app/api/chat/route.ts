@@ -1,27 +1,28 @@
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
 import { db } from "@/utils/db";
-import { messagesTable, type insertMessage } from "@/utils/db/schema";
+import { messagesTable, type InsertMessage } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Helper function to save assistant's response after streaming completes
-async function saveAssistantMessage(
+// Helper function to save a message in the db
+async function saveMessage(
   sessionId: string,
   userId: string,
   content: string,
-  parentMessageId: string | null,
+  parentId: string | null | undefined,
+  role: "assistant" | "user" | "system",
 ) {
   try {
     let threadPath = "0";
     let depth = 0;
 
-    if (parentMessageId) {
+    if (parentId) {
       const parentMessage = await db.query.messagesTable.findFirst({
-        where: eq(messagesTable.id, parentMessageId),
+        where: eq(messagesTable.id, parentId),
       });
 
       if (parentMessage) {
@@ -30,17 +31,20 @@ async function saveAssistantMessage(
       }
     }
 
-    await db.insert(messagesTable).values({
-      sessionId,
-      userId,
-      parentId: parentMessageId,
-      content,
-      role: "assistant",
-      depth,
-      threadPath,
-    });
+    return await db
+      .insert(messagesTable)
+      .values({
+        sessionId,
+        userId,
+        parentId,
+        content,
+        role,
+        depth,
+        threadPath,
+      })
+      .returning();
   } catch (error) {
-    console.error("Error saving assistant message:", error);
+    console.error("Error saving message:", error);
   }
 }
 
@@ -55,82 +59,89 @@ export async function POST(req: Request) {
 
   // Parse the request body
   const {
-    messages,
+    history,
+    userMessage,
     sessionId,
-  }: { messages: insertMessage[]; sessionId: string } = await req.json();
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
+  }: {
+    history: InsertMessage[];
+    userMessage: InsertMessage;
+    sessionId: string;
+  } = await req.json();
+  if (!history || !Array.isArray(history) || !userMessage) {
     return new Response("Invalid request: messages are required", {
       status: 400,
     });
   }
 
   try {
-    // Save the user message to db
-    const userMessage = messages[messages.length - 1];
-
-    // Determine parent message and path for threading
-    let parentId = null;
-    let threadPath = "0";
-    let depth = 0;
-
-    // If there are previous messages, find the last one to use as parent
-    if (messages.length > 1) {
-      const lastMessage = await db.query.messagesTable.findFirst({
-        where: eq(messagesTable.sessionId, sessionId),
-        orderBy: (messages, { desc }) => [desc(messages.createdAt)],
-      });
-
-      if (lastMessage) {
-        parentId = lastMessage.id;
-        threadPath = `${lastMessage.threadPath}/${lastMessage.id}`;
-        depth = lastMessage.depth + 1;
-      }
-    }
-
     // Store the user message
-    await db.insert(messagesTable).values({
+    const insertUserMessageResult = await saveMessage(
       sessionId,
       userId,
-      parentId,
-      content: userMessage.content,
-      role: "user",
-      depth,
-      threadPath,
-    });
+      userMessage.content,
+      userMessage.parentId,
+      "user",
+    );
 
-    // Start the OpenAI completion
-    const params: OpenAI.Chat.ChatCompletionCreateParams = {
-      messages: messages.map((m) => ({
-        role: m.role as "user" | "assistant" | "system",
-        content: m.content,
-      })),
-      model: "gpt-4o-mini",
-      stream: true,
-    };
-    const completion = await openai.chat.completions.create(params);
+    if (!insertUserMessageResult) {
+      return new Response("Failed to save user message", { status: 500 });
+    }
 
     const encoder = new TextEncoder();
     let fullAsssistantResponse = "";
     const stream = new ReadableStream({
       async start(controller) {
         try {
+          // First send the user message data back to the client
+          controller.enqueue(
+            encoder.encode(
+              `event: userMessage\ndata: ${JSON.stringify(insertUserMessageResult[0])}\n\n`,
+            ),
+          );
+
+          // Start the OpenAI completion
+          const messages = history.concat([userMessage]);
+          const params: OpenAI.Chat.ChatCompletionCreateParams = {
+            messages: messages.map((m) => ({
+              role: m.role as "user" | "assistant" | "system",
+              content: m.content,
+            })),
+            model: "gpt-4o-mini",
+            stream: true,
+          };
+          const completion = await openai.chat.completions.create(params);
+
+          // Now handle the completion chunks from LLM service
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
             fullAsssistantResponse += text;
-            controller.enqueue(encoder.encode(text));
+            controller.enqueue(
+              encoder.encode(`event: messageChunk\ndata: ${text}\n\n`),
+            );
           }
         } catch (error) {
           controller.enqueue(
-            encoder.encode("Error: Failed to stream response."),
+            encoder.encode(
+              "event: error\n data: Failed to stream response.\n\n",
+            ),
           );
           console.error("Error streaming response:", error);
         } finally {
-          await saveAssistantMessage(
+          // Insert whatever we have for the completion into the database and send it to client
+          const insertAsssistantMessageResult = await saveMessage(
             sessionId,
             userId,
             fullAsssistantResponse,
-            parentId,
+            insertUserMessageResult[0].id,
+            "assistant",
           );
+          if (insertAsssistantMessageResult) {
+            controller.enqueue(
+              encoder.encode(
+                `event: assistantMessage\ndata: ${JSON.stringify(insertAsssistantMessageResult[0])}\n\n`,
+              ),
+            );
+          }
           controller.close();
         }
       },

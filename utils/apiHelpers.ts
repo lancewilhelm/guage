@@ -1,3 +1,6 @@
+import { DisplayMessage, TempMessage } from "@/app/(auth)/chat/page";
+import { SelectMessage } from "@/utils/db/schema";
+
 /**
  * Create new chat session
  */
@@ -80,9 +83,8 @@ export async function deleteChatSession(sessionId: string) {
 /**
  * Generate a title from the assistant's response
  */
-export async function generateSessionTitle(
-  messages: { role: string; content: string }[],
-) {
+export async function generateSessionTitle(messages: SelectMessage[]) {
+  console.log("Generating title...", messages);
   try {
     const response = await fetch("/api/chat/generate-title", {
       method: "POST",
@@ -102,25 +104,46 @@ export async function generateSessionTitle(
   }
 }
 
+export interface SSEChunk {
+  eventType: string;
+  data: string;
+}
+
+function parseSSEChunk(chunk: string): SSEChunk[] {
+  const events = chunk.split("\n\n");
+  const parsedEvents: SSEChunk[] = [];
+  for (const event of events) {
+    const lines = event.split("\n");
+    const eventType = lines[0]?.replace("event: ", "");
+    const data = lines[1]?.replace("data: ", "");
+    parsedEvents.push({ eventType, data });
+  }
+  return parsedEvents;
+}
+
 /**
  * Stream message from LLM API and return chunks of the message as they are recieved
  */
 export async function streamLlmResponse(
-  messages: {
-    role: string;
-    content: string;
-  }[],
+  messages: DisplayMessage[],
+  userMessage: TempMessage,
   chatSessionId: string,
-  onMessageChunk: (chunk: string) => void,
+  onMessageChunk: ({ eventType, data }: SSEChunk) => void,
   abortController: AbortController,
   shouldGenerateTitle: boolean = false,
 ) {
-  let fullResponse = "";
+  let insertUserMessageResult: SelectMessage | undefined;
+  let insertAsssistantMessageResult: SelectMessage | undefined;
+
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: messages, sessionId: chatSessionId }),
+      body: JSON.stringify({
+        history: messages,
+        userMessage: userMessage,
+        sessionId: chatSessionId,
+      }),
       signal: abortController.signal,
     });
 
@@ -135,14 +158,22 @@ export async function streamLlmResponse(
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
-      fullResponse += chunk;
-      onMessageChunk(chunk);
+      const chunks = parseSSEChunk(decoder.decode(value));
+      for (const chunk of chunks) {
+        onMessageChunk(chunk);
+      }
     }
 
     // Generate title if this is the first assistant response
-    if (shouldGenerateTitle && fullResponse.trim().length > 0) {
-      const title = await generateSessionTitle(messages);
+    if (
+      shouldGenerateTitle &&
+      insertUserMessageResult &&
+      insertAsssistantMessageResult
+    ) {
+      const title = await generateSessionTitle([
+        insertUserMessageResult,
+        insertAsssistantMessageResult,
+      ]);
       if (title) {
         await updateChatSession(chatSessionId, { title });
       }
@@ -152,8 +183,15 @@ export async function streamLlmResponse(
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       // Generate title if this is the first assistant response
-      if (shouldGenerateTitle && fullResponse.trim().length > 0) {
-        const title = await generateSessionTitle(messages);
+      if (
+        shouldGenerateTitle &&
+        insertUserMessageResult &&
+        insertAsssistantMessageResult
+      ) {
+        const title = await generateSessionTitle([
+          insertUserMessageResult,
+          insertAsssistantMessageResult,
+        ]);
         if (title) {
           await updateChatSession(chatSessionId, { title });
         }
