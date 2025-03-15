@@ -213,24 +213,28 @@ export default function Chat() {
       </div>
 
       {/* Center: Chat & InputRow */}
-      <div className="col-start-2 row-start-2 row-span-2 mx-auto w-full max-w-[1000px] h-full flex flex-col">
+      <div className="col-start-2 row-start-2 row-span-2 h-full flex flex-col">
         <div className="flex-grow overflow-y-auto overflow-x-hidden chat-container">
-          <ChatBox
-            messages={messages}
+          <div className="mx-auto w-full max-w-[1000px]">
+            <ChatBox
+              messages={messages}
+              isLoading={isLoading}
+              isSessionLoaded={!!currentChatSessionId}
+            />
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-[1000px]">
+          <InputRow
+            submitHandler={handleSubmit}
+            stopHandler={handleStopStream}
+            inputValue={userInput}
+            setInputValue={setUserInput}
             isLoading={isLoading}
-            isSessionLoaded={!!currentChatSessionId}
+            isStreaming={isStreaming}
+            buttonLabel="send"
+            disabled={!currentChatSessionId}
           />
         </div>
-        <InputRow
-          submitHandler={handleSubmit}
-          stopHandler={handleStopStream}
-          inputValue={userInput}
-          setInputValue={setUserInput}
-          isLoading={isLoading}
-          isStreaming={isStreaming}
-          buttonLabel="send"
-          disabled={!currentChatSessionId}
-        />
       </div>
     </div>
   );
