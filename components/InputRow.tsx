@@ -20,7 +20,7 @@ export default function InputRow({
   disabled?: boolean;
 }) {
   return (
-    <div className="col-start-2 row-start-3 flex gap-2 p-2 ">
+    <div className="col-start-2 row-start-3 flex gap-2 p-5 ">
       <textarea
         className={`border border-(--main-color) rounded grow p-1 ${disabled ? "bg-(--sub-color)" : ""}`}
         placeholder="type a message here..."

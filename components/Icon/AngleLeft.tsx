@@ -10,7 +10,7 @@ export function Fa6SolidAngleLeft(props: SVGProps<SVGSVGElement>) {
       {...props}
     >
       <path
-        fill={props.fill}
+        fill={props.fill ? props.fill : "#ffffff"}
         d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256l137.3-137.4c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"
       ></path>
     </svg>

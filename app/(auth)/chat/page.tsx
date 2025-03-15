@@ -175,6 +175,7 @@ export default function Chat() {
       );
       if (sessionId === currentChatSessionId) {
         setMessages([]);
+        setCurrentChatSessionId(undefined);
       }
     } else {
       console.error("Failed to delete chat session");
@@ -194,6 +195,7 @@ export default function Chat() {
           toggleSessionPanel={() => {
             setIsSessionPanelVisible(!isSessionPanelVisible);
           }}
+          createChatSession={createSession}
         />
       </div>
 

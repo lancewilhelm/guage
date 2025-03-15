@@ -11,7 +11,7 @@ export function TablerDots(props: SVGProps<SVGSVGElement>) {
     >
       <path
         fill="none"
-        stroke={props.fill}
+        stroke={props.fill ? props.fill : "#ffffff"}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeWidth="2"
