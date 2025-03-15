@@ -31,7 +31,12 @@ export async function POST(req: Request) {
   }
 
   // Create session
-  await createSession({ id: user[0].id, email: user[0].email });
+  await createSession({
+    id: user[0].id,
+    email: user[0].email,
+    name: user[0].name,
+    role: user[0].role,
+  });
 
   return NextResponse.json({ message: "Login successful" }, { status: 200 });
 }

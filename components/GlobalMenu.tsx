@@ -41,10 +41,7 @@ export default function GlobalMenu() {
           </DropDownMenuItem>
         </DropDownMenuList>
       </DropDownMenu>
-      <Settings
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      {isSettingsOpen && <Settings onClose={() => setIsSettingsOpen(false)} />}
     </div>
   );
 }

@@ -2,17 +2,24 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
 
-interface Session extends JwtPayload {
+export interface Session extends JwtPayload {
   user: {
     id: string;
     email: string;
+    name: string | null;
+    role: "user" | "admin";
   };
 }
 
 const SECRET = process.env.AUTH_SECRET!; // Define in .env.local
 
-export async function createSession(user: { id: string; email: string }) {
-  const token = jwt.sign({ user: user }, SECRET, { expiresIn: "1h" });
+export async function createSession(user: {
+  id: string;
+  email: string;
+  name: string | null;
+  role: "user" | "admin";
+}) {
+  const token = jwt.sign({ user }, SECRET, { expiresIn: "1h" });
   (await cookies()).set("guage_token", token, { httpOnly: true, path: "/" });
 }
 

@@ -79,7 +79,7 @@ export default function ChatSessionListItem({
             }}
             className="p-1 cursor-pointer"
           >
-            <CheckIcon fill="#008800" />
+            <CheckIcon fill="var(--accept-color)" />
           </button>
           <button
             onClick={() => {
@@ -88,7 +88,7 @@ export default function ChatSessionListItem({
             }}
             className="p-1 cursor-pointer"
           >
-            <XMarkIcon fill="#880000" />
+            <XMarkIcon fill="var(--cancel-color)" />
           </button>
         </div>
       ) : (

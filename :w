@@ -1,0 +1,62 @@
+import { useEffect, useRef } from "react";
+import CheckIcon from "@/components/Icon/Check";
+import XMarkIcon from "@/components/Icon/XMark";
+
+export default function InputElement({
+  type,
+  title,
+  value,
+  onChange,
+  onSave,
+  autoSave = true,
+  debounceTime = 500,
+}: {
+  type: string;
+  title: string;
+  value: string | number | undefined;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSave: () => void;
+  autoSave?: boolean;
+  debounceTime?: number;
+}) {
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    onChange(e);
+
+    if (autoSave && onSave) {
+      // Clear existing timeouts
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      // Set a new timeout
+      debounceTimerRef.current = setTimeout(() => {
+        onSave();
+      }, debounceTime);
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div>
+      <div>{title}</div>
+      <div className="flex items-center gap-2">
+        <input
+          type={type}
+          value={value}
+          onChange={handleChange}
+          className="w-[250px] border border-(--main-color) p-1 rounded"
+        />
+        <CheckIcon fill="var(--main-color)" onClick={onSave} />
+        <XMarkIcon fill="var(--main-color)" />
+      </div>
+    </div>
+  );
+}

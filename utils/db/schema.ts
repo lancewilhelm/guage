@@ -11,7 +11,9 @@ export const usersTable = pgTable("users", {
   name: text("name"),
   email: text("email").unique().notNull(),
   passwordHash: text("password_hash").notNull(),
-  role: text("role").default("user").notNull(),
+  role: text("role", { enum: ["user", "admin"] })
+    .default("user")
+    .notNull(),
   createdAt: timestamp("created_at", { mode: "date" })
     .default(sql`now()`)
     .notNull(),

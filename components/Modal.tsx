@@ -1,13 +1,22 @@
+import { useEffect } from "react";
+
 export default function Modal({
   children,
-  isOpen,
   onClose,
 }: {
   children: React.ReactNode;
-  isOpen: boolean;
   onClose: () => void;
 }) {
-  if (!isOpen) return null;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   return (
     <div
