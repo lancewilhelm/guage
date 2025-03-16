@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { db } from "@/utils/db";
 import { messagesTable } from "@/utils/db/schema";
@@ -6,10 +7,12 @@ import { eq, and } from "drizzle-orm";
 
 // GET handler for fetching all chat sessions for the current user
 export async function GET(req: Request) {
+  logger.info(req, "GET /api/chat/messages");
   try {
     // Check for authorized user
     const session = await getSession();
     if (!session) {
+      logger.warn("GET /api/chat/messages: Unauthorized access attempt");
       return new Response("Unauthorized", { status: 401 });
     }
 
@@ -18,6 +21,7 @@ export async function GET(req: Request) {
     const sessionId = url.searchParams.get("sessionId");
 
     if (!sessionId) {
+      logger.warn("GET /api/chat/messages: sessionId is required");
       return NextResponse.json(
         { error: "sessionId is required" },
         { status: 400 },
@@ -25,6 +29,10 @@ export async function GET(req: Request) {
     }
 
     // Fetch chat sessions for the current user, ordered by most recent
+    logger.debug(
+      { userId, sessionId },
+      "GET /api/chat/messages: Fetching messages",
+    );
     const messages = await db
       .select()
       .from(messagesTable)
@@ -36,46 +44,16 @@ export async function GET(req: Request) {
       )
       .orderBy(messagesTable.createdAt);
 
+    logger.debug(
+      { count: messages.length, ids: messages.map((m) => m.id) },
+      "GET /api/chat/messages: Found messages",
+    );
     return NextResponse.json(messages);
   } catch (error) {
-    console.error("Error fetching chat sessions:", error);
+    logger.error(error, "Error fetching chat messages:");
     return NextResponse.json(
       { error: "Failed to fetch chat sessions" },
       { status: 500 },
     );
   }
 }
-
-// // Update a message by ID
-// export async function PUT(req: Request) {
-//   try {
-//     // Check for authorized user
-//     const session = await getSession();
-//     if (!session) {
-//       return new Response("Unauthorized", { status: 401 });
-//     }
-//
-//     const userId = session.user.id;
-//     const { messageId, ...updateData } = await req.json();
-//
-//     // Update the chat session in the database
-//     const result = await db
-//       .update(messagesTable)
-//       .set(updateData)
-//       .where(
-//         and(eq(messagesTable.id, messageId), eq(messagesTable.userId, userId)),
-//       );
-//
-//     if (result.rowCount === 0) {
-//       return new Response("Message Not Found", { status: 404 });
-//     }
-//
-//     return NextResponse.json({ message: "Message updated" }, { status: 200 });
-//   } catch (error) {
-//     console.error("Error updating message:", error);
-//     return NextResponse.json(
-//       { error: "Failed to update message" },
-//       { status: 500 },
-//     );
-//   }
-// }

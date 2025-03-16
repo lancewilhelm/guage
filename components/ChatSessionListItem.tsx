@@ -111,15 +111,8 @@ export default function ChatSessionListItem({
                 Rename
               </div>
             </DropDownMenuItem>
-            <DropDownMenuItem
-              onClick={() => {
-                console.log("trashing");
-              }}
-            >
-              <div
-                className="grid grid-cols-[20px_auto] items-center text-(--error-color)"
-                onClick={() => deleteHandler(session.id)}
-              >
+            <DropDownMenuItem onClick={() => deleteHandler(session.id)}>
+              <div className="grid grid-cols-[20px_auto] items-center text-(--error-color)">
                 <TrashCanIcon
                   fill="var(--error-color)"
                   className="translate-y-[-1px]"

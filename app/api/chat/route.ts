@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
 import { db } from "@/utils/db";
@@ -56,9 +57,11 @@ async function saveMessage(
 }
 
 export async function POST(req: Request) {
+  logger.info("POST /api/chat");
   // Check for authorized user
   const session = await getSession();
   if (!session) {
+    logger.warn("POST /api/chat: Unauthorized access attempt");
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -81,6 +84,10 @@ export async function POST(req: Request) {
   }
 
   try {
+    logger.debug(
+      { userId, sessionId, userMessage },
+      "POST /api/chat: Processing user message",
+    );
     // Store the user message
     const insertUserMessageResult = await saveMessage(
       sessionId,
@@ -91,6 +98,7 @@ export async function POST(req: Request) {
     );
 
     if (!insertUserMessageResult) {
+      logger.error("Failed to save user message");
       return new Response("Failed to save user message", { status: 500 });
     }
 
@@ -100,6 +108,10 @@ export async function POST(req: Request) {
       async start(controller) {
         try {
           // First send the user message data back to the client
+          logger.debug(
+            { userMessage: insertUserMessageResult[0] },
+            "POST /api/chat: Sending user message",
+          );
           controller.enqueue(
             encoder.encode(
               `event: userMessage\ndata: ${JSON.stringify(insertUserMessageResult[0])}\n\n`,
@@ -107,6 +119,10 @@ export async function POST(req: Request) {
           );
 
           // Start the OpenAI completion
+          logger.debug(
+            { history, userMessage },
+            "POST /api/chat: Starting OpenAI completion",
+          );
           const messages = history.concat([userMessage]);
           const params: OpenAI.Chat.ChatCompletionCreateParams = {
             messages: messages.map((m) => ({
@@ -122,19 +138,24 @@ export async function POST(req: Request) {
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
             fullAsssistantResponse += text;
+            logger.debug({ text }, "POST /api/chat: Streaming response");
             controller.enqueue(
               encoder.encode(`event: messageChunk\ndata: ${text}\n\n`),
             );
           }
         } catch (error) {
+          logger.error(error, "Error streaming response:");
           controller.enqueue(
             encoder.encode(
               "event: error\n data: Failed to stream response.\n\n",
             ),
           );
-          console.error("Error streaming response:", error);
         } finally {
           // Insert whatever we have for the completion into the database and send it to client
+          logger.debug(
+            { fullAsssistantResponse },
+            "POST /api/chat: Saving assistant message",
+          );
           const insertAsssistantMessageResult = await saveMessage(
             sessionId,
             userId,
@@ -146,6 +167,13 @@ export async function POST(req: Request) {
             controller.enqueue(
               encoder.encode(
                 `event: assistantMessage\ndata: ${JSON.stringify(insertAsssistantMessageResult[0])}\n\n`,
+              ),
+            );
+          } else {
+            logger.error("Failed to save assistant message");
+            controller.enqueue(
+              encoder.encode(
+                "event: error\n data: Failed to save assistant message.\n\n",
               ),
             );
           }
@@ -163,7 +191,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.log("Error in the chat API:", error);
+    logger.error(error, "Error processing user message:");
     return new Response("Internal server error", { status: 500 });
   }
 }

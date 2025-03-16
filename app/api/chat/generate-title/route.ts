@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
@@ -8,9 +9,11 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
+  logger.info(req, "POST /api/chat/generate-title");
   // Check for authorized user
   const session = await getSession();
   if (!session) {
+    logger.warn("POST /api/chat/generate-title: Unauthorized access attempt");
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -34,15 +37,20 @@ export async function POST(req: Request) {
 
   try {
     // Start the OpenAI completion
+    logger.debug(
+      { messages: parsedMessages },
+      "POST /api/chat/generate-title: Generating title",
+    );
     const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       messages: [systemPrompt, ...parsedMessages],
       model: "gpt-4o-mini",
     };
     const completion = await openai.chat.completions.create(params);
     const title = completion.choices[0].message.content;
+    logger.debug({ title }, "POST /api/chat/generate-title: Generated title");
     return NextResponse.json(title);
   } catch (error) {
-    console.log("Error in the chat API:", error);
+    logger.error(error, "Error generating title:");
     return new Response("Internal server error", { status: 500 });
   }
 }

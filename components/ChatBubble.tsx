@@ -132,7 +132,7 @@ export default function ChatBubble({
                 className="cursor-pointer"
               />
               <div className="text-(--main-color)">
-                {index} of {count}
+                {index + 1} of {count}
               </div>
               <AngleRightIcon
                 fill="var(--main-color)"
