@@ -10,7 +10,17 @@ import XMarkIcon from "@/components/Icon/XMark";
 import { useSession } from "@/context/session-context";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
 
-export default function ChatBubble({ message }: { message: DisplayMessage }) {
+export default function ChatBubble({
+  message,
+  index,
+  count,
+  onEdit,
+}: {
+  message: DisplayMessage;
+  index: number;
+  count: number;
+  onEdit: (message: DisplayMessage) => void;
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(
     message.content ? message.content : "",
@@ -41,6 +51,7 @@ export default function ChatBubble({ message }: { message: DisplayMessage }) {
 
   const handleSaveEdit = () => {
     setIsEditing(false);
+    onEdit({ ...message, content: editedContent });
     // Here you would typically update the content in your chat context/state
     // For now we'll just use local state
   };
@@ -120,7 +131,9 @@ export default function ChatBubble({ message }: { message: DisplayMessage }) {
                 fill="var(--main-color)"
                 className="cursor-pointer"
               />
-              <div className="text-(--main-color)">1 of 2</div>
+              <div className="text-(--main-color)">
+                {index} of {count}
+              </div>
               <AngleRightIcon
                 fill="var(--main-color)"
                 className="cursor-pointer"

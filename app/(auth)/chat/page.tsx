@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ChatBox from "@/components/ChatBox";
 import InputRow from "@/components/InputRow";
 import SessionsSidePanel from "@/components/SessionsSidePanel";
@@ -13,12 +13,15 @@ import {
   streamLlmResponse,
   SSEChunk,
 } from "@/utils/apiHelpers";
+import { captureRejectionSymbol } from "node:events";
 
 export interface TempMessage {
   role: "user" | "assistant";
   content: string;
   parentId?: string;
   id?: string;
+  childrenIds?: string[];
+  depth?: number;
 }
 
 export type DisplayMessage = SelectMessage | TempMessage;
@@ -26,6 +29,11 @@ export type DisplayMessage = SelectMessage | TempMessage;
 export default function Chat() {
   const [chatSessions, setChatSessions] = useState<SelectChatSession[]>([]);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [thread, setThread] = useState<DisplayMessage[]>([]);
+  const threadIndicesRef = useRef<{ [key: number]: number }>({});
+  const threadMessageCountsRef = useRef<{ [key: number]: number }>({});
+  const [leafMessage, setLeafMessage] = useState<DisplayMessage>();
+  const [maxDepth, setMaxDepth] = useState(0);
   const [currentChatSessionId, setCurrentChatSessionId] = useState<
     string | undefined
   >(undefined);
@@ -35,29 +43,25 @@ export default function Chat() {
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const loadChatSession = async (sessionId: string) => {
+  async function loadChatSession(sessionId: string) {
     setCurrentChatSessionId(sessionId);
     try {
       setIsLoading(true);
+
       const response = await fetch(
         `/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`,
       );
       if (!response.ok) throw new Error("Failed to fetch chat messages");
+
       const data: SelectMessage[] = await response.json();
       setMessages(data);
+      setLeafMessage(data[data.length - 1]);
     } catch (error) {
       console.error("Error fetching chat messages:", error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // call loadChatSession when the sessionId changes
-  useEffect(() => {
-    if (currentChatSessionId) {
-      loadChatSession(currentChatSessionId);
-    }
-  }, [currentChatSessionId]);
+  }
 
   // Scroll the chatbax to the bottom as messages are added
   const scrollToBottom = () => {
@@ -69,11 +73,6 @@ export default function Chat() {
       });
     }
   };
-
-  // Call the scroll to the bottom function as messages are added
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
 
   /**
    * Handle stopping the current response stream
@@ -107,6 +106,7 @@ export default function Chat() {
       parentId: parentId,
     };
     setMessages((prev) => [...prev, userMessage]);
+    setThread((prev) => [...prev, userMessage]);
 
     // Set some variables
     setIsStreaming(true);
@@ -118,6 +118,7 @@ export default function Chat() {
     // Add an empty assistant message that will be filled with the streaming response
     const assistantMessage: TempMessage = { role: "assistant", content: "" };
     setMessages((prev) => [...prev, assistantMessage]);
+    setMessages((prev) => [...prev, assistantMessage]);
 
     let accumulatedResponse = "";
     const isFirstResponse =
@@ -127,25 +128,33 @@ export default function Chat() {
       // Replace the messages with their database versions or append chunks to the temporary assistant message
       if (eventType === "userMessage") {
         const insertUserMessageResult = JSON.parse(data);
-        console.log("insertUserMessageResult", insertUserMessageResult);
         setMessages((prev) => [
+          ...prev.slice(0, -2),
+          insertUserMessageResult,
+          assistantMessage,
+        ]);
+        setThread((prev) => [
           ...prev.slice(0, -2),
           insertUserMessageResult,
           assistantMessage,
         ]);
       } else if (eventType === "assistantMessage") {
         const insertAsssistantMessageResult = JSON.parse(data);
-        console.log(
-          "insertAsssistantMessageResult",
-          insertAsssistantMessageResult,
-        );
         setMessages((prev) => [
+          ...prev.slice(0, -1),
+          insertAsssistantMessageResult,
+        ]);
+        setThread((prev) => [
           ...prev.slice(0, -1),
           insertAsssistantMessageResult,
         ]);
       } else if (eventType === "messageChunk") {
         accumulatedResponse += data;
         setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "assistant", content: accumulatedResponse },
+        ]);
+        setThread((prev) => [
           ...prev.slice(0, -1),
           { role: "assistant", content: accumulatedResponse },
         ]);
@@ -227,9 +236,119 @@ export default function Chat() {
     }
   }
 
-  // Fetch chat sessions when the compnent mounts
+  /**
+   * Update a message that has been edited
+   */
+  async function handleEditMessage(message: DisplayMessage) {}
+
+  /**
+   * Generates an array of indices for each depth of the tree to max depth. Defaults to 0
+   * This will be used to show what the current message index is for each depth
+   */
+  const generateThreadIndices = useCallback(() => {
+    if (Object.keys(threadIndicesRef.current).length === 0) {
+      for (let i = 0; i <= maxDepth; i++) {
+        threadIndicesRef.current[i] = 0;
+      }
+    } else {
+      // Check if we need to add new indices
+      for (let i = 0; i <= maxDepth; i++) {
+        if (threadIndicesRef.current[i] === undefined) {
+          threadIndicesRef.current[i] = 0;
+        }
+      }
+    }
+  }, [maxDepth]);
+
+  /**
+   * Generates an array of the number of nodes at each depth
+   * This acts as the denominator for the thread indices
+   */
+  const generateThreadMessageCounts = useCallback(() => {
+    const rootMessages = messages.filter(
+      (message) => message.parentId === null,
+    );
+    threadMessageCountsRef.current[0] = rootMessages.length;
+
+    let currentMessage: DisplayMessage | undefined =
+      messages[threadIndicesRef.current[0]];
+
+    for (let i = 1; i <= maxDepth; i++) {
+      threadMessageCountsRef.current[i] = currentMessage.childrenIds
+        ? currentMessage.childrenIds.length
+        : 0;
+      currentMessage = messages.find(
+        (message) =>
+          currentMessage?.childrenIds &&
+          message.id ===
+            currentMessage.childrenIds[threadIndicesRef.current[i]],
+      );
+      if (!currentMessage) {
+        break;
+      }
+    }
+  }, [messages, maxDepth]);
+
+  /**
+   * Generates the chat thread from the nodeIndices
+   */
+  const generateThread = useCallback(() => {
+    const newThread: DisplayMessage[] = [];
+
+    const rootMessages = messages.filter(
+      (message) => message.parentId === null,
+    );
+    let currentMessage: DisplayMessage | undefined =
+      rootMessages[threadIndicesRef.current[0]];
+    newThread.push(currentMessage);
+    for (let i = 1; i <= maxDepth; i++) {
+      currentMessage = messages.find(
+        (message) =>
+          message.id ===
+          currentMessage?.childrenIds?.[threadIndicesRef.current[i]],
+      );
+      if (currentMessage) {
+        newThread.push(currentMessage);
+      } else {
+        break;
+      }
+    }
+
+    console.log("maxdepth:", maxDepth);
+    console.log("threadIndicesRef:", threadIndicesRef.current);
+    console.log("threadMessageCountsRef:", threadMessageCountsRef.current);
+    console.log("thread:", newThread);
+    setThread(newThread);
+  }, [messages, maxDepth]);
+
+  // ====================
+  // UseEfects
+  // ====================
+  // Call the scroll to the bottom function as messages are added
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+      setMaxDepth(
+        Math.max(...messages.map((msg) => (msg.depth ? msg.depth : 0))),
+      );
+      generateThreadIndices();
+      generateThreadMessageCounts();
+      generateThread();
+    }
+  }, [
+    messages,
+    generateThreadIndices,
+    generateThreadMessageCounts,
+    generateThread,
+  ]);
+
+  // Fetch all sessions and call loadChatSession when
+  // the component mounts and sessionId changes
   useEffect(() => {
     fetchSessions();
+    if (currentChatSessionId) {
+      loadChatSession(currentChatSessionId);
+    }
   }, [currentChatSessionId]);
 
   return (
@@ -262,8 +381,13 @@ export default function Chat() {
         <div className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container">
           <div className="mx-auto w-full max-w-[1000px]">
             <ChatBox
-              messages={messages}
+              thread={thread}
+              threadIndices={threadIndicesRef.current}
+              threadMessageCounts={threadMessageCountsRef.current}
               isSessionLoaded={!!currentChatSessionId}
+              onMessageEdit={(message: DisplayMessage) =>
+                handleEditMessage(message)
+              }
             />
           </div>
         </div>

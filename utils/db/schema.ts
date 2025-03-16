@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  integer,
+  AnyPgColumn,
+} from "drizzle-orm/pg-core";
 import { InferInsertModel, InferSelectModel, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -61,11 +68,13 @@ export const messagesTable = pgTable("messages", {
   userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  parentId: uuid("parent_id"), // Self-referencing for branching
+  parentId: uuid("parent_id").references((): AnyPgColumn => messagesTable.id, {
+    onDelete: "cascade",
+  }), // Self-referencing for branching
+  childrenIds: uuid("children_ids").array(),
   content: text("content").notNull(),
   role: text("role").notNull(), // "user" or "assistant"
   depth: integer("depth").notNull().default(0),
-  threadPath: text("thread_path").notNull(), // Precomputed path (e.g., "1/2/4")
   createdAt: timestamp("created_at", { mode: "date" })
     .default(sql`now()`)
     .notNull(),

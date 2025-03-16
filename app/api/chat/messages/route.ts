@@ -45,3 +45,37 @@ export async function GET(req: Request) {
     );
   }
 }
+
+// // Update a message by ID
+// export async function PUT(req: Request) {
+//   try {
+//     // Check for authorized user
+//     const session = await getSession();
+//     if (!session) {
+//       return new Response("Unauthorized", { status: 401 });
+//     }
+//
+//     const userId = session.user.id;
+//     const { messageId, ...updateData } = await req.json();
+//
+//     // Update the chat session in the database
+//     const result = await db
+//       .update(messagesTable)
+//       .set(updateData)
+//       .where(
+//         and(eq(messagesTable.id, messageId), eq(messagesTable.userId, userId)),
+//       );
+//
+//     if (result.rowCount === 0) {
+//       return new Response("Message Not Found", { status: 404 });
+//     }
+//
+//     return NextResponse.json({ message: "Message updated" }, { status: 200 });
+//   } catch (error) {
+//     console.error("Error updating message:", error);
+//     return NextResponse.json(
+//       { error: "Failed to update message" },
+//       { status: 500 },
+//     );
+//   }
+// }

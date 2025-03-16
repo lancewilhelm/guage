@@ -2,7 +2,8 @@ import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
 import { db } from "@/utils/db";
 import { messagesTable, type InsertMessage } from "@/utils/db/schema";
-import { eq } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import { SelectMessage } from "@/utils/db/schema";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,7 +18,6 @@ async function saveMessage(
   role: "assistant" | "user" | "system",
 ) {
   try {
-    let threadPath = "0";
     let depth = 0;
 
     if (parentId) {
@@ -26,12 +26,11 @@ async function saveMessage(
       });
 
       if (parentMessage) {
-        threadPath = `${parentMessage.threadPath}/${parentMessage.id}`;
         depth = parentMessage.depth + 1;
       }
     }
 
-    return await db
+    const result = (await db
       .insert(messagesTable)
       .values({
         sessionId,
@@ -40,9 +39,17 @@ async function saveMessage(
         content,
         role,
         depth,
-        threadPath,
       })
-      .returning();
+      .returning()) as SelectMessage[];
+
+    // Update the childrenIds of the parent message
+    if (parentId) {
+      await db.execute(
+        sql`UPDATE ${messagesTable} SET children_ids = children_ids || ARRAY[${result[0].id}::uuid] WHERE ${messagesTable.id} = ${parentId}`,
+      );
+    }
+
+    return result;
   } catch (error) {
     console.error("Error saving message:", error);
   }
