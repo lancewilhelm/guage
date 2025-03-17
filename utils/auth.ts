@@ -19,7 +19,7 @@ export async function createSession(user: {
   name: string | null;
   role: "user" | "admin";
 }) {
-  const token = jwt.sign({ user }, SECRET, { expiresIn: "1h" });
+  const token = jwt.sign({ user }, SECRET, { expiresIn: "1y" });
   (await cookies()).set("guage_token", token, { httpOnly: true, path: "/" });
 }
 

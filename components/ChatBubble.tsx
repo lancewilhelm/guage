@@ -67,7 +67,7 @@ export default function ChatBubble({
 
   return (
     <div
-      className={`flex ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex cursor-default ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
     >
       <div
         className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[70%] ${message.role === "user" ? "items-end" : "items-start"}`}
@@ -136,6 +136,7 @@ export default function ChatBubble({
                   fill="var(--main-color)"
                   className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
                   onClick={() =>
+                    siblingInfo.currentIndex !== 0 &&
                     onBranchChange(
                       (siblingInfo.currentIndex - 1 + siblingInfo.total) %
                         siblingInfo.total,
@@ -149,6 +150,7 @@ export default function ChatBubble({
                   fill="var(--main-color)"
                   className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
                   onClick={() =>
+                    siblingInfo.currentIndex !== siblingInfo.total - 1 &&
                     onBranchChange(
                       (siblingInfo.currentIndex + 1) % siblingInfo.total,
                     )
