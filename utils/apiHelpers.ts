@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { DisplayMessage, TempMessage } from "@/app/(auth)/chat/page";
 import { SelectMessage } from "@/utils/db/schema";
 
@@ -21,6 +22,7 @@ export async function createChatSession() {
     return newChatSession;
   } catch (error) {
     console.error("Error creating chat session:", error);
+    return null;
   }
 }
 
@@ -75,7 +77,7 @@ export async function deleteChatSession(sessionId: string) {
 
     return true;
   } catch (error) {
-    console.error("Error deleting chat session:", error);
+    logger.error("Error deleting chat session:", error);
     return false;
   }
 }
@@ -84,7 +86,7 @@ export async function deleteChatSession(sessionId: string) {
  * Generate a title from the assistant's response
  */
 export async function generateSessionTitle(messages: SelectMessage[]) {
-  console.log("Generating title...", messages);
+  logger.debug("generateSessionTitle:", { messages });
   try {
     const response = await fetch("/api/chat/generate-title", {
       method: "POST",
@@ -99,7 +101,7 @@ export async function generateSessionTitle(messages: SelectMessage[]) {
     const title = await response.json();
     return title;
   } catch (error) {
-    console.error("Error generating title:", error);
+    logger.error("Error generating title:", error);
     return null;
   }
 }
@@ -160,10 +162,23 @@ export async function streamLlmResponse(
 
       const chunks = parseSSEChunk(decoder.decode(value));
       for (const chunk of chunks) {
+        if (chunk.eventType === "userMessage") {
+          insertUserMessageResult = JSON.parse(chunk.data) as SelectMessage;
+        } else if (chunk.eventType === "assistantMessage") {
+          insertAsssistantMessageResult = JSON.parse(
+            chunk.data,
+          ) as SelectMessage;
+        }
+
         onMessageChunk(chunk);
       }
     }
 
+    logger.debug("Checking if we should generate title", {
+      shouldGenerateTitle,
+      insertUserMessageResult,
+      insertAsssistantMessageResult,
+    });
     // Generate title if this is the first assistant response
     if (
       shouldGenerateTitle &&
@@ -197,7 +212,7 @@ export async function streamLlmResponse(
         }
       }
     } else {
-      console.error("Error streaming message:", error);
+      logger.error("Error streaming response:", error);
     }
     return false;
   }
