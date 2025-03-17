@@ -70,11 +70,11 @@ export default function ChatBubble({
       className={`flex cursor-default ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
     >
       <div
-        className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[70%] ${message.role === "user" ? "items-end" : "items-start"}`}
+        className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[70%] w-full ${message.role === "user" ? "items-end" : "items-start"}`}
       >
         <div className="px-1">{handleInterlocutorName()}</div>
         {isEditing ? (
-          <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full w-full">
+          <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden w-full max-w-full">
             <textarea
               ref={inputRef}
               value={editedContent}
@@ -87,7 +87,7 @@ export default function ChatBubble({
                   handleCancelEdit();
                 }
               }}
-              className="min-h-[50px] w-screen p-1 focus:outline-none resize-y"
+              className="w-full min-h-[50px] p-1 focus:outline-none resize-y"
             />
             <div
               className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}
