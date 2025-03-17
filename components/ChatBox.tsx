@@ -1,18 +1,19 @@
 import ChatBubble from "@/components/ChatBubble";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
+import { ThreadState } from "@/app/(auth)/chat/page";
 
 export default function ChatBox({
   thread,
-  threadIndices,
-  threadMessageCounts,
+  threadState,
   isSessionLoaded = false,
   onMessageEdit,
+  onBranchChange,
 }: {
   thread: DisplayMessage[];
-  threadIndices: { [key: number]: number };
-  threadMessageCounts: { [key: number]: number };
+  threadState: ThreadState;
   isSessionLoaded?: boolean;
   onMessageEdit: (message: DisplayMessage) => void;
+  onBranchChange: (messageId: string, siblingIndex: number) => void;
 }) {
   return (
     <div className="flex flex-col gap-2 w-full h-full p-2 overflow-x-hidden">
@@ -28,19 +29,15 @@ export default function ChatBox({
           </div>
         </div>
       ) : (
-        thread.map((message, index) => (
+        thread.map((message) => (
           <ChatBubble
-            key={index}
+            key={message.id}
             message={message}
-            index={
-              message.depth !== undefined ? threadIndices[message.depth] : 0
-            }
-            count={
-              message.depth !== undefined
-                ? threadMessageCounts[message.depth]
-                : 0
-            }
             onEdit={onMessageEdit}
+            siblingInfo={threadState.siblingInfo[message.id]}
+            onBranchChange={(siblingIndex) =>
+              onBranchChange(message.id, siblingIndex)
+            }
           />
         ))
       )}

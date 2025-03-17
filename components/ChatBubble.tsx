@@ -10,16 +10,22 @@ import XMarkIcon from "@/components/Icon/XMark";
 import { useSession } from "@/context/session-context";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
 
+interface SiblingInfo {
+  total: number; // Total siblings at this level
+  currentIndex: number; // Current index among siblings
+  siblingIds: string[]; // Ids of all siblings
+}
+
 export default function ChatBubble({
   message,
-  index,
-  count,
   onEdit,
+  siblingInfo,
+  onBranchChange,
 }: {
   message: DisplayMessage;
-  index: number;
-  count: number;
   onEdit: (message: DisplayMessage) => void;
+  siblingInfo: SiblingInfo;
+  onBranchChange: (siblingIndex: number) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(
@@ -52,8 +58,6 @@ export default function ChatBubble({
   const handleSaveEdit = () => {
     setIsEditing(false);
     onEdit({ ...message, content: editedContent });
-    // Here you would typically update the content in your chat context/state
-    // For now we'll just use local state
   };
 
   const handleCancelEdit = () => {
@@ -126,19 +130,32 @@ export default function ChatBubble({
               className="cursor-pointer"
               onClick={handleEditClick}
             />
-            <div className="flex items-center gap-1">
-              <AngleLeftIcon
-                fill="var(--main-color)"
-                className="cursor-pointer"
-              />
-              <div className="text-(--main-color)">
-                {index + 1} of {count}
+            {siblingInfo && siblingInfo.total > 1 && (
+              <div className="flex items-center gap-1">
+                <AngleLeftIcon
+                  fill="var(--main-color)"
+                  className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
+                  onClick={() =>
+                    onBranchChange(
+                      (siblingInfo.currentIndex - 1 + siblingInfo.total) %
+                        siblingInfo.total,
+                    )
+                  }
+                />
+                <div className="text-[var(--main-color)]">
+                  {siblingInfo.currentIndex + 1} of {siblingInfo.total}
+                </div>
+                <AngleRightIcon
+                  fill="var(--main-color)"
+                  className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
+                  onClick={() =>
+                    onBranchChange(
+                      (siblingInfo.currentIndex + 1) % siblingInfo.total,
+                    )
+                  }
+                />
               </div>
-              <AngleRightIcon
-                fill="var(--main-color)"
-                className="cursor-pointer"
-              />
-            </div>
+            )}
           </div>
         )}
       </div>
