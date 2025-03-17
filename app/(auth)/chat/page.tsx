@@ -28,13 +28,7 @@ export interface TempMessage {
 
 export type DisplayMessage = SelectMessage | TempMessage;
 
-// Represents a node in the message tree
-export interface MessageNode {
-  message: DisplayMessage;
-  children: string[];
-}
-
-export type MessageMap = Record<string, MessageNode>;
+export type MessageMap = Record<string, DisplayMessage>;
 
 // Tracks the state of the currently active thread
 export interface ThreadState {
@@ -64,36 +58,25 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
+  const pendingBranchChange = useRef<{
+    messageId: string;
+    siblingIndex: number;
+  } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Derive the active thread from the thread state and message map
   const thread = useMemo(() => {
-    return threadState.activePath
-      .map((id) => messageMap[id]?.message)
+    if (!threadState.activePath.length) return [];
+    const t = threadState.activePath
+      .map((id) => messageMap[id])
       .filter(Boolean) as DisplayMessage[];
+    logger.debug("thread:", {
+      thread: t,
+      activePath: threadState.activePath,
+      messageMap,
+    });
+    return t;
   }, [threadState.activePath, messageMap]);
-
-  // Rebuild the message map when messages change
-  useEffect(() => {
-    const map: MessageMap = {};
-
-    // First pass: create message nodes
-    messages.forEach((msg) => {
-      map[msg.id] = { message: msg, children: [] };
-    });
-
-    // Second pass: populate children arrays
-    messages.forEach((msg) => {
-      if (msg.parentId && map[msg.parentId]) {
-        map[msg.parentId].children.push(msg.id);
-      }
-    });
-
-    logger.debug("Rebuilding message map", {
-      map,
-    });
-    setMessageMap(map);
-  }, [messages]);
 
   // Add memoization for handlers that don't change often
   /**
@@ -112,7 +95,7 @@ export default function Chat() {
    * Memoized to prevent unnecessary re-renders
    */
   const fetchMessages = useCallback(async (sessionId: string) => {
-    logger.debug("Fetching messages for session", { sessionId });
+    logger.debug("fetchMessages:", { sessionId });
     try {
       const response = await fetch(
         `/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`,
@@ -125,23 +108,26 @@ export default function Chat() {
     }
   }, []);
 
-  async function loadChatSession(sessionId: string) {
-    setCurrentChatSessionId(sessionId);
-    try {
-      setIsLoading(true);
+  const loadChatSession = useCallback(
+    async (sessionId: string) => {
+      setCurrentChatSessionId(sessionId);
+      try {
+        setIsLoading(true);
 
-      const data = await fetchMessages(sessionId);
-      setMessages(data);
-      logger.debug("Chat session loaded", {
-        sessionId,
-        messageCount: data.length,
-      });
-    } catch (error) {
-      console.error("Error fetching chat messages:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+        const data = await fetchMessages(sessionId);
+        setMessages(data);
+        logger.debug("loadChatSession:", {
+          sessionId,
+          messageCount: data.length,
+        });
+      } catch (error) {
+        console.error("Error fetching chat messages:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchMessages],
+  );
 
   /**
    * Core function to handle message creation and response generation
@@ -160,7 +146,7 @@ export default function Chat() {
     setIsStreaming(true);
     abortControllerRef.current = new AbortController();
 
-    logger.debug("Created message pair", {
+    logger.debug("createMessagePairAndStream:", {
       userMessageId: newMessage.id,
       assistantMessageId: responseMessage.id,
       depth: newMessage.depth,
@@ -185,7 +171,7 @@ export default function Chat() {
       }
     }
 
-    logger.debug("Streaming response", {
+    logger.debug("streamLlmResponse:", {
       sessionId: currentChatSessionId,
       messageId: newMessage.id,
       isFirstResponse,
@@ -204,7 +190,7 @@ export default function Chat() {
       console.error("Error connecting to the chat API:", error);
     } finally {
       setIsStreaming(false);
-      logger.debug("Stream completed", {
+      logger.debug("stream completed:", {
         responseLength: accumulatedResponse.length,
       });
       abortControllerRef.current = null;
@@ -235,7 +221,7 @@ export default function Chat() {
     originalMessage: DisplayMessage,
     serverMessage: DisplayMessage,
   ) {
-    logger.debug("Updating message IDs", {
+    logger.debug("updateMessageIds", {
       originalMessage: originalMessage,
       serverMessage,
     });
@@ -266,13 +252,44 @@ export default function Chat() {
         return msg;
       });
     });
+
+    // Also update thread state to reflect the new message ID
+    setThreadState((prev) => {
+      const newActivePath = prev.activePath.map((id) =>
+        id === originalMessage.id ? serverMessage.id : id,
+      );
+
+      // Clone and update siblingInfo to use new IDs
+      const newSiblingInfo = { ...prev.siblingInfo };
+
+      // If the message ID is a key in siblingInfo, update it
+      if (prev.siblingInfo[originalMessage.id]) {
+        newSiblingInfo[serverMessage.id] = prev.siblingInfo[originalMessage.id];
+        delete newSiblingInfo[originalMessage.id];
+      }
+
+      // For all sibling infos, update IDs in siblingIds arrays
+      Object.keys(newSiblingInfo).forEach((key) => {
+        newSiblingInfo[key] = {
+          ...newSiblingInfo[key],
+          siblingIds: newSiblingInfo[key].siblingIds.map((id) =>
+            id === originalMessage.id ? serverMessage.id : id,
+          ),
+        };
+      });
+
+      return {
+        activePath: newActivePath,
+        siblingInfo: newSiblingInfo,
+      };
+    });
   }
 
   /**
    * Handle the submission of new messages to the backend
    */
   async function handleSubmit() {
-    logger.debug("Handling message submission", {
+    logger.debug("handleSubmit:", {
       inputLength: userInput.length,
       sessionId: currentChatSessionId,
     });
@@ -283,8 +300,8 @@ export default function Chat() {
     // Add the user message to the list
     let parentId: string | null = null;
     let depth = 0;
-    if (thread.length > 0) {
-      const lastMessage = thread[thread.length - 1];
+    if (threadState.activePath.length > 0) {
+      const lastMessage = messageMap[threadState.activePath.slice(-1)[0]];
       if (lastMessage.role === "assistant") {
         parentId = lastMessage.id;
         depth = lastMessage.depth + 1;
@@ -318,23 +335,45 @@ export default function Chat() {
       depth: depth,
     };
 
+    // Update the childrenIds of the parent message
+    if (parentId) {
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === parentId
+            ? {
+                ...msg,
+                childrenIds: Array.isArray(msg.childrenIds)
+                  ? [...msg.childrenIds, userMessageId]
+                  : [userMessageId],
+              }
+            : msg,
+        ),
+      );
+    }
+
+    // Add the assistant message to messages, and thread state
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setThreadState((prev) => {
+      return {
+        activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
+        siblingInfo: {
+          ...prev.siblingInfo,
+          [assistantMessage.id]: {
+            total: 1,
+            currentIndex: 0,
+            siblingIds: [assistantMessage.id],
+          },
+          [userMessage.id]: {
+            total: 1,
+            currentIndex: 0,
+            siblingIds: [userMessage.id],
+          },
+        },
+      };
+    });
+
     // Clear input field
     setUserInput("");
-
-    // Before adding messages, manually update the thread state to ensure this stays in the active path
-    if (parentId) {
-      // Add this new message as a child of the parent and make sure it's the selected one
-      setThreadState((prev) => {
-        const parentNode = messageMap[parentId];
-        if (!parentNode) return prev;
-
-        // Calculate what the child index will be (it will be appended to the array)
-        const newChildIndex = parentNode.children.length;
-
-        // Deep copy the current state
-        return { ...prev };
-      });
-    }
 
     // Determine if this is the first response
     const isFirstResponse =
@@ -344,37 +383,20 @@ export default function Chat() {
     await createMessagePairAndStream(
       userMessage,
       assistantMessage,
-      thread.length > 0 ? [...thread, userMessage] : [userMessage],
+      thread.length > 0 ? [...thread] : [],
       isFirstResponse,
     );
-
-    // After the response is complete, make sure this new path remains selected
-    // This is important because the messageMap rebuilds when messages change
-    setTimeout(() => {
-      if (parentId) {
-        // Find index of the new message in the parent's children
-        const parentNode = messageMap[parentId];
-        if (parentNode) {
-          const childIndex = parentNode.children.findIndex(
-            (id) => id === userMessageId,
-          );
-          if (childIndex !== -1) {
-            // Select this branch to ensure it remains active
-            changeBranch(parentId, childIndex);
-          }
-        }
-      }
-    }, 0);
   }
 
   /**
    * Create a new chat session
    */
   async function createSession() {
-    logger.debug("Creating new chat session");
+    logger.debug("createSession:");
     const newChatSession = await createChatSession();
     setChatSessions([newChatSession, ...chatSessions]);
     setCurrentChatSessionId(newChatSession.id);
+    setThreadState({ activePath: [], siblingInfo: {} });
   }
 
   /**
@@ -391,7 +413,7 @@ export default function Chat() {
    * Update the chat session title
    */
   async function renameSession(sessionId: string, title: string) {
-    logger.debug("Renaming session", { sessionId, title });
+    logger.debug("renameSession:", { sessionId, title });
     const updatedSession = await updateChatSession(sessionId, { title });
     if (updatedSession) {
       setChatSessions(
@@ -408,7 +430,7 @@ export default function Chat() {
    * Delete a chat session
    */
   async function deleteSession(sessionId: string) {
-    logger.debug("Deleting session", { sessionId });
+    logger.debug("deleteSession:", { sessionId });
     const result = await deleteChatSession(sessionId);
     if (result) {
       setChatSessions(
@@ -416,6 +438,7 @@ export default function Chat() {
       );
       if (sessionId === currentChatSessionId) {
         setMessages([]);
+        setThreadState({ activePath: [], siblingInfo: {} });
         setCurrentChatSessionId(undefined);
       }
     } else {
@@ -423,10 +446,7 @@ export default function Chat() {
     }
   }
 
-  function initializeThreadState(
-    messageMap: MessageMap,
-    previousState?: ThreadState,
-  ): ThreadState {
+  function generateThreadState(messageMap: MessageMap): ThreadState {
     const threadState: ThreadState = {
       activePath: [],
       siblingInfo: {},
@@ -434,9 +454,12 @@ export default function Chat() {
 
     // Find the root message(s)
     const rootMessages = Object.values(messageMap)
-      .map((node) => node.message)
+      .map((node) => node)
       .filter((msg) => msg.parentId === null)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
 
     if (rootMessages.length === 0) return threadState; // No messages
 
@@ -455,7 +478,7 @@ export default function Chat() {
     while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
       const siblingCount = currentNode.childrenIds.length;
       const siblingIds = currentNode.childrenIds;
-      currentNode = messageMap[currentNode.childrenIds[0]].message;
+      currentNode = messageMap[currentNode.childrenIds[0]];
 
       // Add sibling information for this parent
       threadState.siblingInfo[currentNode.id] = {
@@ -466,96 +489,90 @@ export default function Chat() {
       threadState.activePath.push(currentNode.id);
     }
 
-    logger.debug("Initialized thread state", threadState);
+    logger.debug("generateThreadState:", threadState);
     return threadState;
   }
 
-  function changeBranch(messageId: string, newSiblingIndex: number) {
-    setThreadState((prev) => {
-      // Get sibling info
-      const siblingInfo = prev.siblingInfo[messageId];
-      if (!siblingInfo || newSiblingIndex >= siblingInfo.total) return prev;
+  const changeBranch = useCallback(
+    (messageId: string, newSiblingIndex: number) => {
+      setThreadState((prev) => {
+        // Get sibling info
+        const siblingInfo = prev.siblingInfo[messageId];
+        if (!siblingInfo || newSiblingIndex >= siblingInfo.total) return prev;
 
-      // Get the sibling ID to switch to
-      const newSiblingId = siblingInfo.siblingIds[newSiblingIndex];
+        // Get the sibling ID to switch to
+        const newSiblingId = siblingInfo.siblingIds[newSiblingIndex];
 
-      logger.debug("Selecting branch", {
-        messageId,
-        newSiblingIndex,
-        newSiblingId,
-      });
+        logger.debug("changeBranch:", {
+          messageId,
+          newSiblingId,
+        });
 
-      // Create new sibling info with updated index
-      const newSiblingInfo = {
-        ...prev.siblingInfo,
-        [newSiblingId]: {
-          ...siblingInfo,
-          currentIndex: newSiblingIndex,
-        },
-      };
+        // Create new sibling info
+        const newSiblingInfo = {
+          ...prev.siblingInfo,
+          [newSiblingId]: {
+            ...siblingInfo,
+            currentIndex: newSiblingIndex,
+          },
+        };
 
-      // Determine where in the path to make the change
-      const messageIndex = messageId ? prev.activePath.indexOf(messageId) : -1;
-      let newPath: string[];
+        // Determine where in the path to make the change
+        const messageIndex = messageId
+          ? prev.activePath.indexOf(messageId)
+          : -1;
+        let newPath: string[];
 
-      if (messageId === null || messageIndex === -1) {
-        // Root level change or parent not in path
-        newPath = [newSiblingId];
-      } else {
-        // Truncate path at parent and add new sibling
-        newPath = [...prev.activePath.slice(0, messageIndex)];
-        newPath.push(newSiblingId);
-      }
-
-      // Build the rest of the path following first children
-      let currentNode = messageMap[newSiblingId].message;
-
-      while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-        const siblingCount = currentNode.childrenIds.length;
-        const siblingIds = currentNode.childrenIds;
-        currentNode = messageMap[currentNode.childrenIds[0]].message;
-
-        // Add sibling information for this new parent if not already present
-        if (!newSiblingInfo[currentNode.id]) {
-          newSiblingInfo[currentNode.id] = {
-            total: siblingCount,
-            currentIndex: 0,
-            siblingIds: [...siblingIds],
-          };
+        if (messageId === null || messageIndex === -1) {
+          // Root level change or parent not in path
+          newPath = [newSiblingId];
+        } else {
+          // Truncate path at parent and add new sibling
+          newPath = [...prev.activePath.slice(0, messageIndex)];
+          newPath.push(newSiblingId);
         }
-        newPath.push(currentNode.id);
-      }
 
-      logger.debug("New thread", { newPath, newSiblingInfo });
-      return {
-        activePath: newPath,
-        siblingInfo: newSiblingInfo,
-      };
-    });
-  }
+        // Build the rest of the path following first children
+        let currentNode = messageMap[newSiblingId];
+
+        while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
+          const siblingCount = currentNode.childrenIds.length;
+          const siblingIds = currentNode.childrenIds;
+          currentNode = messageMap[currentNode.childrenIds[0]];
+
+          // Add sibling information for this new parent if not already present
+          if (!newSiblingInfo[currentNode.id]) {
+            newSiblingInfo[currentNode.id] = {
+              total: siblingCount,
+              currentIndex: 0,
+              siblingIds: [...siblingIds],
+            };
+          }
+          newPath.push(currentNode.id);
+        }
+        logger.debug("changeBranch:", newPath, newSiblingInfo);
+        return {
+          activePath: newPath,
+          siblingInfo: newSiblingInfo,
+        };
+      });
+    },
+    [messageMap],
+  );
 
   // Handle message edits - create a new branch when a message is edited
   async function handleEditMessage(message: DisplayMessage) {
-    logger.debug("Handling message edit", { messageId: message.id });
-
-    if (!currentChatSessionId) return;
-
-    // Find the parent of this message
-    const parentId = message.parentId;
-    if (!parentId) {
-      logger.error("Cannot edit message with no parent");
-      return;
-    }
+    logger.debug("handleEditMessage:", { messageId: message.id });
 
     // Generate new UUIDs for the edited message and its response
     const editedMessageId = uuidv4();
     const responseMessageId = uuidv4();
 
     // Create the edited message as a new branch
-    const editedMessage: TempMessage = {
+    const userMessage: TempMessage = {
       role: message.role,
       content: message.content,
-      parentId: parentId,
+      parentId: message.parentId,
       createdAt: new Date(),
       id: editedMessageId,
       childrenIds: [responseMessageId],
@@ -574,7 +591,7 @@ export default function Chat() {
     };
 
     // Get context for this message by finding parent in thread
-    const parentIndex = thread.findIndex((msg) => msg.id === parentId);
+    const parentIndex = thread.findIndex((msg) => msg.id === message.parentId);
     let contextMessages: DisplayMessage[];
 
     if (parentIndex === -1) {
@@ -585,45 +602,102 @@ export default function Chat() {
       contextMessages = [...thread.slice(0, parentIndex + 1)];
     }
 
+    const siblingPrevTotal = threadState.siblingInfo[message.id].total;
+    const siblingPrevIndex = threadState.siblingInfo[message.id].currentIndex;
+    const siblingPrevIds = threadState.siblingInfo[message.id].siblingIds;
+    const newSiblingIds = [...siblingPrevIds, userMessage.id];
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setThreadState((prev) => {
+      const newActivePath = [
+        ...prev.activePath,
+        userMessage.id,
+        assistantMessage.id,
+      ];
+      return {
+        activePath: newActivePath,
+        siblingInfo: {
+          ...prev.siblingInfo,
+          [message.id]: {
+            total: siblingPrevTotal + 1,
+            currentIndex: siblingPrevIndex,
+            siblingIds: newSiblingIds,
+          },
+          [userMessage.id]: {
+            total: siblingPrevTotal + 1,
+            currentIndex: siblingPrevTotal,
+            siblingIds: newSiblingIds,
+          },
+          [assistantMessage.id]: {
+            total: 1,
+            currentIndex: 0,
+            siblingIds: [assistantMessage.id],
+          },
+        },
+      };
+    });
+
+    // Now that map is updated, we can safely change branch
+    pendingBranchChange.current = {
+      messageId: message.id,
+      siblingIndex: siblingPrevTotal,
+    };
+
     // Create message pair and stream response
     await createMessagePairAndStream(
-      editedMessage,
+      userMessage,
       assistantMessage,
-      [...contextMessages, editedMessage],
+      [...contextMessages],
       false,
     );
-
-    // After streaming completes, update the thread state to select the new branch
-    setTimeout(() => {
-      if (parentId) {
-        // Find the index of the edited message in the parent's children
-        const parentNode = messageMap[parentId];
-        if (parentNode) {
-          const childIndex = parentNode.children.findIndex(
-            (id) => id === editedMessageId,
-          );
-          if (childIndex !== -1) {
-            // Select the new branch
-            changeBranch(parentId, childIndex);
-          }
-        }
-      }
-    }, 0);
   }
 
-  // Initialize thread state when messageMap changes
+  // Log the thread state when it changes
   useEffect(() => {
-    setThreadState((prev) => initializeThreadState(messageMap, prev));
-  }, [messageMap]);
+    logger.debug("threadState:", threadState);
+  }, [threadState]);
 
-  // Fetch all sessions and call loadChatSession when
-  // the component mounts and sessionId changes
+  // Fetch chat sessions and load the current session on mount
+  // Gets all of the messages for the current session
   useEffect(() => {
     fetchSessions();
     if (currentChatSessionId) {
       loadChatSession(currentChatSessionId);
     }
-  }, [currentChatSessionId]);
+  }, [currentChatSessionId, loadChatSession]);
+
+  // Update message map when messages change
+  useEffect(() => {
+    const map: MessageMap = {};
+
+    // First pass: create message nodes
+    messages.forEach((msg) => {
+      map[msg.id] = msg;
+    });
+
+    logger.debug("setMessageMap:", {
+      map,
+    });
+    setMessageMap(map);
+  }, [messages]);
+
+  // Initialize thread state when messageMap changes, only if it's empty
+  useEffect(() => {
+    if (
+      threadState.activePath.length === 0 &&
+      Object.keys(messageMap).length &&
+      currentChatSessionId
+    ) {
+      setThreadState(generateThreadState(messageMap));
+    }
+  }, [messageMap, threadState.activePath, currentChatSessionId]);
+
+  useEffect(() => {
+    if (pendingBranchChange.current) {
+      const { messageId, siblingIndex } = pendingBranchChange.current;
+      changeBranch(messageId, siblingIndex);
+      pendingBranchChange.current = null;
+    }
+  }, [messageMap, changeBranch]);
 
   return (
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
@@ -661,7 +735,6 @@ export default function Chat() {
               onMessageEdit={handleEditMessage}
               // Pass sibling information to each message
               onBranchChange={(messageId: string, siblingIndex) => {
-                logger.debug("Branch change", { messageId, siblingIndex });
                 changeBranch(messageId, siblingIndex);
               }}
             />
