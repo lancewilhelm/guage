@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { geistSans } from "@/utils/fonts";
 import "./globals.css";
+import "./hljs.css";
 
 export const metadata: Metadata = {
   title: "Guage",

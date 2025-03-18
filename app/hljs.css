@@ -1,0 +1,169 @@
+/*!
+  Theme: OneDark
+  Author: Lalit Magant (http://github.com/tilal6991)
+  License: ~ MIT (or more permissive) [via base16-schemes-source]
+  Maintainer: @highlightjs/core-team
+  Version: 2021.09.0
+*/
+
+:root {
+  --bg0: #282c34; /* Default Background */
+  --bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
+  --bg2: #3e4451; /* Selection Background */
+  --cmt: #545862; /* Comments, Invisibles, Line Highlighting */
+  --fg0: #565c64; /* Dark Foreground (Used for status bars) */
+  --fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
+  --fg2: #b6bdca; /* Light Foreground (Not often used) */
+  --bg3: #c8ccd4; /* Light Background (Not often used) */
+  --red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+  --org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+  --yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
+  --grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
+  --blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
+  --idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
+  --vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
+  --wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+}
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+}
+
+pre ::-webkit-scrollbar-track {
+  background: var(--bg0);
+}
+
+code.hljs {
+  padding: 3px 5px;
+}
+
+.hljs {
+  color: var(--fg1);
+  background: var(--bg0);
+}
+
+.hljs::selection,
+.hljs ::selection {
+  background-color: var(--bg2);
+  color: var(--fg1);
+}
+
+/* purposely do not highlight these things */
+.hljs-formula,
+.hljs-params,
+.hljs-property {
+}
+
+/* Comments, Invisibles, Line Highlighting */
+.hljs-comment {
+  color: var(--cmt);
+}
+
+/* Dark Foreground (Used for status bars) */
+.hljs-tag {
+  color: var(--fg0);
+}
+
+/* Default Foreground, Caret, Delimiters, Operators */
+.hljs-subst,
+.hljs-punctuation,
+.hljs-operator {
+  color: var(--fg1);
+}
+
+.hljs-operator {
+  opacity: 0.7;
+}
+
+/* base08 - Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+.hljs-bullet,
+.hljs-variable,
+.hljs-template-variable,
+.hljs-selector-tag,
+.hljs-name,
+.hljs-deletion {
+  color: var(--red);
+}
+
+/* base09 - Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+.hljs-symbol,
+.hljs-number,
+.hljs-link,
+.hljs-attr,
+.hljs-variable.constant_,
+.hljs-literal {
+  color: var(--org);
+}
+
+/* base0A - Classes, Markup Bold, Search Text Background */
+.hljs-title,
+.hljs-class .hljs-title,
+.hljs-title.class_ {
+  color: var(--yel);
+}
+
+.hljs-strong {
+  font-weight: bold;
+  color: var(--yel);
+}
+
+/* base0B - Strings, Inherited Class, Markup Code, Diff Inserted */
+.hljs-code,
+.hljs-addition,
+.hljs-title.class_.inherited__,
+.hljs-string {
+  color: var(--grn);
+}
+
+/* base0C - Support, Regular Expressions, Escape Characters, Markup Quotes */
+.hljs-built_in,
+.hljs-doctag, /* guessing */
+.hljs-quote,
+.hljs-keyword.hljs-atrule,
+.hljs-regexp {
+  color: var(--blu);
+}
+
+/* base0D - Functions, Methods, Attribute IDs, Headings */
+.hljs-function .hljs-title,
+.hljs-attribute,
+.ruby .hljs-property,
+.hljs-title.function_,
+.hljs-section {
+  color: var(--idg);
+}
+
+/* base0E - Keywords, Storage, Selector, Markup Italic, Diff Changed */
+.hljs-type,
+/* .hljs-selector-id, */
+/* .hljs-selector-class, */
+/* .hljs-selector-attr, */
+/* .hljs-selector-pseudo, */
+.hljs-template-tag,
+.diff .hljs-meta,
+.hljs-keyword {
+  color: var(--vlt);
+}
+.hljs-emphasis {
+  color: var(--vlt);
+  font-style: italic;
+}
+
+/* base0F - Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+.hljs-meta,
+/*
+  prevent top level .keyword and .string scopes
+  from leaking into meta by accident
+*/
+.hljs-meta .hljs-keyword,
+.hljs-meta .hljs-string {
+  color: var(--wng);
+}
+
+.hljs-meta .hljs-keyword,
+/* for v10 compatible themes */
+.hljs-meta-keyword {
+  font-weight: bold;
+}

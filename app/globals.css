@@ -96,14 +96,6 @@ li {
   margin-bottom: 0.5rem;
 }
 
-pre {
-  overflow-x: auto;
-  max-width: 100%;
-  border: 1px solid var(--main-color);
-  border-radius: var(--border-radius);
-  padding: 5px;
-}
-
 math {
   padding: 5px 0;
 }

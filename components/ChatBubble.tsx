@@ -1,7 +1,10 @@
 import { logger } from "@/utils/logger";
 import { useState, useRef, useEffect } from "react";
-import { micromark } from "micromark";
-import { math, mathHtml } from "micromark-extension-math";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHightlight from "rehype-highlight";
+import Markdown from "react-markdown";
 import BouncingDotsIcon from "@/components/Icon/BouncingDots";
 import PencilIcon from "@/components/Icon/Pencil";
 import AngleRightIcon from "@/components/Icon/AngleRight";
@@ -10,6 +13,7 @@ import CheckIcon from "@/components/Icon/Check";
 import XMarkIcon from "@/components/Icon/XMark";
 import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
+import Pre from "@/components/Pre";
 import { useSession } from "@/context/session-context";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
 
@@ -18,6 +22,12 @@ interface SiblingInfo {
   currentIndex: number; // Current index among siblings
   siblingIds: string[]; // Ids of all siblings
 }
+
+const customComponents = {
+  pre({ children, ...props }: React.PropsWithChildren) {
+    return <Pre {...props}>{children}</Pre>;
+  },
+};
 
 export default function ChatBubble({
   message,
@@ -121,13 +131,15 @@ export default function ChatBubble({
           <div
             ref={contentRef}
             className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full"
-            dangerouslySetInnerHTML={{
-              __html: micromark(message.content, {
-                extensions: [math()],
-                htmlExtensions: [mathHtml()],
-              }),
-            }}
-          />
+          >
+            <Markdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex, rehypeHightlight]}
+              components={customComponents}
+            >
+              {editedContent}
+            </Markdown>
+          </div>
         ) : (
           <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
             <BouncingDotsIcon fill="var(--main-color)" />
