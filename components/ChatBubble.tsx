@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { useState, useRef, useEffect } from "react";
 import { micromark } from "micromark";
 import { math, mathHtml } from "micromark-extension-math";
@@ -7,6 +8,8 @@ import AngleRightIcon from "@/components/Icon/AngleRight";
 import AngleLeftIcon from "@/components/Icon/AngleLeft";
 import CheckIcon from "@/components/Icon/Check";
 import XMarkIcon from "@/components/Icon/XMark";
+import CopyIcon from "@/components/Icon/Copy";
+import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import { useSession } from "@/context/session-context";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
 
@@ -31,12 +34,18 @@ export default function ChatBubble({
   const [editedContent, setEditedContent] = useState(
     message.content ? message.content : "",
   );
+  const [isCopied, setIsCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { session } = useSession();
 
-  useEffect(() => {
-    setEditedContent(message.content);
-  }, [message.content]);
+  function handleCopy() {
+    logger.debug("Copying message to clipboard");
+    if (!contentRef.current) return;
+    navigator.clipboard.writeText(contentRef.current.innerText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  }
 
   function handleInterlocutorName() {
     if (message.role === "user") {
@@ -64,6 +73,10 @@ export default function ChatBubble({
     setIsEditing(false);
     setEditedContent(message.content);
   };
+
+  useEffect(() => {
+    setEditedContent(message.content);
+  }, [message.content]);
 
   return (
     <div
@@ -106,11 +119,12 @@ export default function ChatBubble({
           </div>
         ) : message.content !== "" ? (
           <div
+            ref={contentRef}
             className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full"
             dangerouslySetInnerHTML={{
-              __html: micromark(editedContent, {
-                // extensions: [math()],
-                // htmlExtensions: [mathHtml()],
+              __html: micromark(message.content, {
+                extensions: [math()],
+                htmlExtensions: [mathHtml()],
               }),
             }}
           />
@@ -125,6 +139,19 @@ export default function ChatBubble({
           <div
             className={`flex gap-2 items-center ${message.role === "user" ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}
           >
+            {isCopied ? (
+              <ThumbsUpIcon fill="var(--main-color)" />
+            ) : (
+              <CopyIcon
+                fill="var(--main-color)"
+                className="cursor-pointer"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCopy();
+                }}
+              />
+            )}
             <PencilIcon
               fill="var(--main-color)"
               className="cursor-pointer"
