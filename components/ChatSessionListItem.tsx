@@ -37,7 +37,7 @@ export default function ChatSessionListItem({
 
   return (
     <div
-      className={`flex justify-between items-center rounded border p-1 overflow-hidden ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
+      className={`flex justify-between items-center rounded border p-1 ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
     >
