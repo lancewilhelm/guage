@@ -156,7 +156,7 @@ export default function Chat() {
 
     function handleMessageChunk({ eventType, data }: SSEChunk) {
       if (eventType === "messageChunk") {
-        accumulatedResponse += data;
+        accumulatedResponse += JSON.parse(data);
         updateMessageContent(responseMessage.id, accumulatedResponse);
       } else if (
         eventType === "userMessage" ||

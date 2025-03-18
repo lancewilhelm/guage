@@ -140,7 +140,9 @@ export async function POST(req: Request) {
             fullAsssistantResponse += text;
             logger.debug({ text }, "POST /api/chat: Streaming response");
             controller.enqueue(
-              encoder.encode(`event: messageChunk\ndata: ${text}\n\n`),
+              encoder.encode(
+                `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,
+              ),
             );
           }
         } catch (error) {
