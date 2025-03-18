@@ -1,5 +1,5 @@
 import { logger } from "@/utils/logger";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -29,7 +29,66 @@ const customComponents = {
   },
 };
 
-export default function ChatBubble({
+// Memoized markdown component to prevent unnecessary re-renders
+const MessageContent = memo(({ content }: { content: string }) => (
+  <Markdown
+    remarkPlugins={[remarkGfm, remarkMath]}
+    rehypePlugins={[rehypeKatex, rehypeHightlight]}
+    components={customComponents}
+  >
+    {content}
+  </Markdown>
+));
+MessageContent.displayName = "MessageContent";
+
+// Extract navigation controls to a separate component
+const SiblingNavigation = memo(
+  ({
+    siblingInfo,
+    onBranchChange,
+  }: {
+    siblingInfo: SiblingInfo;
+    onBranchChange: (siblingIndex: number) => void;
+  }) => {
+    const handlePrevSibling = useCallback(() => {
+      if (siblingInfo.currentIndex !== 0) {
+        onBranchChange(
+          (siblingInfo.currentIndex - 1 + siblingInfo.total) %
+            siblingInfo.total,
+        );
+      }
+    }, [siblingInfo, onBranchChange]);
+
+    const handleNextSibling = useCallback(() => {
+      if (siblingInfo.currentIndex !== siblingInfo.total - 1) {
+        onBranchChange((siblingInfo.currentIndex + 1) % siblingInfo.total);
+      }
+    }, [siblingInfo, onBranchChange]);
+
+    if (siblingInfo.total <= 1) return null;
+
+    return (
+      <div className="flex items-center gap-1">
+        <AngleLeftIcon
+          fill="var(--main-color)"
+          className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
+          onClick={handlePrevSibling}
+        />
+        <div className="text-[var(--main-color)]">
+          {siblingInfo.currentIndex + 1} of {siblingInfo.total}
+        </div>
+        <AngleRightIcon
+          fill="var(--main-color)"
+          className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
+          onClick={handleNextSibling}
+        />
+      </div>
+    );
+  },
+);
+SiblingNavigation.displayName = "SiblingNavigation";
+
+function ChatBubble({
   message,
   onEdit,
   siblingInfo,
@@ -41,75 +100,75 @@ export default function ChatBubble({
   onBranchChange: (siblingIndex: number) => void;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(
-    message.content ? message.content : "",
-  );
+  const [editedContent, setEditedContent] = useState(message.content || "");
   const [isCopied, setIsCopied] = useState(false);
+  const [isButtonRowVisible, setIsButtonRowVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { session } = useSession();
 
-  function handleCopy() {
+  const handleCopy = useCallback(() => {
     logger.debug("Copying message to clipboard");
     if (!contentRef.current) return;
     navigator.clipboard.writeText(contentRef.current.innerText);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-  }
+  }, []);
 
-  function handleInterlocutorName() {
-    if (message.role === "user") {
-      if (session?.user.name) {
-        return session.user.name;
-      }
-      return "You";
-    }
-    return "Assistant";
-  }
+  const interlocutorName =
+    message.role === "user" ? session?.user.name || "You" : "Assistant";
 
-  const handleEditClick = () => {
+  const handleEditClick = useCallback(() => {
     setIsEditing(true);
-    setEditedContent(message.content);
+    setEditedContent(message.content || "");
     // Focus the textarea after it renders
     setTimeout(() => inputRef.current?.focus(), 0);
-  };
+  }, [message.content]);
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = useCallback(() => {
     setIsEditing(false);
     onEdit({ ...message, content: editedContent });
-  };
+  }, [message, editedContent, onEdit]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
-    setEditedContent(message.content);
-  };
+    setEditedContent(message.content || "");
+  }, [message.content]);
 
+  const handleTextareaKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSaveEdit();
+      } else if (e.key === "Escape") {
+        handleCancelEdit();
+      }
+    },
+    [handleSaveEdit, handleCancelEdit],
+  );
+
+  // Update edited content when message content changes
   useEffect(() => {
-    setEditedContent(message.content);
+    setEditedContent(message.content || "");
   }, [message.content]);
 
   return (
     <div
       className={`flex cursor-default ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+      onMouseEnter={() => setIsButtonRowVisible(true)}
+      onMouseLeave={() => setIsButtonRowVisible(false)}
     >
       <div
         className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[70%] w-full ${message.role === "user" ? "items-end" : "items-start"}`}
       >
-        <div className="px-1">{handleInterlocutorName()}</div>
+        <div className="px-1">{interlocutorName}</div>
         {isEditing ? (
           <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden w-full max-w-full">
             <textarea
               ref={inputRef}
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSaveEdit();
-                } else if (e.key === "Escape") {
-                  handleCancelEdit();
-                }
-              }}
+              onKeyDown={handleTextareaKeyDown}
               className="w-full min-h-[50px] p-1 focus:outline-none resize-y"
             />
             <div
@@ -127,18 +186,12 @@ export default function ChatBubble({
               />
             </div>
           </div>
-        ) : message.content !== "" ? (
+        ) : message.content ? (
           <div
             ref={contentRef}
             className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full"
           >
-            <Markdown
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeKatex, rehypeHightlight]}
-              components={customComponents}
-            >
-              {editedContent}
-            </Markdown>
+            <MessageContent content={editedContent} />
           </div>
         ) : (
           <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
@@ -152,10 +205,16 @@ export default function ChatBubble({
             className={`flex gap-2 items-center ${message.role === "user" ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}
           >
             {isCopied ? (
-              <ThumbsUpIcon fill="var(--main-color)" />
+              <ThumbsUpIcon
+                fill={
+                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                }
+              />
             ) : (
               <CopyIcon
-                fill="var(--main-color)"
+                fill={
+                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                }
                 className="cursor-pointer"
                 onMouseDown={(e) => {
                   e.preventDefault();
@@ -165,41 +224,21 @@ export default function ChatBubble({
               />
             )}
             <PencilIcon
-              fill="var(--main-color)"
+              fill={
+                isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+              }
               className="cursor-pointer"
               onClick={handleEditClick}
             />
-            {siblingInfo && siblingInfo.total > 1 && (
-              <div className="flex items-center gap-1">
-                <AngleLeftIcon
-                  fill="var(--main-color)"
-                  className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
-                  onClick={() =>
-                    siblingInfo.currentIndex !== 0 &&
-                    onBranchChange(
-                      (siblingInfo.currentIndex - 1 + siblingInfo.total) %
-                        siblingInfo.total,
-                    )
-                  }
-                />
-                <div className="text-[var(--main-color)]">
-                  {siblingInfo.currentIndex + 1} of {siblingInfo.total}
-                </div>
-                <AngleRightIcon
-                  fill="var(--main-color)"
-                  className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
-                  onClick={() =>
-                    siblingInfo.currentIndex !== siblingInfo.total - 1 &&
-                    onBranchChange(
-                      (siblingInfo.currentIndex + 1) % siblingInfo.total,
-                    )
-                  }
-                />
-              </div>
-            )}
+            <SiblingNavigation
+              siblingInfo={siblingInfo}
+              onBranchChange={onBranchChange}
+            />
           </div>
         )}
       </div>
     </div>
   );
 }
+
+export default memo(ChatBubble);
