@@ -659,10 +659,13 @@ export default function Chat() {
   // Fetch chat sessions and load the current session on mount
   // Gets all of the messages for the current session
   useEffect(() => {
-    fetchSessions();
-    if (currentChatSessionId) {
-      loadChatSession(currentChatSessionId);
+    async function initSession() {
+      if (currentChatSessionId) {
+        loadChatSession(currentChatSessionId);
+      }
     }
+    fetchSessions();
+    initSession();
   }, [currentChatSessionId, loadChatSession]);
 
   // Update message map when messages change
@@ -682,14 +685,21 @@ export default function Chat() {
 
   // Initialize thread state when messageMap changes, only if it's empty
   useEffect(() => {
-    if (
-      threadState.activePath.length === 0 &&
-      Object.keys(messageMap).length &&
-      currentChatSessionId
-    ) {
-      setThreadState(generateThreadState(messageMap));
+    if (Object.keys(messageMap).length > 0 && currentChatSessionId) {
+      // Check if we need to regenerate thread state
+      const needsRegeneration =
+        threadState.activePath.length === 0 ||
+        !threadState.activePath.every((id) => messageMap[id]);
+
+      if (needsRegeneration) {
+        const newThreadState = generateThreadState(messageMap);
+        // Only update if something actually changed to avoid render loops
+        if (JSON.stringify(newThreadState) !== JSON.stringify(threadState)) {
+          setThreadState(newThreadState);
+        }
+      }
     }
-  }, [messageMap, threadState.activePath, currentChatSessionId]);
+  }, [messageMap, currentChatSessionId, threadState]);
 
   useEffect(() => {
     if (pendingBranchChange.current) {

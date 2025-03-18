@@ -109,8 +109,8 @@ export default function ChatBubble({
             className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full"
             dangerouslySetInnerHTML={{
               __html: micromark(editedContent, {
-                extensions: [math()],
-                htmlExtensions: [mathHtml()],
+                // extensions: [math()],
+                // htmlExtensions: [mathHtml()],
               }),
             }}
           />
