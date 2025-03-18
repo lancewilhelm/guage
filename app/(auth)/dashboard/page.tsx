@@ -1,3 +1,26 @@
+"use client";
+import { useSession } from "@/context/session-context";
+import { ebGaramond } from "@/utils/fonts";
+import Chat from "@/components/Dashboard/Cards/Chat";
+import Header from "@/components/Header";
+
 export default function Dashboard() {
-  return <div className="flex justify-center ">Dashboard content</div>;
+  const { session } = useSession();
+  return (
+    <div className="grid h-full grid-cols-[1fr_1500px_1fr] grid-rows-[min-content_1fr]">
+      <Header className="col-span-3" />
+      <div className="flex flex-col gap-10 col-start-2 items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <div className="text-2xl font-extralight">Welcome</div>
+          <div className={`text-6xl ${ebGaramond.className}`}>
+            {session?.user.name ? session.user.name : "User"}
+          </div>
+        </div>
+        <div id="cards" className="flex gap-4">
+          <Chat />
+          <div>Role-Play</div>
+        </div>
+      </div>
+    </div>
+  );
 }

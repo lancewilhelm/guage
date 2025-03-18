@@ -8,7 +8,7 @@ import DropDownMenu, {
 } from "@/components/DropDownMenu";
 import Settings from "@/components/Settings/Main";
 
-export default function GlobalMenu() {
+export default function GlobalMenu({ className }: { className?: string }) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const router = useRouter();
   const handleLogout = async () => {
@@ -25,7 +25,7 @@ export default function GlobalMenu() {
   };
 
   return (
-    <div>
+    <div className={`${className}`}>
       <DropDownMenu>
         <DropDownMenuButton>
           <div className="flex items-center gap-2">

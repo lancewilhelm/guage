@@ -7,6 +7,7 @@ import DropDownMenu, {
 } from "@/components/DropDownMenu";
 
 const routes = [
+  { path: "/dashboard", label: "Dashboard" },
   { path: "/chat", label: "Chat" },
   { path: "/roleplay", label: "Role Play" },
 ];
