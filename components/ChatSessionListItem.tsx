@@ -37,13 +37,13 @@ export default function ChatSessionListItem({
 
   return (
     <div
-      className={`flex justify-between items-center rounded border p-1 ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
+      className={`flex justify-between items-center rounded border p-1 overflow-hidden ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
     >
       <div
-        className="cursor-pointer hover:opacity-80"
-        onClick={() => setCurrentChatSessionId(session.id)}
+        className="cursor-pointer hover:opacity-80 overflow-hidden"
+        onMouseDown={() => setCurrentChatSessionId(session.id)}
       >
         {isRenaming ? (
           <input
@@ -65,7 +65,9 @@ export default function ChatSessionListItem({
             className="border px-1 rounded w-full"
           />
         ) : (
-          session.title
+          <div className="text-nowrap overflow-hidden text-ellipsis">
+            {session.title}
+          </div>
         )}
       </div>
       {isRenaming ? (
