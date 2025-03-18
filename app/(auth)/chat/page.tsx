@@ -489,7 +489,7 @@ export default function Chat() {
       threadState.activePath.push(currentNode.id);
     }
 
-    logger.debug("generateThreadState:", threadState);
+    logger.debug("generateThreadState:", { threadState, messageMap });
     return threadState;
   }
 
@@ -687,11 +687,12 @@ export default function Chat() {
   useEffect(() => {
     if (Object.keys(messageMap).length > 0 && currentChatSessionId) {
       // Check if we need to regenerate thread state
-      const needsRegeneration =
-        threadState.activePath.length === 0 ||
-        !threadState.activePath.every((id) => messageMap[id]);
+      const isThreadEmpty = threadState.activePath.length === 0;
+      const hasFirstMessageChanged =
+        threadState.activePath.length > 0 &&
+        !messageMap[threadState.activePath[0]];
 
-      if (needsRegeneration) {
+      if (isThreadEmpty || hasFirstMessageChanged) {
         const newThreadState = generateThreadState(messageMap);
         // Only update if something actually changed to avoid render loops
         if (JSON.stringify(newThreadState) !== JSON.stringify(threadState)) {

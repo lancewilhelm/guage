@@ -174,11 +174,6 @@ export async function streamLlmResponse(
       }
     }
 
-    logger.debug("Checking if we should generate title", {
-      shouldGenerateTitle,
-      insertUserMessageResult,
-      insertAsssistantMessageResult,
-    });
     // Generate title if this is the first assistant response
     if (
       shouldGenerateTitle &&
