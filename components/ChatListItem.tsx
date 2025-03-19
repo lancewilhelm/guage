@@ -37,14 +37,12 @@ export default function ChatListItem({
 
   return (
     <div
-      className={`flex justify-between items-center rounded border p-1 ${currentChatSessionId === session.id ? "border-(--main-color)" : "border-(--bg-color)"}`}
+      className={`flex gap-1 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
+      onMouseDown={() => setCurrentChatSessionId(session.id)}
     >
-      <div
-        className="cursor-pointer hover:opacity-80 overflow-hidden"
-        onMouseDown={() => setCurrentChatSessionId(session.id)}
-      >
+      <div className="cursor-pointer hover:opacity-80 overflow-hidden">
         {isRenaming ? (
           <input
             type="text"
@@ -81,7 +79,7 @@ export default function ChatListItem({
             }}
             className="p-1 cursor-pointer"
           >
-            <CheckIcon fill="var(--accept-color)" />
+            <CheckIcon fill="var(--color-yes)" />
           </button>
           <button
             onClick={() => {
@@ -90,16 +88,18 @@ export default function ChatListItem({
             }}
             className="p-1 cursor-pointer"
           >
-            <XMarkIcon fill="var(--cancel-color)" />
+            <XMarkIcon fill="var(--color-no)" />
           </button>
         </div>
       ) : (
         <DropDownMenu>
           <DropDownMenuButton>
             {isMenuButtonVisible ? (
-              <DotsIcon fill="var(--main-color)" />
+              <DotsIcon fill="var(--color-acc)" />
             ) : (
-              <DotsIcon fill="var(--bg-color)" />
+              <DotsIcon
+                fill={`${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
+              />
             )}
           </DropDownMenuButton>
           <DropDownMenuList align="right">
@@ -109,14 +109,14 @@ export default function ChatListItem({
               }}
             >
               <div className="grid grid-cols-[20px_auto] items-center ">
-                <PencilIcon fill="var(--main-color)" />
+                <PencilIcon fill="var(--color-acc)" />
                 Rename
               </div>
             </DropDownMenuItem>
             <DropDownMenuItem onClick={() => deleteHandler(session.id)}>
               <div className="grid grid-cols-[20px_auto] items-center text-(--error-color)">
                 <TrashCanIcon
-                  fill="var(--error-color)"
+                  fill="var(--color-no)"
                   className="translate-y-[-1px]"
                 />
                 Trash

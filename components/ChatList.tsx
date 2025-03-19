@@ -65,7 +65,7 @@ export default function SessionsPanel({
   };
 
   return (
-    <div className={`h-full ${isVisible ? "flex" : "hidden"}`}>
+    <div className={`h-full bg-(--color-bg1) ${isVisible ? "flex" : "hidden"}`}>
       <div
         className="flex justify-center p-2 overflow-hidden"
         style={{ width: sessionPanelWidth }}
@@ -73,17 +73,18 @@ export default function SessionsPanel({
         <div className="flex flex-col w-full items-center gap-2">
           <div className="flex w-full items-center px-2">
             <TableListIcon
-              fill="var(--main-color)"
+              fill="var(--color-acc)"
               className="cursor-pointer"
               onMouseDown={() => setIsVisible(false)}
             />
-            <div className="grow text-center">Sessions</div>
+            <div className="grow text-center">Chats</div>
             <PlusIcon
-              fill="var(--main-color)"
+              fill="var(--color-acc)"
               className="cursor-pointer"
               onClick={createHandler}
             />
           </div>
+          <div className="w-full h-[1px] bg-(--color-bg2)" />
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
             {chatSessions.map((session) => (
@@ -107,9 +108,8 @@ export default function SessionsPanel({
         }}
       >
         {/* Some trickery to create a 1px border with a wide hover range*/}
-        <div className="w-[2px] bg-(--bg-color)" />
-        <div className="w-[1px] bg-(--main-color)" />
-        <div className="w-[2px] bg-(--bg-color)" />
+        <div className="w-[3px] bg-(--color-bg1)" />
+        <div className="w-[3px] bg-(--color-bg0)" />
       </div>
     </div>
   );

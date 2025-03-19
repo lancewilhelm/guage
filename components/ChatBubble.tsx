@@ -30,15 +30,20 @@ const customComponents = {
 };
 
 // Memoized markdown component to prevent unnecessary re-renders
-const MessageContent = memo(({ content }: { content: string }) => (
-  <Markdown
-    remarkPlugins={[remarkGfm, remarkMath]}
-    rehypePlugins={[rehypeKatex, rehypeHightlight]}
-    components={customComponents}
-  >
-    {content}
-  </Markdown>
-));
+const MessageContent = memo(
+  ({ content, role }: { content: string; role: string }) =>
+    role === "user" ? (
+      <div>{content}</div>
+    ) : (
+      <Markdown
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex, rehypeHightlight]}
+        components={customComponents}
+      >
+        {content}
+      </Markdown>
+    ),
+);
 MessageContent.displayName = "MessageContent";
 
 // Extract navigation controls to a separate component
@@ -70,15 +75,15 @@ const SiblingNavigation = memo(
     return (
       <div className="flex items-center gap-1">
         <AngleLeftIcon
-          fill="var(--main-color)"
+          fill="var(--color-acc)"
           className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
           onClick={handlePrevSibling}
         />
-        <div className="text-[var(--main-color)]">
+        <div className="text-[var(--color-acc)]">
           {siblingInfo.currentIndex + 1} of {siblingInfo.total}
         </div>
         <AngleRightIcon
-          fill="var(--main-color)"
+          fill="var(--color-acc)"
           className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
           onClick={handleNextSibling}
         />
@@ -122,7 +127,13 @@ function ChatBubble({
     setIsEditing(true);
     setEditedContent(message.content || "");
     // Focus the textarea after it renders
-    setTimeout(() => inputRef.current?.focus(), 0);
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+        inputRef.current.selectionStart = inputRef.current.selectionEnd =
+          inputRef.current.value.length;
+      }
+    }, 0);
   }, [message.content]);
 
   const handleSaveEdit = useCallback(() => {
@@ -163,7 +174,7 @@ function ChatBubble({
       >
         <div className="px-1">{interlocutorName}</div>
         {isEditing ? (
-          <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden w-full max-w-full">
+          <div className="flex flex-col gap-2 bg-(--color-bg2) rounded-lg p-2 overflow-hidden w-full max-w-full">
             <textarea
               ref={inputRef}
               value={editedContent}
@@ -176,12 +187,12 @@ function ChatBubble({
             >
               <CheckIcon
                 onClick={handleSaveEdit}
-                fill="var(--accept-color)"
+                fill="var(--color-yes)"
                 className="cursor-pointer"
               />
               <XMarkIcon
                 onClick={handleCancelEdit}
-                fill="var(--cancel-color)"
+                fill="var(--color-no)"
                 className="cursor-pointer"
               />
             </div>
@@ -189,13 +200,13 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full"
+            className="flex flex-col gap-2 bg-(--color-bg2) border border-(--color-bg2) rounded-lg p-3 overflow-hidden max-w-full"
           >
-            <MessageContent content={editedContent} />
+            <MessageContent content={editedContent} role={message.role} />
           </div>
         ) : (
           <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
-            <BouncingDotsIcon fill="var(--main-color)" />
+            <BouncingDotsIcon fill="var(--color-acc)" />
           </div>
         )}
 
@@ -207,13 +218,13 @@ function ChatBubble({
             {isCopied ? (
               <ThumbsUpIcon
                 fill={
-                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                  isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
                 }
               />
             ) : (
               <CopyIcon
                 fill={
-                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                  isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
                 }
                 className="cursor-pointer"
                 onMouseDown={(e) => {
@@ -225,7 +236,7 @@ function ChatBubble({
             )}
             <PencilIcon
               fill={
-                isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
               }
               className="cursor-pointer"
               onClick={handleEditClick}

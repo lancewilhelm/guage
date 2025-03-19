@@ -27,7 +27,7 @@ export default function ProfilePage() {
           type="text"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          className="w-[250px] border border-(--main-color) p-1 rounded"
+          className="w-[250px] border border-(--color-bg2) p-1 rounded"
         />
       </div>
     </div>

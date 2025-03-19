@@ -184,7 +184,7 @@ export default function Chat() {
   /**
    * Load a chat session by ID
    */
-  const loadChatSession = useCallback(
+  const loadSession = useCallback(
     async (sessionId: string) => {
       setMessages([]);
       setThreadState({ activePath: [], siblingInfo: {} });
@@ -200,6 +200,11 @@ export default function Chat() {
         logger.error("Error fetching chat messages:", error);
       } finally {
         setIsLoading(false);
+
+        // Focus the input after loading a session
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
       }
     },
     [fetchMessages],
@@ -482,6 +487,11 @@ export default function Chat() {
     setMessageMap({});
     setCurrentChatSessionId(newChatSession.id);
     setChatSessions((prev) => [newChatSession, ...prev]);
+
+    // Focus the input after creating a new session
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   }, []);
 
   /**
@@ -697,9 +707,9 @@ export default function Chat() {
   // Load the chat session when it changes
   useEffect(() => {
     if (currentChatSessionId) {
-      loadChatSession(currentChatSessionId);
+      loadSession(currentChatSessionId);
     }
-  }, [currentChatSessionId, loadChatSession]);
+  }, [currentChatSessionId, loadSession]);
 
   // Update message map when messages change
   useEffect(() => {
@@ -765,7 +775,7 @@ export default function Chat() {
       {/* Center: Chat & InputRow */}
       <div className="col-start-2 row-start-2 row-span-2 h-full flex flex-col">
         <div className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container">
-          <div className="mx-auto w-full max-w-[1000px]">
+          <div className="mx-auto w-full max-w-[1000px] px-5">
             <ChatBox
               thread={thread}
               threadState={threadState}
@@ -782,7 +792,6 @@ export default function Chat() {
             stopHandler={handleStopStream}
             isLoading={isLoading}
             isStreaming={isStreaming}
-            buttonLabel="send"
           />
         </div>
       </div>

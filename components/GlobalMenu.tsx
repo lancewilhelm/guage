@@ -29,7 +29,7 @@ export default function GlobalMenu({ className }: { className?: string }) {
       <DropDownMenu>
         <DropDownMenuButton>
           <div className="flex items-center gap-2">
-            <MenuIcon fill="var(--main-color)" />
+            <MenuIcon fill="var(--color-acc)" />
           </div>
         </DropDownMenuButton>
         <DropDownMenuList align="right">

@@ -100,7 +100,7 @@ export default function RolePlay() {
           <div className="flex w-full justify-center">
             {sessionWidth < minWidth ? (
               <AngleRightIcon
-                fill="var(--main-color)"
+                fill="var(--color-acc)"
                 className="cursor-pointer"
                 onMouseDown={() => togglePanel("session")}
               />
@@ -108,7 +108,7 @@ export default function RolePlay() {
               <div className="flex w-full">
                 <div className="grow text-left">Sessions</div>
                 <AngleLeftIcon
-                  fill="var(--main-color)"
+                  fill="var(--color-acc)"
                   className="cursor-pointer"
                   onMouseDown={() => togglePanel("session")}
                 />
@@ -116,21 +116,21 @@ export default function RolePlay() {
             )}
           </div>
         </div>
-        <div className="w-[1px] bg-(--main-color) relative">
+        <div className="w-[1px] bg-(--color-acc) relative">
           {/* Resizing handle */}
           <div
-            className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--main-color) rounded cursor-ew-resize items-center justify-center"
+            className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--color-acc) rounded cursor-ew-resize items-center justify-center"
             onMouseDown={(e) => startResizing(e, "session")}
           >
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-            <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
+            <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
+            <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
+            <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
           </div>
         </div>
       </div>
 
       {/* Center: Scenario & Chat */}
-      <div className="p-2 col-start-2 row-start-1 border-b border-(--main-color)">
+      <div className="p-2 col-start-2 row-start-1 border-b border-(--color-acc)">
         <div className="text-2xl font-bold">Scenario</div>
         <div>
           You are a boss requesting that an employee, Taylor, works extra hours
@@ -145,15 +145,15 @@ export default function RolePlay() {
       {/* Feedback Panel (Collapsible) */}
       <div className="flex col-start-3 row-span-3">
         <div className="flex col-start-3 row-span-3">
-          <div className="w-[1px] bg-(--main-color) relative">
+          <div className="w-[1px] bg-(--color-acc) relative">
             {/* Resizing handle */}
             <div
-              className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--main-color) rounded cursor-ew-resize items-center justify-center"
+              className="flex flex-col gap-1 absolute top-1/2 -translate-y-1/2 -left-1.5 px-1 py-2 bg-(--color-acc) rounded cursor-ew-resize items-center justify-center"
               onMouseDown={(e) => startResizing(e, "feedback")}
             >
-              <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-              <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
-              <div className="w-1 h-1 bg-(--bg-color) rounded-full"></div>
+              <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
+              <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
+              <div className="w-1 h-1 bg-(--color-bg0) rounded-full"></div>
             </div>
           </div>
 
@@ -164,14 +164,14 @@ export default function RolePlay() {
             <div className="flex w-full justify-center">
               {feedbackWidth < minWidth ? (
                 <AngleLeftIcon
-                  fill="var(--main-color)"
+                  fill="var(--color-acc)"
                   className="cursor-pointer"
                   onMouseDown={() => togglePanel("feedback")}
                 />
               ) : (
                 <div className="flex w-full">
                   <AngleRightIcon
-                    fill="var(--main-color)"
+                    fill="var(--color-acc)"
                     className="cursor-pointer"
                     onMouseDown={() => togglePanel("feedback")}
                   />
@@ -184,12 +184,12 @@ export default function RolePlay() {
       </div>
 
       {/* Input & Buttons */}
-      <div className="col-start-2 row-start-3 flex gap-2 p-2 border-t border-(--main-color)">
+      <div className="col-start-2 row-start-3 flex gap-2 p-2 border-t border-(--color-acc)">
         <textarea
-          className="border border-(--main-color) rounded grow p-1"
+          className="border border-(--color-acc) rounded grow p-1"
           placeholder="type a message here..."
         ></textarea>
-        <div className="border bg-(--text-color) text-(--bg-color) rounded-lg flex items-center p-2 hover:opacity-80 active:opacity-60 cursor-pointer">
+        <div className="border bg-(--color-fg0) text-(--color-bg0) rounded-lg flex items-center p-2 hover:opacity-80 active:opacity-60 cursor-pointer">
           send
         </div>
       </div>

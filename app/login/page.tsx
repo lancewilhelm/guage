@@ -45,12 +45,12 @@ export default function Login() {
       >
         <Link href="/">
           <div
-            className={`text-7xl ${ebGaramond.className} mb-6 text-(--main-color)`}
+            className={`text-7xl ${ebGaramond.className} mb-6 text-(--color-acc)`}
           >
             Guage
           </div>
         </Link>
-        <div className="flex flex-col gap-2 items-center">
+        <form className="flex flex-col gap-2 items-center">
           <div>
             <div>email</div>
             <input
@@ -59,7 +59,7 @@ export default function Login() {
               value={form.email}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
-              className="border border-(--sub-color) px-2 py-1 rounded text-[12pt] w-[250px]"
+              className="border border-(--color-bg2) px-2 py-1 rounded text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -70,16 +70,17 @@ export default function Login() {
               value={form.password}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
-              className="border border-(--sub-color) px-2 py-1 rounded text-[12pt] w-[250px]"
+              className="border border-(--color-bg2) px-2 py-1 rounded text-[12pt] w-[250px]"
             />
           </div>
-          <div
-            className="bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer"
+          <button
+            className="bg-(--color-fg2) text-(--color-bg0) rounded px-2 py-1 cursor-pointer hover:opacity-80 active:opacity-60"
+            type="submit"
             onClick={handleLogin}
           >
             login
-          </div>
-        </div>
+          </button>
+        </form>
       </div>
     </div>
   );

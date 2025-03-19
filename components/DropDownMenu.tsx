@@ -97,7 +97,7 @@ export function DropDownMenuList({
 
   return isOpen ? (
     <div
-      className={`absolute bg-(--bg-color) mt-2 border rounded min-w-max z-10 ${align === "right" ? "right-0" : "left-0"}`}
+      className={`absolute bg-(--color-bg1) mt-2 border-2 border-(--color-bg2) rounded-xl min-w-max z-10 shadow-xl ${align === "right" ? "right-0" : "left-0"}`}
     >
       {children}
     </div>
@@ -119,7 +119,7 @@ export function DropDownMenuItem({
   const { setIsOpen } = context;
   return (
     <div
-      className="cursor-pointer bg-(--bg-color) rounded p-2 hover:opacity-80 active:opacity-60"
+      className="cursor-pointer bg-(--color-bg1) rounded-xl p-2 hover:opacity-80 active:opacity-60"
       onClick={() => {
         onClick();
         setIsOpen(false);

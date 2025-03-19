@@ -6,7 +6,8 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import StopIcon from "@/components/Icon/StopCircle";
+import UpArrowIcon from "@/components/Icon/UpArrow";
+import SquareRoundedIcon from "@/components/Icon/SquareRounded";
 
 const SubmitButton = memo(
   ({
@@ -15,20 +16,18 @@ const SubmitButton = memo(
     hasInput,
     onSubmit,
     onStop,
-    buttonLabel,
   }: {
     isStreaming: boolean;
     isLoading: boolean;
     hasInput: boolean;
     onSubmit: () => void;
     onStop: () => void;
-    buttonLabel: string;
   }) => {
     const isDisabled = isLoading || (!hasInput && !isStreaming);
     const buttonClasses = `
     flex items-center justify-center
-    border rounded-lg p-2 w-[50px]
-    bg-(--text-color) text-(--bg-color)
+    border rounded-full p-2 w-10 h-10 
+    bg-(--color-fg0) text-(--color-bg0)
     ${isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}
   `;
 
@@ -45,9 +44,13 @@ const SubmitButton = memo(
         className={buttonClasses}
         onClick={handleClick}
         disabled={isDisabled}
-        aria-label={isStreaming ? "Stop" : buttonLabel}
+        aria-label={isStreaming ? "Stop" : "Send"}
       >
-        {isStreaming ? <StopIcon fill="var(--bg-color)" /> : buttonLabel}
+        {isStreaming ? (
+          <SquareRoundedIcon fill="var(--color-bg0)" />
+        ) : (
+          <UpArrowIcon fill="var(--color-bg0)" />
+        )}
       </button>
     );
   },
@@ -70,7 +73,6 @@ const InputRow = forwardRef<
     initialValue?: string;
     isLoading?: boolean;
     isStreaming?: boolean;
-    buttonLabel?: string;
     disabled?: boolean;
   }
 >(function InputRow(
@@ -80,7 +82,6 @@ const InputRow = forwardRef<
     initialValue = "",
     isLoading = false,
     isStreaming = false,
-    buttonLabel = "submit",
     disabled = false,
   },
   ref,
@@ -126,11 +127,11 @@ const InputRow = forwardRef<
   );
 
   return (
-    <div className="col-start-2 row-start-3 flex gap-2 p-4">
+    <div className="col-start-2 row-start-3 flex items-center gap-2 p-2 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4">
       <textarea
         ref={textareaRef}
-        className={`border border-(--main-color) rounded grow p-1 ${disabled ? "bg-(--sub-color)" : ""}`}
-        placeholder="type a message here..."
+        className={`rounded grow p-1 resize-none focus:outline-none ${disabled ? "bg-(--color-bg2)" : ""}`}
+        placeholder="Send a message..."
         disabled={disabled || isLoading}
         value={inputValue}
         onChange={handleInputChange}
@@ -142,7 +143,6 @@ const InputRow = forwardRef<
         hasInput={hasInput}
         onSubmit={submitHandler}
         onStop={stopHandler}
-        buttonLabel={buttonLabel}
       />
     </div>
   );

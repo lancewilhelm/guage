@@ -51,12 +51,12 @@ export default function InputElement({
           type={type}
           value={newValue}
           onChange={handleChange}
-          className="w-[250px] border border-(--main-color) p-1 rounded"
+          className="w-[250px] border border-(--color-bg2) p-1 rounded"
         />
         {!autoSave && newValue !== value && (
           <div className="flex gap-2">
             <CheckIcon
-              fill="var(--accept-color)"
+              fill="var(--color-yes)"
               onClick={() => {
                 onSave();
                 setNewValue(value);
@@ -64,7 +64,7 @@ export default function InputElement({
               className="cursor-pointer"
             />
             <XMarkIcon
-              fill="var(--cancel-color)"
+              fill="var(--color-no)"
               onClick={() => setNewValue(value)}
               className="cursor-pointer"
             />

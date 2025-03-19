@@ -23,7 +23,7 @@ export default function Header({
         {isSessionButtonVisible && (
           <div className="flex gap-4">
             <TableListIcon
-              fill="var(--main-color)"
+              fill="var(--color-acc)"
               className="cursor-pointer"
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -32,7 +32,7 @@ export default function Header({
               }}
             />
             <PlusIcon
-              fill="var(--main-color)"
+              fill="var(--color-acc)"
               className="cursor-pointer"
               onClick={createChatSession}
             />

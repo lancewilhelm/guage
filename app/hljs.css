@@ -7,22 +7,43 @@
 */
 
 :root {
-  --bg0: #282c34; /* Default Background */
-  --bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
-  --bg2: #3e4451; /* Selection Background */
-  --cmt: #545862; /* Comments, Invisibles, Line Highlighting */
-  --fg0: #565c64; /* Dark Foreground (Used for status bars) */
-  --fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
-  --fg2: #b6bdca; /* Light Foreground (Not often used) */
-  --bg3: #c8ccd4; /* Light Background (Not often used) */
-  --red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
-  --org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
-  --yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
-  --grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
-  --blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
-  --idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
-  --vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
-  --wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+  --hljs-bg0: #fafafa; /* Default Background */
+  --hljs-bg1: #eaeaeb; /* Lighter Background (Used for status bars, line number and folding marks) */
+  --hljs-bg2: #d6d6d6; /* Selection Background */
+  --hljs-bg3: #f0f0f1; /* Light Background (Not often used) */
+  --hljs-cmt: #a0a1a7; /* Comments, Invisibles, Line Highlighting */
+  --hljs-fg0: #383a42; /* Dark Foreground (Used for status bars) */
+  --hljs-fg1: #4f525e; /* Default Foreground, Caret, Delimiters, Operators */
+  --hljs-fg2: #6a6d7a; /* Light Foreground (Not often used) */
+  --hljs-red: #e45649; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+  --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+  --hljs-yel: #986801; /* Classes, Markup Bold, Search Text Background */
+  --hljs-grn: #50a14f; /* Strings, Inherited Class, Markup Code, Diff Inserted */
+  --hljs-blu: #4078f2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
+  --hljs-idg: #a626a4; /* Functions, Methods, Attribute IDs, Headings */
+  --hljs-vlt: #0184bc; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
+  --hljs-wng: #c18401; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --hljs-bg0: #282c34; /* Default Background */
+    --hljs-bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
+    --hljs-bg2: #3e4451; /* Selection Background */
+    --hljs-bg3: #c8ccd4; /* Light Background (Not often used) */
+    --hljs-cmt: #545862; /* Comments, Invisibles, Line Highlighting */
+    --hljs-fg0: #565c64; /* Dark Foreground (Used for status bars) */
+    --hljs-fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
+    --hljs-fg2: #b6bdca; /* Light Foreground (Not often used) */
+    --hljs-red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+    --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+    --hljs-yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
+    --hljs-grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
+    --hljs-blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
+    --hljs-idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
+    --hljs-vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
+    --hljs-wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+  }
 }
 
 pre code.hljs {
@@ -32,7 +53,7 @@ pre code.hljs {
 }
 
 pre ::-webkit-scrollbar-track {
-  background: var(--bg0);
+  background: var(--color-bg1);
 }
 
 code.hljs {
@@ -40,14 +61,14 @@ code.hljs {
 }
 
 .hljs {
-  color: var(--fg1);
-  background: var(--bg0);
+  color: var(--hljs-fg1);
+  background: var(--color-bg1);
 }
 
 .hljs::selection,
 .hljs ::selection {
-  background-color: var(--bg2);
-  color: var(--fg1);
+  background-color: var(--hljs-bg2);
+  color: var(--hljs-fg1);
 }
 
 /* purposely do not highlight these things */
@@ -58,19 +79,19 @@ code.hljs {
 
 /* Comments, Invisibles, Line Highlighting */
 .hljs-comment {
-  color: var(--cmt);
+  color: var(--hljs-cmt);
 }
 
 /* Dark Foreground (Used for status bars) */
 .hljs-tag {
-  color: var(--fg0);
+  color: var(--hljs-fg0);
 }
 
 /* Default Foreground, Caret, Delimiters, Operators */
 .hljs-subst,
 .hljs-punctuation,
 .hljs-operator {
-  color: var(--fg1);
+  color: var(--hljs-fg1);
 }
 
 .hljs-operator {
@@ -84,7 +105,7 @@ code.hljs {
 .hljs-selector-tag,
 .hljs-name,
 .hljs-deletion {
-  color: var(--red);
+  color: var(--hljs-red);
 }
 
 /* base09 - Integers, Boolean, Constants, XML Attributes, Markup Link Url */
@@ -94,19 +115,19 @@ code.hljs {
 .hljs-attr,
 .hljs-variable.constant_,
 .hljs-literal {
-  color: var(--org);
+  color: var(--hljs-org);
 }
 
 /* base0A - Classes, Markup Bold, Search Text Background */
 .hljs-title,
 .hljs-class .hljs-title,
 .hljs-title.class_ {
-  color: var(--yel);
+  color: var(--hljs-yel);
 }
 
 .hljs-strong {
   font-weight: bold;
-  color: var(--yel);
+  color: var(--hljs-yel);
 }
 
 /* base0B - Strings, Inherited Class, Markup Code, Diff Inserted */
@@ -114,7 +135,7 @@ code.hljs {
 .hljs-addition,
 .hljs-title.class_.inherited__,
 .hljs-string {
-  color: var(--grn);
+  color: var(--hljs-grn);
 }
 
 /* base0C - Support, Regular Expressions, Escape Characters, Markup Quotes */
@@ -123,7 +144,7 @@ code.hljs {
 .hljs-quote,
 .hljs-keyword.hljs-atrule,
 .hljs-regexp {
-  color: var(--blu);
+  color: var(--hljs-blu);
 }
 
 /* base0D - Functions, Methods, Attribute IDs, Headings */
@@ -132,7 +153,7 @@ code.hljs {
 .ruby .hljs-property,
 .hljs-title.function_,
 .hljs-section {
-  color: var(--idg);
+  color: var(--hljs-idg);
 }
 
 /* base0E - Keywords, Storage, Selector, Markup Italic, Diff Changed */
@@ -144,10 +165,10 @@ code.hljs {
 .hljs-template-tag,
 .diff .hljs-meta,
 .hljs-keyword {
-  color: var(--vlt);
+  color: var(--hljs-vlt);
 }
 .hljs-emphasis {
-  color: var(--vlt);
+  color: var(--hljs-vlt);
   font-style: italic;
 }
 
@@ -159,7 +180,7 @@ code.hljs {
 */
 .hljs-meta .hljs-keyword,
 .hljs-meta .hljs-string {
-  color: var(--wng);
+  color: var(--hljs-wng);
 }
 
 .hljs-meta .hljs-keyword,

@@ -19,7 +19,10 @@ function SettingsPageListItem({
   onClick: () => void;
 }) {
   return (
-    <div className="cursor-pointer" onClick={onClick}>
+    <div
+      className="cursor-pointer hover:opacity-80 active:opacity-60"
+      onClick={onClick}
+    >
       {name}
     </div>
   );
@@ -30,16 +33,16 @@ export default function Settings({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal onClose={onClose}>
-      <div className="grid grid-cols-[100px_auto] grid-rows-[min-content_auto] bg-(--bg-color) border w-[800px] max-w-[80vw] h-[800px] rounded-(--border-radius)">
-        <div className="flex justify-between items-center col-span-2 p-2 border-b">
+      <div className="grid grid-cols-[100px_auto] grid-rows-[min-content_auto] bg-(--color-bg1) border-2 border-(--color-bg2) w-[800px] max-w-[80vw] h-[800px] rounded-(--border-radius)">
+        <div className="flex justify-between items-center col-span-2 p-2 border-b-2 border-(--color-bg2)">
           <div>Settings</div>
           <XMarkIcon
-            fill="var(--main-color)"
-            className="cursor-pointer"
+            fill="var(--color-fg2)"
+            className="cursor-pointer hover:opacity-80 active:opacity-60"
             onClick={onClose}
           />
         </div>
-        <div className="flex flex-col gap-2 border-r p-2 row-start-2">
+        <div className="flex flex-col gap-2 border-r-2 border-(--color-bg2) p-2 row-start-2">
           {Object.entries(settingsPages).map(([slug, { name }]) => (
             <SettingsPageListItem
               key={slug}

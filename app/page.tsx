@@ -17,7 +17,7 @@ export default async function Home() {
         className={`flex flex-col items-center justify-center row-start-[content-start] col-start-[content-start]`}
       >
         <div
-          className={`text-7xl ${ebGaramond.className} mb-6 text-(--main-color)`}
+          className={`text-7xl ${ebGaramond.className} mb-6 text-(--color-acc)`}
         >
           Guage
         </div>

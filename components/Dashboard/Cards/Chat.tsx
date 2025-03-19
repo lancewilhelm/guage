@@ -11,7 +11,7 @@ export default function Chat() {
       <Link href="/chat" className="text-xl">
         Chat
       </Link>
-      <div className="flex gap-4 w-full border border-(--main-color) rounded p-4">
+      <div className="flex gap-4 w-full border border-(--color-acc) rounded p-4">
         <div className="flex items-center justify-center border p-2 rounded text-xl">
           New Chat
         </div>

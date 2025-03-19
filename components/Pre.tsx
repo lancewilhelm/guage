@@ -27,24 +27,24 @@ export default function Pre({ children, ...props }: PreProps) {
   }
 
   return (
-    <div className="flex flex-col my-[10px] sm:m-[10px]">
+    <div className="flex flex-col my-[10px] sm:m-[10px] shadow">
       <div className="flex flex-col">
         <div className="grid grid-cols-[min-content_max-content_auto_min-content] text-sm font-mono">
           {language && (
             <div
-              className={`bg-(--main-color) text-(--bg-color) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
+              className={`bg-(--color-bg1) text-(--color-fg0) border-b border-(--color-bg2) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
             >
               {language}
             </div>
           )}
           <div
-            className="flex justify-center w-[30px] items-center bg-(--main-color) text-(--bg-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:bg-(--sub-color) transition-all duration-300 copy-code-btn"
+            className="flex justify-center w-[30px] items-center bg-(--color-bg1) border-b border-(--color-bg2) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
             onClick={copyCode}
           >
             {copied ? (
-              <ThumbsUpIcon fill="var(--bg-color)" />
+              <ThumbsUpIcon fill="var(--color-fg0)" />
             ) : (
-              <CopyIcon fill="var(--bg-color)" />
+              <CopyIcon fill="var(--color-fg0)" />
             )}
           </div>
         </div>
@@ -52,7 +52,7 @@ export default function Pre({ children, ...props }: PreProps) {
       <pre
         ref={preRef}
         style={props.style}
-        className="overflow-x-auto border border-(--main-color) rounded-b"
+        className="overflow-x-auto rounded-b"
       >
         {children}
       </pre>

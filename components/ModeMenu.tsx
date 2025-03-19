@@ -26,7 +26,7 @@ export default function ModeMenu() {
       <DropDownMenuButton>
         <div className="flex items-center gap-2">
           {currentRoute ? currentRoute.label : "Select a page"}
-          <AngleDownIcon fill="var(--main-color)" />
+          <AngleDownIcon fill="var(--color-acc)" />
         </div>
       </DropDownMenuButton>
       <DropDownMenuList>
