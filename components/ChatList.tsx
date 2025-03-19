@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
-import ChatSessionListItem from "./ChatSessionListItem";
+import ChatListItem from "./ChatListItem";
 import { SelectChatSession } from "@/utils/db/schema";
 
 export default function SessionsPanel({
@@ -87,7 +87,7 @@ export default function SessionsPanel({
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
             {chatSessions.map((session) => (
-              <ChatSessionListItem
+              <ChatListItem
                 key={session.id}
                 session={session}
                 currentChatSessionId={currentChatSessionId}

@@ -11,7 +11,7 @@ import DropDownMenu, {
 } from "@/components/DropDownMenu";
 import { SelectChatSession } from "@/utils/db/schema";
 
-export default function ChatSessionListItem({
+export default function ChatListItem({
   session,
   currentChatSessionId,
   setCurrentChatSessionId,

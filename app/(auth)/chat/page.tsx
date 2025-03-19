@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { logger } from "@/utils/logger";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ChatBox from "@/components/ChatBox";
 import InputRow, { InputRowHandle } from "@/components/InputRow";
-import SessionsSidePanel from "@/components/SessionsSidePanel";
+import SessionsSidePanel from "@/components/ChatList";
 import Header from "@/components/Header";
 import { SelectChatSession, SelectMessage } from "@/utils/db/schema";
 import {
@@ -67,23 +67,80 @@ export default function Chat() {
   // Derive the active thread from the thread state and message map
   const thread = useMemo(() => {
     if (!threadState.activePath.length) return [];
-    const t = threadState.activePath
+    return threadState.activePath
       .map((id) => messageMap[id])
       .filter(Boolean) as DisplayMessage[];
-    logger.debug("thread:", {
-      thread: t,
-      activePath: threadState.activePath,
-      messageMap,
-    });
-    return t;
   }, [threadState.activePath, messageMap]);
 
   /**
+   * Generate a new message map from messages
+   */
+  const generateMessageMap = useCallback(
+    (messages: DisplayMessage[]): MessageMap => {
+      const map: MessageMap = {};
+      messages.forEach((msg) => {
+        map[msg.id] = msg;
+      });
+      return map;
+    },
+    [],
+  );
+
+  /**
+   * Generate thread state from the message map
+   */
+  const generateThreadState = useCallback(
+    (messageMap: MessageMap): ThreadState => {
+      const threadState: ThreadState = {
+        activePath: [],
+        siblingInfo: {},
+      };
+
+      // Find the root message(s)
+      const rootMessages = Object.values(messageMap)
+        .filter((msg) => msg.parentId === null)
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+
+      if (rootMessages.length === 0) return threadState; // No messages
+
+      // Start at the first root message
+      let currentNode = rootMessages[0];
+
+      // Handle info for the root level
+      threadState.siblingInfo[currentNode.id] = {
+        total: rootMessages.length,
+        currentIndex: 0,
+        siblingIds: rootMessages.map((msg) => msg.id),
+      };
+      threadState.activePath.push(currentNode.id);
+
+      // Traverse down following the first child at each level
+      while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
+        const siblingCount = currentNode.childrenIds.length;
+        const siblingIds = currentNode.childrenIds;
+        currentNode = messageMap[currentNode.childrenIds[0]];
+
+        // Add sibling information for this parent
+        threadState.siblingInfo[currentNode.id] = {
+          total: siblingCount,
+          currentIndex: 0,
+          siblingIds: [...siblingIds],
+        };
+        threadState.activePath.push(currentNode.id);
+      }
+
+      return threadState;
+    },
+    [],
+  );
+
+  /**
    * Fetch messages from the backend
-   * Memoized to prevent unnecessary re-renders
    */
   const fetchMessages = useCallback(async (sessionId: string) => {
-    logger.debug("fetchMessages:", { sessionId });
     try {
       const response = await fetch(
         `/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`,
@@ -92,7 +149,7 @@ export default function Chat() {
       if (!response.ok) throw new Error("Failed to fetch chat messages");
       return await response.json();
     } catch (error) {
-      console.error("Error fetching chat messages:", error);
+      logger.error("Error fetching chat messages:", error);
     }
   }, []);
 
@@ -100,7 +157,6 @@ export default function Chat() {
    * Stop the stream of messages from the LLM API
    */
   const handleStopStream = useCallback(async () => {
-    logger.debug("handleStopStream:");
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -109,20 +165,25 @@ export default function Chat() {
       if (currentChatSessionId) {
         setTimeout(async () => {
           const updatedMessages = await fetchMessages(currentChatSessionId);
-          logger.debug("Fetching messages after stream stop", {
-            updatedMessages,
-          });
           if (updatedMessages) {
             setMessages(updatedMessages);
-            setThreadState(
-              generateThreadState(generateMessageMap(updatedMessages)),
-            );
+            const newMessageMap = generateMessageMap(updatedMessages);
+            setMessageMap(newMessageMap);
+            setThreadState(generateThreadState(newMessageMap));
           }
         }, 500);
       }
     }
-  }, [currentChatSessionId, fetchMessages]);
+  }, [
+    currentChatSessionId,
+    fetchMessages,
+    generateMessageMap,
+    generateThreadState,
+  ]);
 
+  /**
+   * Load a chat session by ID
+   */
   const loadChatSession = useCallback(
     async (sessionId: string) => {
       setMessages([]);
@@ -131,15 +192,12 @@ export default function Chat() {
       setCurrentChatSessionId(sessionId);
       try {
         setIsLoading(true);
-
         const data = await fetchMessages(sessionId);
-        setMessages(data);
-        logger.debug("loadChatSession:", {
-          sessionId,
-          messageCount: data.length,
-        });
+        if (data) {
+          setMessages(data);
+        }
       } catch (error) {
-        console.error("Error fetching chat messages:", error);
+        logger.error("Error fetching chat messages:", error);
       } finally {
         setIsLoading(false);
       }
@@ -148,165 +206,164 @@ export default function Chat() {
   );
 
   /**
-   * Core function to handle message creation and response generation
-   * Used by both new messages and edited messages
+   * Fetch the chat sessions from the backend
    */
-  async function createMessagePairAndStream(
-    newMessage: TempMessage,
-    responseMessage: TempMessage,
-    contextMessages: DisplayMessage[],
-    isFirstResponse: boolean = false,
-  ) {
-    // Update messages with the new message pair
-    setMessages((prev) => [...prev, newMessage, responseMessage]);
-
-    // Set up streaming state
-    setIsStreaming(true);
-    abortControllerRef.current = new AbortController();
-
-    logger.debug("createMessagePairAndStream:", {
-      userMessageId: newMessage.id,
-      assistantMessageId: responseMessage.id,
-      depth: newMessage.depth,
-    });
-
-    let accumulatedResponse = "";
-
-    function handleMessageChunk({ eventType, data }: SSEChunk) {
-      if (eventType === "messageChunk") {
-        accumulatedResponse += JSON.parse(data);
-        updateMessageContent(responseMessage.id, accumulatedResponse);
-      } else if (
-        eventType === "userMessage" ||
-        eventType === "assistantMessage"
-      ) {
-        const messageResult = JSON.parse(data);
-        const originalMessage =
-          eventType === "userMessage" ? newMessage : responseMessage;
-        updateMessageIds(originalMessage, messageResult);
-      } else if (eventType === "error") {
-        console.error("Error streaming response:", data);
-      }
+  const fetchSessions = useCallback(async () => {
+    const data = await fetchChatSessions();
+    if (data) {
+      setChatSessions(data);
     }
-
-    logger.debug("streamLlmResponse:", {
-      sessionId: currentChatSessionId,
-      messageId: newMessage.id,
-      isFirstResponse,
-    });
-
-    try {
-      await streamLlmResponse(
-        contextMessages,
-        newMessage,
-        currentChatSessionId!,
-        handleMessageChunk,
-        abortControllerRef.current,
-        isFirstResponse,
-      );
-    } catch (error) {
-      console.error("Error connecting to the chat API:", error);
-    } finally {
-      setIsStreaming(false);
-      logger.debug("stream completed:", {
-        responseLength: accumulatedResponse.length,
-      });
-      abortControllerRef.current = null;
-
-      if (isFirstResponse) {
-        await fetchSessions();
-      }
-
-      return responseMessage.id;
-    }
-  }
+  }, []);
 
   /**
    * Helper function to update messages with new content
    */
-  function updateMessageContent(messageId: string, content: string) {
-    setMessages((prev) => {
-      return prev.map((msg) =>
-        msg.id === messageId ? { ...msg, content } : msg,
+  const updateMessageContent = useCallback(
+    (messageId: string, content: string) => {
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === messageId ? { ...msg, content } : msg)),
       );
-    });
-  }
+    },
+    [],
+  );
 
   /**
    * Helper function to update IDs from client-generated to server-generated
    */
-  function updateMessageIds(
-    originalMessage: DisplayMessage,
-    serverMessage: DisplayMessage,
-  ) {
-    logger.debug("updateMessageIds", {
-      originalMessage: originalMessage,
-      serverMessage,
-    });
+  const updateMessageIds = useCallback(
+    (originalMessage: DisplayMessage, serverMessage: DisplayMessage) => {
+      setMessages((prev) => {
+        return prev.map((msg) => {
+          // Replace the message with server version
+          if (msg.id === originalMessage.id) {
+            return {
+              ...serverMessage,
+              childrenIds: originalMessage.childrenIds,
+            };
+          }
 
-    setMessages((prev) => {
-      return prev.map((msg) => {
-        // Replace the message with server version
-        if (msg.id === originalMessage.id) {
-          return {
-            ...serverMessage,
-            childrenIds: originalMessage.childrenIds,
-          };
-        }
+          // Update any references to the old ID in parentId
+          if (msg.parentId === originalMessage.id) {
+            return { ...msg, parentId: serverMessage.id };
+          }
 
-        // Update any references to the old ID in parentId
-        if (msg.parentId === originalMessage.id) {
-          return { ...msg, parentId: serverMessage.id };
-        }
+          // Update any references in childrenIds array
+          if (msg.childrenIds && msg.childrenIds.includes(originalMessage.id)) {
+            const newChildrenIds = msg.childrenIds.map((childId) =>
+              childId === originalMessage.id ? serverMessage.id : childId,
+            );
+            return { ...msg, childrenIds: newChildrenIds };
+          }
 
-        // Update any references in childrenIds array
-        if (msg.childrenIds && msg.childrenIds.includes(originalMessage.id)) {
-          const newChildrenIds = msg.childrenIds.map((childId) =>
-            childId === originalMessage.id ? serverMessage.id : childId,
-          );
-          return { ...msg, childrenIds: newChildrenIds };
-        }
-
-        return msg;
+          return msg;
+        });
       });
-    });
 
-    // Also update thread state to reflect the new message ID
-    setThreadState((prev) => {
-      const newActivePath = prev.activePath.map((id) =>
-        id === originalMessage.id ? serverMessage.id : id,
-      );
+      // Also update thread state to reflect the new message ID
+      setThreadState((prev) => {
+        const newActivePath = prev.activePath.map((id) =>
+          id === originalMessage.id ? serverMessage.id : id,
+        );
 
-      // Clone and update siblingInfo to use new IDs
-      const newSiblingInfo = { ...prev.siblingInfo };
+        // Clone and update siblingInfo to use new IDs
+        const newSiblingInfo = { ...prev.siblingInfo };
 
-      // If the message ID is a key in siblingInfo, update it
-      if (prev.siblingInfo[originalMessage.id]) {
-        newSiblingInfo[serverMessage.id] = prev.siblingInfo[originalMessage.id];
-        delete newSiblingInfo[originalMessage.id];
-      }
+        // If the message ID is a key in siblingInfo, update it
+        if (prev.siblingInfo[originalMessage.id]) {
+          newSiblingInfo[serverMessage.id] =
+            prev.siblingInfo[originalMessage.id];
+          delete newSiblingInfo[originalMessage.id];
+        }
 
-      // For all sibling infos, update IDs in siblingIds arrays
-      Object.keys(newSiblingInfo).forEach((key) => {
-        newSiblingInfo[key] = {
-          ...newSiblingInfo[key],
-          siblingIds: newSiblingInfo[key].siblingIds.map((id) =>
-            id === originalMessage.id ? serverMessage.id : id,
-          ),
+        // For all sibling infos, update IDs in siblingIds arrays
+        Object.keys(newSiblingInfo).forEach((key) => {
+          newSiblingInfo[key] = {
+            ...newSiblingInfo[key],
+            siblingIds: newSiblingInfo[key].siblingIds.map((id) =>
+              id === originalMessage.id ? serverMessage.id : id,
+            ),
+          };
+        });
+
+        return {
+          activePath: newActivePath,
+          siblingInfo: newSiblingInfo,
         };
       });
+    },
+    [],
+  );
 
-      return {
-        activePath: newActivePath,
-        siblingInfo: newSiblingInfo,
+  /**
+   * Core function to handle message creation and response generation
+   */
+  const createMessagePairAndStream = useCallback(
+    async (
+      newMessage: TempMessage,
+      responseMessage: TempMessage,
+      contextMessages: DisplayMessage[],
+      isFirstResponse: boolean = false,
+    ) => {
+      // Update messages with the new message pair
+      setMessages((prev) => [...prev, newMessage, responseMessage]);
+
+      // Set up streaming state
+      setIsStreaming(true);
+      abortControllerRef.current = new AbortController();
+
+      let accumulatedResponse = "";
+
+      const handleMessageChunk = ({ eventType, data }: SSEChunk) => {
+        if (eventType === "messageChunk") {
+          accumulatedResponse += JSON.parse(data);
+          updateMessageContent(responseMessage.id, accumulatedResponse);
+        } else if (
+          eventType === "userMessage" ||
+          eventType === "assistantMessage"
+        ) {
+          const messageResult = JSON.parse(data);
+          const originalMessage =
+            eventType === "userMessage" ? newMessage : responseMessage;
+          updateMessageIds(originalMessage, messageResult);
+        } else if (eventType === "error") {
+          logger.error("Error streaming response:", data);
+        }
       };
-    });
-  }
+
+      try {
+        await streamLlmResponse(
+          contextMessages,
+          newMessage,
+          currentChatSessionId!,
+          handleMessageChunk,
+          abortControllerRef.current,
+          isFirstResponse,
+        );
+      } catch (error) {
+        logger.error("Error connecting to the chat API:", error);
+      } finally {
+        setIsStreaming(false);
+        abortControllerRef.current = null;
+
+        if (isFirstResponse) {
+          await fetchSessions();
+        }
+
+        return responseMessage.id;
+      }
+    },
+    [
+      currentChatSessionId,
+      updateMessageContent,
+      updateMessageIds,
+      fetchSessions,
+    ],
+  );
 
   /**
    * Handle the submission of new messages to the backend
    */
-  async function handleSubmit() {
+  const handleSubmit = useCallback(async () => {
     const userInput = inputRef.current?.getValue();
 
     if (!userInput?.trim() || isLoading || currentChatSessionId === undefined)
@@ -314,17 +371,12 @@ export default function Chat() {
 
     inputRef.current?.clear();
 
-    logger.debug("handleSubmit:", {
-      inputLength: userInput.length,
-      sessionId: currentChatSessionId,
-    });
-
     // Add the user message to the list
     let parentId: string | null = null;
     let depth = 0;
     if (threadState.activePath.length > 0) {
       const lastMessage = messageMap[threadState.activePath.slice(-1)[0]];
-      if (lastMessage.role === "assistant") {
+      if (lastMessage?.role === "assistant") {
         parentId = lastMessage.id;
         depth = lastMessage.depth + 1;
       }
@@ -405,13 +457,20 @@ export default function Chat() {
       thread.length > 0 ? [...thread] : [],
       isFirstResponse,
     );
-  }
+  }, [
+    isLoading,
+    currentChatSessionId,
+    threadState,
+    messageMap,
+    messages,
+    thread,
+    createMessagePairAndStream,
+  ]);
 
   /**
    * Create a new chat session
    */
-  async function createSession() {
-    logger.debug("createSession:");
+  const createSession = useCallback(async () => {
     const newChatSession = await createChatSession();
     if (!newChatSession) {
       logger.error("Failed to create chat session");
@@ -422,103 +481,53 @@ export default function Chat() {
     setThreadState({ activePath: [], siblingInfo: {} });
     setMessageMap({});
     setCurrentChatSessionId(newChatSession.id);
-    setChatSessions([newChatSession, ...chatSessions]);
-  }
-
-  /**
-   * Fetch the chat sessions from the backend
-   */
-  async function fetchSessions() {
-    const data = await fetchChatSessions();
-    if (data) {
-      setChatSessions(data);
-    }
-  }
+    setChatSessions((prev) => [newChatSession, ...prev]);
+  }, []);
 
   /**
    * Update the chat session title
    */
-  async function renameSession(sessionId: string, title: string) {
-    logger.debug("renameSession:", { sessionId, title });
-    const updatedSession = await updateChatSession(sessionId, { title });
-    if (updatedSession) {
-      setChatSessions(
-        chatSessions.map((session) =>
-          session.id === sessionId ? { ...session, title } : session,
-        ),
-      );
-    } else {
-      console.error("Failed to update chat session");
-    }
-  }
+  const renameSession = useCallback(
+    async (sessionId: string, title: string) => {
+      const updatedSession = await updateChatSession(sessionId, { title });
+      if (updatedSession) {
+        setChatSessions((prev) =>
+          prev.map((session) =>
+            session.id === sessionId ? { ...session, title } : session,
+          ),
+        );
+      } else {
+        logger.error("Failed to update chat session");
+      }
+    },
+    [],
+  );
 
   /**
    * Delete a chat session
    */
-  async function deleteSession(sessionId: string) {
-    logger.debug("deleteSession:", { sessionId });
-    const result = await deleteChatSession(sessionId);
-    if (result) {
-      setChatSessions(
-        chatSessions.filter((session) => session.id !== sessionId),
-      );
-      if (sessionId === currentChatSessionId) {
-        setMessages([]);
-        setThreadState({ activePath: [], siblingInfo: {} });
-        setCurrentChatSessionId(undefined);
+  const deleteSession = useCallback(
+    async (sessionId: string) => {
+      const result = await deleteChatSession(sessionId);
+      if (result) {
+        setChatSessions((prev) =>
+          prev.filter((session) => session.id !== sessionId),
+        );
+        if (sessionId === currentChatSessionId) {
+          setMessages([]);
+          setThreadState({ activePath: [], siblingInfo: {} });
+          setCurrentChatSessionId(undefined);
+        }
+      } else {
+        logger.error("Failed to delete chat session");
       }
-    } else {
-      console.error("Failed to delete chat session");
-    }
-  }
+    },
+    [currentChatSessionId],
+  );
 
-  function generateThreadState(messageMap: MessageMap): ThreadState {
-    const threadState: ThreadState = {
-      activePath: [],
-      siblingInfo: {},
-    };
-
-    // Find the root message(s)
-    const rootMessages = Object.values(messageMap)
-      .map((node) => node)
-      .filter((msg) => msg.parentId === null)
-      .sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-
-    if (rootMessages.length === 0) return threadState; // No messages
-
-    // Start at the first root message
-    let currentNode = rootMessages[0];
-
-    // Handle info for the root level
-    threadState.siblingInfo[currentNode.id] = {
-      total: rootMessages.length,
-      currentIndex: 0,
-      siblingIds: rootMessages.map((msg) => msg.id),
-    };
-    threadState.activePath.push(currentNode.id);
-
-    // Traverse down following the first child at each level
-    while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-      const siblingCount = currentNode.childrenIds.length;
-      const siblingIds = currentNode.childrenIds;
-      currentNode = messageMap[currentNode.childrenIds[0]];
-
-      // Add sibling information for this parent
-      threadState.siblingInfo[currentNode.id] = {
-        total: siblingCount,
-        currentIndex: 0,
-        siblingIds: [...siblingIds],
-      };
-      threadState.activePath.push(currentNode.id);
-    }
-
-    logger.debug("generateThreadState:", { threadState, messageMap });
-    return threadState;
-  }
-
+  /**
+   * Change to a different message branch
+   */
   const changeBranch = useCallback(
     (messageId: string, newSiblingIndex: number) => {
       setThreadState((prev) => {
@@ -528,11 +537,6 @@ export default function Chat() {
 
         // Get the sibling ID to switch to
         const newSiblingId = siblingInfo.siblingIds[newSiblingIndex];
-
-        logger.debug("changeBranch:", {
-          messageId,
-          newSiblingId,
-        });
 
         // Create new sibling info
         const newSiblingInfo = {
@@ -560,11 +564,14 @@ export default function Chat() {
 
         // Build the rest of the path following first children
         let currentNode = messageMap[newSiblingId];
+        if (!currentNode) return prev;
 
         while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
           const siblingCount = currentNode.childrenIds.length;
           const siblingIds = currentNode.childrenIds;
-          currentNode = messageMap[currentNode.childrenIds[0]];
+          const nextNodeId = currentNode.childrenIds[0];
+          currentNode = messageMap[nextNodeId];
+          if (!currentNode) break;
 
           // Add sibling information for this new parent if not already present
           if (!newSiblingInfo[currentNode.id]) {
@@ -576,7 +583,7 @@ export default function Chat() {
           }
           newPath.push(currentNode.id);
         }
-        logger.debug("changeBranch:", newPath, newSiblingInfo);
+
         return {
           activePath: newPath,
           siblingInfo: newSiblingInfo,
@@ -586,156 +593,141 @@ export default function Chat() {
     [messageMap],
   );
 
-  // Handle message edits - create a new branch when a message is edited
-  async function handleEditMessage(message: DisplayMessage) {
-    logger.debug("handleEditMessage:", { messageId: message.id });
-
-    // Generate new UUIDs for the edited message and its response
-    const editedMessageId = uuidv4();
-    const responseMessageId = uuidv4();
-
-    // Create the edited message as a new branch
-    const userMessage: TempMessage = {
-      role: message.role,
-      content: message.content,
-      parentId: message.parentId,
-      createdAt: new Date(),
-      id: editedMessageId,
-      childrenIds: [responseMessageId],
-      depth: message.depth,
-    };
-
-    // Create a placeholder for the assistant's response
-    const assistantMessage: TempMessage = {
-      role: "assistant",
-      content: "",
-      parentId: editedMessageId,
-      createdAt: new Date(),
-      id: responseMessageId,
-      childrenIds: null,
-      depth: message.depth + 1,
-    };
-
-    // Get context for this message by finding parent in thread
-    const parentIndex = thread.findIndex((msg) => msg.id === message.parentId);
-    let contextMessages: DisplayMessage[];
-
-    if (parentIndex === -1) {
-      // Parent not found in thread, use default logic
-      contextMessages = messages;
-    } else {
-      // Get thread up to the parent + the edited message
-      contextMessages = [...thread.slice(0, parentIndex + 1)];
-    }
-
-    const siblingPrevTotal = threadState.siblingInfo[message.id].total;
-    const siblingPrevIndex = threadState.siblingInfo[message.id].currentIndex;
-    const siblingPrevIds = threadState.siblingInfo[message.id].siblingIds;
-    const newSiblingIds = [...siblingPrevIds, userMessage.id];
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
-    setThreadState((prev) => {
-      const newActivePath = [
-        ...prev.activePath,
-        userMessage.id,
-        assistantMessage.id,
-      ];
-      return {
-        activePath: newActivePath,
-        siblingInfo: {
-          ...prev.siblingInfo,
-          [message.id]: {
-            total: siblingPrevTotal + 1,
-            currentIndex: siblingPrevIndex,
-            siblingIds: newSiblingIds,
-          },
-          [userMessage.id]: {
-            total: siblingPrevTotal + 1,
-            currentIndex: siblingPrevTotal,
-            siblingIds: newSiblingIds,
-          },
-          [assistantMessage.id]: {
-            total: 1,
-            currentIndex: 0,
-            siblingIds: [assistantMessage.id],
-          },
-        },
-      };
-    });
-
-    // Now that map is updated, we can safely change branch
-    pendingBranchChange.current = {
-      messageId: message.id,
-      siblingIndex: siblingPrevTotal,
-    };
-
-    // Create message pair and stream response
-    await createMessagePairAndStream(
-      userMessage,
-      assistantMessage,
-      [...contextMessages],
-      false,
-    );
-  }
-
   /**
-   * Generate a new message map when messages change
+   * Handle message edits - create a new branch when a message is edited
    */
-  function generateMessageMap(messages: DisplayMessage[]): MessageMap {
-    const map: MessageMap = {};
+  const handleEditMessage = useCallback(
+    async (message: DisplayMessage) => {
+      // Generate new UUIDs for the edited message and its response
+      const editedMessageId = uuidv4();
+      const responseMessageId = uuidv4();
 
-    // First pass: create message nodes
-    messages.forEach((msg) => {
-      map[msg.id] = msg;
-    });
+      // Create the edited message as a new branch
+      const userMessage: TempMessage = {
+        role: message.role,
+        content: message.content,
+        parentId: message.parentId,
+        createdAt: new Date(),
+        id: editedMessageId,
+        childrenIds: [responseMessageId],
+        depth: message.depth,
+      };
 
-    logger.debug("generateMessageMap:", {
-      map,
-    });
-    return map;
-  }
+      // Create a placeholder for the assistant's response
+      const assistantMessage: TempMessage = {
+        role: "assistant",
+        content: "",
+        parentId: editedMessageId,
+        createdAt: new Date(),
+        id: responseMessageId,
+        childrenIds: null,
+        depth: message.depth + 1,
+      };
 
-  // Log the thread state when it changes
+      // Get context for this message by finding parent in thread
+      const parentIndex = thread.findIndex(
+        (msg) => msg.id === message.parentId,
+      );
+      let contextMessages: DisplayMessage[];
+
+      if (parentIndex === -1) {
+        // Parent not found in thread, use default logic
+        contextMessages = messages;
+      } else {
+        // Get thread up to the parent + the edited message
+        contextMessages = [...thread.slice(0, parentIndex + 1)];
+      }
+
+      // Update the sibling information with the new message
+      const siblingInfo = threadState.siblingInfo[message.id];
+      if (!siblingInfo) return;
+
+      const siblingPrevTotal = siblingInfo.total;
+      const siblingPrevIndex = siblingInfo.currentIndex;
+      const siblingPrevIds = siblingInfo.siblingIds;
+      const newSiblingIds = [...siblingPrevIds, userMessage.id];
+
+      setMessages((prev) => [...prev, userMessage, assistantMessage]);
+      setThreadState((prev) => {
+        return {
+          activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
+          siblingInfo: {
+            ...prev.siblingInfo,
+            [message.id]: {
+              total: siblingPrevTotal + 1,
+              currentIndex: siblingPrevIndex,
+              siblingIds: newSiblingIds,
+            },
+            [userMessage.id]: {
+              total: siblingPrevTotal + 1,
+              currentIndex: siblingPrevTotal,
+              siblingIds: newSiblingIds,
+            },
+            [assistantMessage.id]: {
+              total: 1,
+              currentIndex: 0,
+              siblingIds: [assistantMessage.id],
+            },
+          },
+        };
+      });
+
+      // Now that map is updated, we can safely change branch
+      pendingBranchChange.current = {
+        messageId: message.id,
+        siblingIndex: siblingPrevTotal,
+      };
+
+      // Create message pair and stream response
+      await createMessagePairAndStream(
+        userMessage,
+        assistantMessage,
+        [...contextMessages],
+        false,
+      );
+    },
+    [thread, messages, threadState, createMessagePairAndStream],
+  );
+
+  // Load sessions on initial render
   useEffect(() => {
-    logger.debug("threadState:", threadState);
-  }, [threadState]);
+    fetchSessions();
+  }, [fetchSessions]);
 
   // Load the chat session when it changes
   useEffect(() => {
-    async function initSession() {
-      if (currentChatSessionId) {
-        loadChatSession(currentChatSessionId);
-      }
+    if (currentChatSessionId) {
+      loadChatSession(currentChatSessionId);
     }
-    fetchSessions();
-    initSession();
   }, [currentChatSessionId, loadChatSession]);
 
   // Update message map when messages change
   useEffect(() => {
-    if (!messages || !messages.length) return;
+    if (!messages.length) return;
     const map = generateMessageMap(messages);
     setMessageMap(map);
-  }, [messages]);
+  }, [messages, generateMessageMap]);
 
   // Initialize thread state when messageMap changes, only if it's empty
   useEffect(() => {
-    if (Object.keys(messageMap).length > 0 && currentChatSessionId) {
-      // Check if we need to regenerate thread state
-      const isThreadEmpty = threadState.activePath.length === 0;
-      const hasFirstMessageChanged =
-        threadState.activePath.length > 0 &&
-        !messageMap[threadState.activePath[0]];
+    if (Object.keys(messageMap).length === 0 || !currentChatSessionId) return;
 
-      if (isThreadEmpty || hasFirstMessageChanged) {
-        const newThreadState = generateThreadState(messageMap);
-        // Only update if something actually changed to avoid render loops
-        if (JSON.stringify(newThreadState) !== JSON.stringify(threadState)) {
-          setThreadState(newThreadState);
-        }
+    // Check if we need to regenerate thread state
+    const isThreadEmpty = threadState.activePath.length === 0;
+    const hasFirstMessageChanged =
+      threadState.activePath.length > 0 &&
+      !messageMap[threadState.activePath[0]];
+
+    if (isThreadEmpty || hasFirstMessageChanged) {
+      const newThreadState = generateThreadState(messageMap);
+      // Only update if something actually changed to avoid render loops
+      if (JSON.stringify(newThreadState) !== JSON.stringify(threadState)) {
+        setThreadState(newThreadState);
       }
     }
-  }, [messageMap, currentChatSessionId, threadState]);
+  }, [messageMap, currentChatSessionId, threadState, generateThreadState]);
 
+  // Handle pending branch changes after message map updates
   useEffect(() => {
     if (pendingBranchChange.current) {
       const { messageId, siblingIndex } = pendingBranchChange.current;
@@ -744,14 +736,15 @@ export default function Chat() {
     }
   }, [messageMap, changeBranch]);
 
+  // UI Layout and component rendering
   return (
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
       <div className="col-start-2">
         <Header
           isSessionButtonVisible={!isSessionPanelVisible}
-          toggleSessionPanel={() => {
-            setIsSessionPanelVisible(!isSessionPanelVisible);
-          }}
+          toggleSessionPanel={() =>
+            setIsSessionPanelVisible(!isSessionPanelVisible)
+          }
           createChatSession={createSession}
         />
       </div>
@@ -778,10 +771,7 @@ export default function Chat() {
               threadState={threadState}
               isSessionLoaded={!!currentChatSessionId}
               onMessageEdit={handleEditMessage}
-              // Pass sibling information to each message
-              onBranchChange={(messageId: string, siblingIndex) => {
-                changeBranch(messageId, siblingIndex);
-              }}
+              onBranchChange={changeBranch}
             />
           </div>
         </div>
