@@ -127,7 +127,7 @@ const InputRow = forwardRef<
   );
 
   return (
-    <div className="col-start-2 row-start-3 flex items-center gap-2 p-2 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4">
+    <div className="col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4">
       <textarea
         ref={textareaRef}
         className={`rounded grow p-1 resize-none focus:outline-none ${disabled ? "bg-(--color-bg2)" : ""}`}
