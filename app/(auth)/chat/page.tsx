@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { logger } from "@/utils/logger";
 import ChatBox from "@/components/ChatBox";
-import InputRow from "@/components/InputRow";
+import InputRow, { InputRowHandle } from "@/components/InputRow";
 import SessionsSidePanel from "@/components/SessionsSidePanel";
 import Header from "@/components/Header";
 import { SelectChatSession, SelectMessage } from "@/utils/db/schema";
@@ -54,7 +54,6 @@ export default function Chat() {
   const [currentChatSessionId, setCurrentChatSessionId] = useState<
     string | undefined
   >(undefined);
-  const [userInput, setUserInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
@@ -63,6 +62,7 @@ export default function Chat() {
     siblingIndex: number;
   } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<InputRowHandle>(null);
 
   // Derive the active thread from the thread state and message map
   const thread = useMemo(() => {
@@ -77,18 +77,6 @@ export default function Chat() {
     });
     return t;
   }, [threadState.activePath, messageMap]);
-
-  // Add memoization for handlers that don't change often
-  /**
-   * Stop the stream of messages from the LLM API
-   */
-  const handleStopStream = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsStreaming(false);
-    }
-  }, []);
 
   /**
    * Fetch messages from the backend
@@ -108,8 +96,38 @@ export default function Chat() {
     }
   }, []);
 
+  /**
+   * Stop the stream of messages from the LLM API
+   */
+  const handleStopStream = useCallback(async () => {
+    logger.debug("handleStopStream:");
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsStreaming(false);
+
+      if (currentChatSessionId) {
+        setTimeout(async () => {
+          const updatedMessages = await fetchMessages(currentChatSessionId);
+          logger.debug("Fetching messages after stream stop", {
+            updatedMessages,
+          });
+          if (updatedMessages) {
+            setMessages(updatedMessages);
+            setThreadState(
+              generateThreadState(generateMessageMap(updatedMessages)),
+            );
+          }
+        }, 500);
+      }
+    }
+  }, [currentChatSessionId, fetchMessages]);
+
   const loadChatSession = useCallback(
     async (sessionId: string) => {
+      setMessages([]);
+      setThreadState({ activePath: [], siblingInfo: {} });
+      setMessageMap({});
       setCurrentChatSessionId(sessionId);
       try {
         setIsLoading(true);
@@ -289,13 +307,17 @@ export default function Chat() {
    * Handle the submission of new messages to the backend
    */
   async function handleSubmit() {
+    const userInput = inputRef.current?.getValue();
+
+    if (!userInput?.trim() || isLoading || currentChatSessionId === undefined)
+      return;
+
+    inputRef.current?.clear();
+
     logger.debug("handleSubmit:", {
       inputLength: userInput.length,
       sessionId: currentChatSessionId,
     });
-
-    if (!userInput.trim() || isLoading || currentChatSessionId === undefined)
-      return;
 
     // Add the user message to the list
     let parentId: string | null = null;
@@ -372,9 +394,6 @@ export default function Chat() {
       };
     });
 
-    // Clear input field
-    setUserInput("");
-
     // Determine if this is the first response
     const isFirstResponse =
       messages.filter((msg) => msg.role === "assistant").length === 0;
@@ -394,9 +413,16 @@ export default function Chat() {
   async function createSession() {
     logger.debug("createSession:");
     const newChatSession = await createChatSession();
-    setChatSessions([newChatSession, ...chatSessions]);
-    setCurrentChatSessionId(newChatSession.id);
+    if (!newChatSession) {
+      logger.error("Failed to create chat session");
+      return;
+    }
+
+    setMessages([]);
     setThreadState({ activePath: [], siblingInfo: {} });
+    setMessageMap({});
+    setCurrentChatSessionId(newChatSession.id);
+    setChatSessions([newChatSession, ...chatSessions]);
   }
 
   /**
@@ -651,13 +677,29 @@ export default function Chat() {
     );
   }
 
+  /**
+   * Generate a new message map when messages change
+   */
+  function generateMessageMap(messages: DisplayMessage[]): MessageMap {
+    const map: MessageMap = {};
+
+    // First pass: create message nodes
+    messages.forEach((msg) => {
+      map[msg.id] = msg;
+    });
+
+    logger.debug("generateMessageMap:", {
+      map,
+    });
+    return map;
+  }
+
   // Log the thread state when it changes
   useEffect(() => {
     logger.debug("threadState:", threadState);
   }, [threadState]);
 
-  // Fetch chat sessions and load the current session on mount
-  // Gets all of the messages for the current session
+  // Load the chat session when it changes
   useEffect(() => {
     async function initSession() {
       if (currentChatSessionId) {
@@ -670,16 +712,8 @@ export default function Chat() {
 
   // Update message map when messages change
   useEffect(() => {
-    const map: MessageMap = {};
-
-    // First pass: create message nodes
-    messages.forEach((msg) => {
-      map[msg.id] = msg;
-    });
-
-    logger.debug("setMessageMap:", {
-      map,
-    });
+    if (!messages || !messages.length) return;
+    const map = generateMessageMap(messages);
     setMessageMap(map);
   }, [messages]);
 
@@ -753,14 +787,12 @@ export default function Chat() {
         </div>
         <div className="mx-auto w-full max-w-[1000px]">
           <InputRow
+            ref={inputRef}
             submitHandler={handleSubmit}
             stopHandler={handleStopStream}
-            inputValue={userInput}
-            setInputValue={setUserInput}
             isLoading={isLoading}
             isStreaming={isStreaming}
             buttonLabel="send"
-            disabled={!currentChatSessionId}
           />
         </div>
       </div>

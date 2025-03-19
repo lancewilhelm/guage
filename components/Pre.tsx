@@ -17,7 +17,6 @@ export default function Pre({ children, ...props }: PreProps) {
     "",
   );
 
-  console.log("props", props);
   function copyCode() {
     if (!preRef.current) return;
     const codeElement = preRef.current.querySelector("code");

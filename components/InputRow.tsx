@@ -1,4 +1,11 @@
-import { useCallback, memo } from "react";
+import {
+  useCallback,
+  memo,
+  useState,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import StopIcon from "@/components/Icon/StopCircle";
 
 const SubmitButton = memo(
@@ -48,30 +55,64 @@ const SubmitButton = memo(
 
 SubmitButton.displayName = "SubmitButton";
 
-function InputRow({
-  submitHandler,
-  stopHandler,
-  inputValue,
-  setInputValue,
-  isLoading = false,
-  isStreaming = false,
-  buttonLabel = "submit",
-  disabled = false,
-}: {
-  submitHandler: () => void;
-  stopHandler: () => void;
-  inputValue: string;
-  setInputValue: (value: string) => void;
-  isLoading?: boolean;
-  isStreaming?: boolean;
-  buttonLabel?: string;
-  disabled?: boolean;
-}) {
+export interface InputRowHandle {
+  setValue: (value: string) => void;
+  getValue: () => string;
+  focus: () => void;
+  clear: () => void;
+}
+
+const InputRow = forwardRef<
+  InputRowHandle,
+  {
+    submitHandler: () => void;
+    stopHandler: () => void;
+    initialValue?: string;
+    isLoading?: boolean;
+    isStreaming?: boolean;
+    buttonLabel?: string;
+    disabled?: boolean;
+  }
+>(function InputRow(
+  {
+    submitHandler,
+    stopHandler,
+    initialValue = "",
+    isLoading = false,
+    isStreaming = false,
+    buttonLabel = "submit",
+    disabled = false,
+  },
+  ref,
+) {
+  const [inputValue, setInputValueState] = useState(initialValue);
+  const [hasInput, setHasInput] = useState(Boolean(initialValue.trim()));
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      setValue: (value: string) => {
+        setInputValueState(value);
+        setHasInput(Boolean(value.trim()));
+      },
+      getValue: () => inputValue,
+      focus: () => textareaRef.current?.focus(),
+      clear: () => {
+        setInputValueState("");
+        setHasInput(false);
+      },
+    }),
+    [inputValue],
+  );
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setInputValue(e.target.value);
+      const newValue = e.target.value;
+      setInputValueState(newValue);
+      setHasInput(Boolean(newValue.trim()));
     },
-    [setInputValue],
+    [],
   );
 
   const handleKeyDown = useCallback(
@@ -85,8 +126,9 @@ function InputRow({
   );
 
   return (
-    <div className="col-start-2 row-start-3 flex gap-2 p-5">
+    <div className="col-start-2 row-start-3 flex gap-2 p-4">
       <textarea
+        ref={textareaRef}
         className={`border border-(--main-color) rounded grow p-1 ${disabled ? "bg-(--sub-color)" : ""}`}
         placeholder="type a message here..."
         disabled={disabled || isLoading}
@@ -97,13 +139,13 @@ function InputRow({
       <SubmitButton
         isStreaming={isStreaming}
         isLoading={isLoading}
-        hasInput={Boolean(inputValue.trim())}
+        hasInput={hasInput}
         onSubmit={submitHandler}
         onStop={stopHandler}
         buttonLabel={buttonLabel}
       />
     </div>
   );
-}
+});
 
-export default memo(InputRow);
+export default InputRow;
