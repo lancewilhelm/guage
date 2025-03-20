@@ -8,12 +8,26 @@ export default function ChatBox({
   isSessionLoaded = false,
   onMessageEdit,
   onBranchChange,
+  userBubbleWidth,
+  userBubbleMaxWidth = "75%",
+  assistantBubbleWidth = "100%",
+  assistantBubbleMaxWidth,
+  userBubbleBg = "var(--color-bg2)",
+  assistantBubbleBg = "var(--color-bg2)",
+  showNames = false,
 }: {
   thread: DisplayMessage[];
   threadState: ThreadState;
   isSessionLoaded?: boolean;
   onMessageEdit: (message: DisplayMessage) => void;
   onBranchChange: (messageId: string, siblingIndex: number) => void;
+  userBubbleWidth?: string;
+  userBubbleMaxWidth?: string;
+  assistantBubbleWidth?: string;
+  assistantBubbleMaxWidth?: string;
+  userBubbleBg?: string;
+  assistantBubbleBg?: string;
+  showNames?: boolean;
 }) {
   return (
     <div
@@ -40,6 +54,18 @@ export default function ChatBox({
             onBranchChange={(siblingIndex) =>
               onBranchChange(message.id, siblingIndex)
             }
+            width={
+              message.role === "user" ? userBubbleWidth : assistantBubbleWidth
+            }
+            maxWidth={
+              message.role === "user"
+                ? userBubbleMaxWidth
+                : assistantBubbleMaxWidth
+            }
+            backgroundColor={
+              message.role === "user" ? userBubbleBg : assistantBubbleBg
+            }
+            showName={showNames}
           />
         ))
       )}

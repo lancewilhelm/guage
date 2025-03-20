@@ -782,6 +782,7 @@ export default function Chat() {
               isSessionLoaded={!!currentChatSessionId}
               onMessageEdit={handleEditMessage}
               onBranchChange={changeBranch}
+              assistantBubbleBg="var(--color-bg0)"
             />
           </div>
         </div>

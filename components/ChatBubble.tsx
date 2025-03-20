@@ -105,11 +105,19 @@ function ChatBubble({
   onEdit,
   siblingInfo,
   onBranchChange,
+  width,
+  maxWidth,
+  backgroundColor,
+  showName,
 }: {
   message: DisplayMessage;
   onEdit: (message: DisplayMessage) => void;
   siblingInfo: SiblingInfo;
   onBranchChange: (siblingIndex: number) => void;
+  width?: string;
+  maxWidth?: string;
+  backgroundColor: string;
+  showName: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content || "");
@@ -139,12 +147,15 @@ function ChatBubble({
         inputRef.current.focus();
         inputRef.current.selectionStart = inputRef.current.selectionEnd =
           inputRef.current.value.length;
+        inputRef.current.style.height = "auto";
+        inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
       }
     }, 0);
   }, [message.content]);
 
   const handleSaveEdit = useCallback(() => {
     setIsEditing(false);
+    if (editedContent === message.content) return;
     onEdit({ ...message, content: editedContent });
   }, [message, editedContent, onEdit]);
 
@@ -177,17 +188,25 @@ function ChatBubble({
       onMouseLeave={() => setIsButtonRowVisible(false)}
     >
       <div
-        className={`flex flex-col gap-1 w-[80%] sm:w-[75%] min-w-0 ${message.role === "user" ? "items-end" : "items-start"}`}
+        className={`flex flex-col gap-1 ${isEditing && "w-full"} ${message.role === "user" ? "items-end" : "items-start"}`}
+        style={{ width, maxWidth }}
       >
-        <div className="px-1">{interlocutorName}</div>
+        {showName && <div className="px-1">{interlocutorName}</div>}
         {isEditing ? (
-          <div className="flex flex-col gap-2 bg-(--color-bg2) rounded-lg p-2 w-full max-w-full">
+          <div
+            className="flex flex-col w-[100%] gap-2 rounded-lg p-2"
+            style={{ width, maxWidth: width, backgroundColor }}
+          >
             <textarea
               ref={inputRef}
               value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
+              onChange={(e) => {
+                setEditedContent(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${e.target.scrollHeight}px`;
+              }}
               onKeyDown={handleTextareaKeyDown}
-              className="w-full min-h-[50px] p-1 focus:outline-none resize-y"
+              className="w-full p-1 focus:outline-none"
             />
             <div
               className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}
@@ -195,24 +214,28 @@ function ChatBubble({
               <CheckIcon
                 onClick={handleSaveEdit}
                 fill="var(--color-yes)"
-                className="cursor-pointer"
+                className="cursor-pointer scale-125"
               />
               <XMarkIcon
                 onClick={handleCancelEdit}
                 fill="var(--color-no)"
-                className="cursor-pointer"
+                className="cursor-pointer scale-125"
               />
             </div>
           </div>
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="flex flex-col gap-2 bg-(--color-bg2) border border-(--color-bg2) rounded-lg p-3 max-w-full"
+            className="flex flex-col gap-2 rounded-lg p-3 max-w-full"
+            style={{ backgroundColor }}
           >
             <MessageContent content={editedContent} role={message.role} />
           </div>
         ) : (
-          <div className="flex flex-col bg-(--color-bg2) gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
+          <div
+            className="flex flex-col gap-2 rounded-lg p-2 overflow-hidden max-w-full"
+            style={{ backgroundColor }}
+          >
             <BouncingDotsIcon fill="var(--color-fg0)" />
           </div>
         )}
