@@ -27,6 +27,13 @@ const customComponents = {
   pre({ children, ...props }: React.PropsWithChildren) {
     return <Pre {...props}>{children}</Pre>;
   },
+  code({ children, ...props }: React.PropsWithChildren) {
+    return (
+      <code className="whitespace-pre overflow-x-auto" {...props}>
+        {children}
+      </code>
+    );
+  },
 };
 
 // Memoized markdown component to prevent unnecessary re-renders
@@ -165,16 +172,16 @@ function ChatBubble({
 
   return (
     <div
-      className={`flex cursor-default ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex cursor-default w-full ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
       onMouseEnter={() => setIsButtonRowVisible(true)}
       onMouseLeave={() => setIsButtonRowVisible(false)}
     >
       <div
-        className={`flex flex-col gap-1 max-w-[85%] sm:max-w-[70%] w-full ${message.role === "user" ? "items-end" : "items-start"}`}
+        className={`flex flex-col gap-1 w-[80%] sm:w-[75%] min-w-0 ${message.role === "user" ? "items-end" : "items-start"}`}
       >
         <div className="px-1">{interlocutorName}</div>
         {isEditing ? (
-          <div className="flex flex-col gap-2 bg-(--color-bg2) rounded-lg p-2 overflow-hidden w-full max-w-full">
+          <div className="flex flex-col gap-2 bg-(--color-bg2) rounded-lg p-2 w-full max-w-full">
             <textarea
               ref={inputRef}
               value={editedContent}
@@ -200,13 +207,13 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="flex flex-col gap-2 bg-(--color-bg2) border border-(--color-bg2) rounded-lg p-3 overflow-hidden max-w-full"
+            className="flex flex-col gap-2 bg-(--color-bg2) border border-(--color-bg2) rounded-lg p-3 max-w-full"
           >
             <MessageContent content={editedContent} role={message.role} />
           </div>
         ) : (
-          <div className="flex flex-col gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
-            <BouncingDotsIcon fill="var(--color-acc)" />
+          <div className="flex flex-col bg-(--color-bg2) gap-2 border rounded-lg p-2 overflow-hidden max-w-full">
+            <BouncingDotsIcon fill="var(--color-fg0)" />
           </div>
         )}
 

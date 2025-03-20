@@ -29,7 +29,7 @@ export default function Pre({ children, ...props }: PreProps) {
   return (
     <div className="flex flex-col my-[10px] sm:m-[10px] shadow">
       <div className="flex flex-col">
-        <div className="grid grid-cols-[min-content_max-content_auto_min-content] text-sm font-mono">
+        <div className="grid grid-cols-[min-content_max-content_minmax(0,auto)_min-content] text-sm font-mono">
           {language && (
             <div
               className={`bg-(--color-bg1) text-(--color-fg0) border-b border-(--color-bg2) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
@@ -49,11 +49,7 @@ export default function Pre({ children, ...props }: PreProps) {
           </div>
         </div>
       </div>
-      <pre
-        ref={preRef}
-        style={props.style}
-        className="overflow-x-auto rounded-b"
-      >
+      <pre ref={preRef} style={props.style} className="rounded-b">
         {children}
       </pre>
     </div>

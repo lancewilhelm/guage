@@ -773,8 +773,8 @@ export default function Chat() {
       </div>
 
       {/* Center: Chat & InputRow */}
-      <div className="col-start-2 row-start-2 row-span-2 h-full flex flex-col">
-        <div className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container">
+      <div className="col-start-2 row-start-2 row-span-2 h-full w-full flex flex-col overflow-hidden">
+        <div className="flex flex-grow overflow-y-auto chat-container">
           <div className="mx-auto w-full max-w-[1000px] px-5">
             <ChatBox
               thread={thread}

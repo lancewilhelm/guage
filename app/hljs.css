@@ -46,18 +46,22 @@
   }
 }
 
-pre code.hljs {
-  display: block;
+pre {
+  position: relative;
+  background: var(--color-bg1);
   overflow-x: auto;
-  padding: 1em;
+  padding: 10px;
+  display: flex;
+}
+
+pre::after {
+  content: "";
+  display: inline-block; /* This ensures the element takes up space */
+  width: 10px; /* Creates padding effect at the right */
 }
 
 pre ::-webkit-scrollbar-track {
   background: var(--color-bg1);
-}
-
-code.hljs {
-  padding: 3px 5px;
 }
 
 .hljs {

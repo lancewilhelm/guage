@@ -17,7 +17,7 @@ export default function ChatBox({
 }) {
   return (
     <div
-      className={`flex flex-col gap-2 w-full p-2 overflow-x-hidden ${(thread.length === 0 || !isSessionLoaded) && "h-full"}`}
+      className={`flex flex-col gap-2 w-full p-2 ${(thread.length === 0 || !isSessionLoaded) && "h-full"}`}
     >
       {thread.length === 0 ? (
         <div className="flex flex-col grow text-center text-(--color-bg2) justify-center">
