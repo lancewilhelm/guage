@@ -641,12 +641,15 @@ export default function Chat() {
       let contextMessages: DisplayMessage[];
 
       if (parentIndex === -1) {
-        // Parent not found in thread, use default logic
-        contextMessages = messages;
+        // Parent not found in thread, assume root message
+        contextMessages = [];
       } else {
         // Get thread up to the parent + the edited message
         contextMessages = [...thread.slice(0, parentIndex + 1)];
       }
+
+      // Create a new active path with the context messages
+      const newActivePath = contextMessages.map((msg) => msg.id);
 
       // Update the version information with the new message
       const versionInfo = threadState.versionInfo[message.id];
@@ -660,7 +663,7 @@ export default function Chat() {
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
       setThreadState((prev) => {
         return {
-          activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
+          activePath: [...newActivePath, userMessage.id, assistantMessage.id],
           versionInfo: {
             ...prev.versionInfo,
             [message.id]: {
@@ -696,8 +699,13 @@ export default function Chat() {
         false,
       );
     },
-    [thread, messages, threadState, createMessagePairAndStream],
+    [thread, threadState, createMessagePairAndStream],
   );
+
+  // Create a debug logger for threadState
+  useEffect(() => {
+    logger.debug("Thread state updated:", threadState);
+  }, [threadState]);
 
   // Load sessions on initial render
   useEffect(() => {
