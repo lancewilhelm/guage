@@ -20,7 +20,7 @@ export default function ChatBox({
   threadState: ThreadState;
   isSessionLoaded?: boolean;
   onMessageEdit: (message: DisplayMessage) => void;
-  onBranchChange: (messageId: string, siblingIndex: number) => void;
+  onBranchChange: (messageId: string, versionIndex: number) => void;
   userBubbleWidth?: string;
   userBubbleMaxWidth?: string;
   assistantBubbleWidth?: string;
@@ -50,9 +50,9 @@ export default function ChatBox({
             key={message.id}
             message={message}
             onEdit={onMessageEdit}
-            siblingInfo={threadState.siblingInfo[message.id]}
-            onBranchChange={(siblingIndex) =>
-              onBranchChange(message.id, siblingIndex)
+            versionInfo={threadState.versionInfo[message.id]}
+            onBranchChange={(versionIndex) =>
+              onBranchChange(message.id, versionIndex)
             }
             width={
               message.role === "user" ? userBubbleWidth : assistantBubbleWidth

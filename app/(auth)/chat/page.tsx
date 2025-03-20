@@ -33,12 +33,12 @@ export type MessageMap = Record<string, DisplayMessage>;
 // Tracks the state of the currently active thread
 export interface ThreadState {
   activePath: string[]; // Ordered list of message IDs forming the active conversation path
-  siblingInfo: Record<
+  versionInfo: Record<
     string,
     {
       total: number;
       currentIndex: number;
-      siblingIds: string[];
+      versionIds: string[];
     }
   >;
 }
@@ -49,7 +49,7 @@ export default function Chat() {
   const [messageMap, setMessageMap] = useState<MessageMap>({});
   const [threadState, setThreadState] = useState<ThreadState>({
     activePath: [],
-    siblingInfo: {},
+    versionInfo: {},
   });
   const [currentChatSessionId, setCurrentChatSessionId] = useState<
     string | undefined
@@ -59,7 +59,7 @@ export default function Chat() {
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
   const pendingBranchChange = useRef<{
     messageId: string;
-    siblingIndex: number;
+    versionIndex: number;
   } | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<InputRowHandle>(null);
@@ -93,7 +93,7 @@ export default function Chat() {
     (messageMap: MessageMap): ThreadState => {
       const threadState: ThreadState = {
         activePath: [],
-        siblingInfo: {},
+        versionInfo: {},
       };
 
       // Find the root message(s)
@@ -110,24 +110,24 @@ export default function Chat() {
       let currentNode = rootMessages[0];
 
       // Handle info for the root level
-      threadState.siblingInfo[currentNode.id] = {
+      threadState.versionInfo[currentNode.id] = {
         total: rootMessages.length,
         currentIndex: 0,
-        siblingIds: rootMessages.map((msg) => msg.id),
+        versionIds: rootMessages.map((msg) => msg.id),
       };
       threadState.activePath.push(currentNode.id);
 
       // Traverse down following the first child at each level
       while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-        const siblingCount = currentNode.childrenIds.length;
-        const siblingIds = currentNode.childrenIds;
+        const versionCount = currentNode.childrenIds.length;
+        const versionIds = currentNode.childrenIds;
         currentNode = messageMap[currentNode.childrenIds[0]];
 
-        // Add sibling information for this parent
-        threadState.siblingInfo[currentNode.id] = {
-          total: siblingCount,
+        // Add version information for this parent
+        threadState.versionInfo[currentNode.id] = {
+          total: versionCount,
           currentIndex: 0,
-          siblingIds: [...siblingIds],
+          versionIds: [...versionIds],
         };
         threadState.activePath.push(currentNode.id);
       }
@@ -187,7 +187,7 @@ export default function Chat() {
   const loadSession = useCallback(
     async (sessionId: string) => {
       setMessages([]);
-      setThreadState({ activePath: [], siblingInfo: {} });
+      setThreadState({ activePath: [], versionInfo: {} });
       setMessageMap({});
       setCurrentChatSessionId(sessionId);
       try {
@@ -270,21 +270,21 @@ export default function Chat() {
           id === originalMessage.id ? serverMessage.id : id,
         );
 
-        // Clone and update siblingInfo to use new IDs
-        const newSiblingInfo = { ...prev.siblingInfo };
+        // Clone and update versionInfo to use new IDs
+        const newVersionInfo = { ...prev.versionInfo };
 
-        // If the message ID is a key in siblingInfo, update it
-        if (prev.siblingInfo[originalMessage.id]) {
-          newSiblingInfo[serverMessage.id] =
-            prev.siblingInfo[originalMessage.id];
-          delete newSiblingInfo[originalMessage.id];
+        // If the message ID is a key in versionInfo, update it
+        if (prev.versionInfo[originalMessage.id]) {
+          newVersionInfo[serverMessage.id] =
+            prev.versionInfo[originalMessage.id];
+          delete newVersionInfo[originalMessage.id];
         }
 
-        // For all sibling infos, update IDs in siblingIds arrays
-        Object.keys(newSiblingInfo).forEach((key) => {
-          newSiblingInfo[key] = {
-            ...newSiblingInfo[key],
-            siblingIds: newSiblingInfo[key].siblingIds.map((id) =>
+        // For all version infos, update IDs in versionIds arrays
+        Object.keys(newVersionInfo).forEach((key) => {
+          newVersionInfo[key] = {
+            ...newVersionInfo[key],
+            versionIds: newVersionInfo[key].versionIds.map((id) =>
               id === originalMessage.id ? serverMessage.id : id,
             ),
           };
@@ -292,7 +292,7 @@ export default function Chat() {
 
         return {
           activePath: newActivePath,
-          siblingInfo: newSiblingInfo,
+          versionInfo: newVersionInfo,
         };
       });
     },
@@ -435,17 +435,17 @@ export default function Chat() {
     setThreadState((prev) => {
       return {
         activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
-        siblingInfo: {
-          ...prev.siblingInfo,
+        versionInfo: {
+          ...prev.versionInfo,
           [assistantMessage.id]: {
             total: 1,
             currentIndex: 0,
-            siblingIds: [assistantMessage.id],
+            versionIds: [assistantMessage.id],
           },
           [userMessage.id]: {
             total: 1,
             currentIndex: 0,
-            siblingIds: [userMessage.id],
+            versionIds: [userMessage.id],
           },
         },
       };
@@ -483,7 +483,7 @@ export default function Chat() {
     }
 
     setMessages([]);
-    setThreadState({ activePath: [], siblingInfo: {} });
+    setThreadState({ activePath: [], versionInfo: {} });
     setMessageMap({});
     setCurrentChatSessionId(newChatSession.id);
     setChatSessions((prev) => [newChatSession, ...prev]);
@@ -525,7 +525,7 @@ export default function Chat() {
         );
         if (sessionId === currentChatSessionId) {
           setMessages([]);
-          setThreadState({ activePath: [], siblingInfo: {} });
+          setThreadState({ activePath: [], versionInfo: {} });
           setCurrentChatSessionId(undefined);
         }
       } else {
@@ -539,21 +539,21 @@ export default function Chat() {
    * Change to a different message branch
    */
   const changeBranch = useCallback(
-    (messageId: string, newSiblingIndex: number) => {
+    (messageId: string, newVersionIndex: number) => {
       setThreadState((prev) => {
-        // Get sibling info
-        const siblingInfo = prev.siblingInfo[messageId];
-        if (!siblingInfo || newSiblingIndex >= siblingInfo.total) return prev;
+        // Get version info
+        const versionInfo = prev.versionInfo[messageId];
+        if (!versionInfo || newVersionIndex >= versionInfo.total) return prev;
 
-        // Get the sibling ID to switch to
-        const newSiblingId = siblingInfo.siblingIds[newSiblingIndex];
+        // Get the version ID to switch to
+        const newVersionId = versionInfo.versionIds[newVersionIndex];
 
-        // Create new sibling info
-        const newSiblingInfo = {
-          ...prev.siblingInfo,
-          [newSiblingId]: {
-            ...siblingInfo,
-            currentIndex: newSiblingIndex,
+        // Create new version info
+        const newVersionInfo = {
+          ...prev.versionInfo,
+          [newVersionId]: {
+            ...versionInfo,
+            currentIndex: newVersionIndex,
           },
         };
 
@@ -565,30 +565,30 @@ export default function Chat() {
 
         if (messageId === null || messageIndex === -1) {
           // Root level change or parent not in path
-          newPath = [newSiblingId];
+          newPath = [newVersionId];
         } else {
-          // Truncate path at parent and add new sibling
+          // Truncate path at parent and add new version
           newPath = [...prev.activePath.slice(0, messageIndex)];
-          newPath.push(newSiblingId);
+          newPath.push(newVersionId);
         }
 
         // Build the rest of the path following first children
-        let currentNode = messageMap[newSiblingId];
+        let currentNode = messageMap[newVersionId];
         if (!currentNode) return prev;
 
         while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-          const siblingCount = currentNode.childrenIds.length;
-          const siblingIds = currentNode.childrenIds;
+          const versionCount = currentNode.childrenIds.length;
+          const versionIds = currentNode.childrenIds;
           const nextNodeId = currentNode.childrenIds[0];
           currentNode = messageMap[nextNodeId];
           if (!currentNode) break;
 
-          // Add sibling information for this new parent if not already present
-          if (!newSiblingInfo[currentNode.id]) {
-            newSiblingInfo[currentNode.id] = {
-              total: siblingCount,
+          // Add version information for this new parent if not already present
+          if (!newVersionInfo[currentNode.id]) {
+            newVersionInfo[currentNode.id] = {
+              total: versionCount,
               currentIndex: 0,
-              siblingIds: [...siblingIds],
+              versionIds: [...versionIds],
             };
           }
           newPath.push(currentNode.id);
@@ -596,7 +596,7 @@ export default function Chat() {
 
         return {
           activePath: newPath,
-          siblingInfo: newSiblingInfo,
+          versionInfo: newVersionInfo,
         };
       });
     },
@@ -648,35 +648,35 @@ export default function Chat() {
         contextMessages = [...thread.slice(0, parentIndex + 1)];
       }
 
-      // Update the sibling information with the new message
-      const siblingInfo = threadState.siblingInfo[message.id];
-      if (!siblingInfo) return;
+      // Update the version information with the new message
+      const versionInfo = threadState.versionInfo[message.id];
+      if (!versionInfo) return;
 
-      const siblingPrevTotal = siblingInfo.total;
-      const siblingPrevIndex = siblingInfo.currentIndex;
-      const siblingPrevIds = siblingInfo.siblingIds;
-      const newSiblingIds = [...siblingPrevIds, userMessage.id];
+      const versionPrevTotal = versionInfo.total;
+      const versionPrevIndex = versionInfo.currentIndex;
+      const versionPrevIds = versionInfo.versionIds;
+      const newVersionIds = [...versionPrevIds, userMessage.id];
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
       setThreadState((prev) => {
         return {
           activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
-          siblingInfo: {
-            ...prev.siblingInfo,
+          versionInfo: {
+            ...prev.versionInfo,
             [message.id]: {
-              total: siblingPrevTotal + 1,
-              currentIndex: siblingPrevIndex,
-              siblingIds: newSiblingIds,
+              total: versionPrevTotal + 1,
+              currentIndex: versionPrevIndex,
+              versionIds: newVersionIds,
             },
             [userMessage.id]: {
-              total: siblingPrevTotal + 1,
-              currentIndex: siblingPrevTotal,
-              siblingIds: newSiblingIds,
+              total: versionPrevTotal + 1,
+              currentIndex: versionPrevTotal,
+              versionIds: newVersionIds,
             },
             [assistantMessage.id]: {
               total: 1,
               currentIndex: 0,
-              siblingIds: [assistantMessage.id],
+              versionIds: [assistantMessage.id],
             },
           },
         };
@@ -685,7 +685,7 @@ export default function Chat() {
       // Now that map is updated, we can safely change branch
       pendingBranchChange.current = {
         messageId: message.id,
-        siblingIndex: siblingPrevTotal,
+        versionIndex: versionPrevTotal,
       };
 
       // Create message pair and stream response
@@ -740,8 +740,9 @@ export default function Chat() {
   // Handle pending branch changes after message map updates
   useEffect(() => {
     if (pendingBranchChange.current) {
-      const { messageId, siblingIndex } = pendingBranchChange.current;
-      changeBranch(messageId, siblingIndex);
+      const { messageId, versionIndex: versionIndex } =
+        pendingBranchChange.current;
+      changeBranch(messageId, versionIndex);
       pendingBranchChange.current = null;
     }
   }, [messageMap, changeBranch]);

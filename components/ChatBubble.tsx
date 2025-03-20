@@ -17,10 +17,10 @@ import Pre from "@/components/Pre";
 import { useSession } from "@/context/session-context";
 import { DisplayMessage } from "@/app/(auth)/chat/page";
 
-interface SiblingInfo {
-  total: number; // Total siblings at this level
-  currentIndex: number; // Current index among siblings
-  siblingIds: string[]; // Ids of all siblings
+interface VersionInfo {
+  total: number; // Total versions at this level
+  currentIndex: number; // Current index among versions
+  versionIds: string[]; // Ids of all versions
 }
 
 const customComponents = {
@@ -54,56 +54,56 @@ const MessageContent = memo(
 MessageContent.displayName = "MessageContent";
 
 // Extract navigation controls to a separate component
-const SiblingNavigation = memo(
+const VersionNavigation = memo(
   ({
-    siblingInfo,
+    versionInfo,
     onBranchChange,
   }: {
-    siblingInfo: SiblingInfo;
-    onBranchChange: (siblingIndex: number) => void;
+    versionInfo: VersionInfo;
+    onBranchChange: (versionIndex: number) => void;
   }) => {
-    const handlePrevSibling = useCallback(() => {
-      if (siblingInfo.currentIndex !== 0) {
+    const handlePrevVersion = useCallback(() => {
+      if (versionInfo.currentIndex !== 0) {
         onBranchChange(
-          (siblingInfo.currentIndex - 1 + siblingInfo.total) %
-            siblingInfo.total,
+          (versionInfo.currentIndex - 1 + versionInfo.total) %
+            versionInfo.total,
         );
       }
-    }, [siblingInfo, onBranchChange]);
+    }, [versionInfo, onBranchChange]);
 
-    const handleNextSibling = useCallback(() => {
-      if (siblingInfo.currentIndex !== siblingInfo.total - 1) {
-        onBranchChange((siblingInfo.currentIndex + 1) % siblingInfo.total);
+    const handleNextVersion = useCallback(() => {
+      if (versionInfo.currentIndex !== versionInfo.total - 1) {
+        onBranchChange((versionInfo.currentIndex + 1) % versionInfo.total);
       }
-    }, [siblingInfo, onBranchChange]);
+    }, [versionInfo, onBranchChange]);
 
-    if (siblingInfo.total <= 1) return null;
+    if (versionInfo.total <= 1) return null;
 
     return (
       <div className="flex items-center gap-1">
         <AngleLeftIcon
           fill="var(--color-acc)"
-          className={`cursor-pointer ${siblingInfo.currentIndex === 0 ? "opacity-50" : ""}`}
-          onClick={handlePrevSibling}
+          className={`cursor-pointer ${versionInfo.currentIndex === 0 ? "opacity-50" : ""}`}
+          onClick={handlePrevVersion}
         />
         <div className="text-[var(--color-acc)]">
-          {siblingInfo.currentIndex + 1} of {siblingInfo.total}
+          {versionInfo.currentIndex + 1} of {versionInfo.total}
         </div>
         <AngleRightIcon
           fill="var(--color-acc)"
-          className={`cursor-pointer ${siblingInfo.currentIndex === siblingInfo.total - 1 ? "opacity-50" : ""}`}
-          onClick={handleNextSibling}
+          className={`cursor-pointer ${versionInfo.currentIndex === versionInfo.total - 1 ? "opacity-50" : ""}`}
+          onClick={handleNextVersion}
         />
       </div>
     );
   },
 );
-SiblingNavigation.displayName = "SiblingNavigation";
+VersionNavigation.displayName = "VersionNavigation";
 
 function ChatBubble({
   message,
   onEdit,
-  siblingInfo,
+  versionInfo,
   onBranchChange,
   width,
   maxWidth,
@@ -112,8 +112,8 @@ function ChatBubble({
 }: {
   message: DisplayMessage;
   onEdit: (message: DisplayMessage) => void;
-  siblingInfo: SiblingInfo;
-  onBranchChange: (siblingIndex: number) => void;
+  versionInfo: VersionInfo;
+  onBranchChange: (versionIndex: number) => void;
   width?: string;
   maxWidth?: string;
   backgroundColor: string;
@@ -209,7 +209,7 @@ function ChatBubble({
               className="w-full p-1 focus:outline-none"
             />
             <div
-              className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
               <CheckIcon
                 onClick={handleSaveEdit}
@@ -243,8 +243,12 @@ function ChatBubble({
         {/* Buttons */}
         {!isEditing && (
           <div
-            className={`flex gap-2 items-center ${message.role === "user" ? "flex-row-reverse mr-1" : "flex-row ml-1"}`}
+            className={`flex gap-2 items-center ${message.role === "user" ? "flex-row-reverse mr-3" : "flex-row ml-3"}`}
           >
+            <VersionNavigation
+              versionInfo={versionInfo}
+              onBranchChange={onBranchChange}
+            />
             {isCopied ? (
               <ThumbsUpIcon
                 fill={
@@ -270,10 +274,6 @@ function ChatBubble({
               }
               className="cursor-pointer"
               onClick={handleEditClick}
-            />
-            <SiblingNavigation
-              siblingInfo={siblingInfo}
-              onBranchChange={onBranchChange}
             />
           </div>
         )}
