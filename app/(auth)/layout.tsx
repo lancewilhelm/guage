@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/utils/auth";
-import { SessionProvider } from "@/context/session-context";
 
 export default async function AuthLayout({
   children,
@@ -13,9 +12,5 @@ export default async function AuthLayout({
     redirect("/login");
   }
 
-  return (
-    <SessionProvider session={session}>
-      <div className="h-dvh overflow-hidden">{children}</div>
-    </SessionProvider>
-  );
+  return <div className="h-dvh overflow-hidden">{children}</div>;
 }

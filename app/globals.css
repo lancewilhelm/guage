@@ -128,13 +128,13 @@ textarea:focus {
 }
 
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 17px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--color-bg2);
-  border-radius: 3.5px;
+  border-radius: 10px;
+  border: 5px solid var(--color-bg0);
 }
 
 ::-webkit-scrollbar-track {

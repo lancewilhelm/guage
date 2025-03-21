@@ -1,11 +1,11 @@
 "use client";
-import { useSession } from "@/context/session-context";
 import { ebGaramond } from "@/utils/fonts";
 import Chat from "@/components/Dashboard/Cards/Chat";
 import Header from "@/components/Header";
+import { useSessionStore } from "@/store/sessionStore";
 
 export default function Dashboard() {
-  const { session } = useSession();
+  const { session } = useSessionStore();
   return (
     <div className="flex flex-col h-full">
       <Header className="col-span-3" />

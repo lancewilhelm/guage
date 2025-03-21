@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
   // Create session
   logger.debug({ email: user[0].email }, "POST /api/login: Creating session");
-  await createSession({
+  const session = await createSession({
     id: user[0].id,
     email: user[0].email,
     name: user[0].name,
@@ -45,5 +45,8 @@ export async function POST(req: Request) {
   });
 
   logger.info("POST /api/login: Login successful");
-  return NextResponse.json({ message: "Login successful" }, { status: 200 });
+  return NextResponse.json(
+    { message: "Login successful", session },
+    { status: 200 },
+  );
 }

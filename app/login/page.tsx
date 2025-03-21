@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { EB_Garamond } from "next/font/google";
+import { useSessionStore } from "@/store/sessionStore";
 
 const ebGaramond = EB_Garamond({
   variable: "--font-eb-garamond-serif",
@@ -12,6 +13,7 @@ const ebGaramond = EB_Garamond({
 export default function Login() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
+  const { setSession } = useSessionStore();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,6 +34,8 @@ export default function Login() {
     });
 
     if (res.ok) {
+      const data = await res.json();
+      setSession(data.session);
       router.push("/dashboard");
     } else {
       alert("Invalid credentials");

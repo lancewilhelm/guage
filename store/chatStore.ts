@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { LocalMessage } from "@/utils/db/localDb";
 
-// Instead of maintaining an object with activePath and versionInfo,
-// we now only keep activeBranch, which is an array of message IDs.
+/**
+ * ChatsState: State for a chat session.
+ * Maintains messages and active branch.
+ */
 export interface ChatsState {
   messages: Record<string, LocalMessage>;
   activeBranch: string[]; // the branch of messages currently displayed
@@ -10,6 +12,10 @@ export interface ChatsState {
   abortController?: AbortController;
 }
 
+/**
+ * ChatStore: Zustand store for chat sessions.
+ * Maintains chat sessions, messages, and active branches.
+ */
 export interface ChatStore {
   chats: Record<string, ChatsState>;
   currentChatId?: string;
@@ -41,10 +47,12 @@ export interface ChatStore {
 }
 
 /**
- * Helper: Generate the active branch from scratch.
+ * Generate the active branch from scratch.
  * We assume that the “root” messages are those with no parent.
  * We sort roots by createdAt, pick the first root, then follow the first-child
  * chain (using each message’s childrenIds) until no more children exist.
+ * @param messages - Record of messages
+ * @returns Array of message IDs in the active branch
  */
 function generateActiveBranch(
   messages: Record<string, LocalMessage>,
@@ -68,7 +76,12 @@ function generateActiveBranch(
   return branch;
 }
 
-// Helper: Given a session and a starting message ID, build the descendant chain (the branch) by always following the first child.
+/**
+ * Build a branch starting from a message and following the first-child chain.
+ * @param session - Chat session state
+ * @param startId - Starting message ID
+ * @returns Array of message IDs in the branch
+ */
 function buildBranchFrom(session: ChatsState, startId: string): string[] {
   const branch: string[] = [];
   branch.push(startId);
@@ -81,6 +94,10 @@ function buildBranchFrom(session: ChatsState, startId: string): string[] {
   return branch;
 }
 
+/**
+ * ChatStore: Zustand store for chat sessions.
+ * Maintains chat sessions, messages, and active branches.
+ */
 export const useChatStore = create<ChatStore>((set) => ({
   chats: {},
   currentChatId: undefined,
@@ -200,11 +217,6 @@ export const useChatStore = create<ChatStore>((set) => ({
         },
       };
     }),
-  /**
-   * changeBranch: Given a messageId and a newVersionIndex,
-   * update the active branch so that the branch from the parent
-   * is replaced with the sibling at newVersionIndex and its first-child chain.
-   */
   changeBranch: (
     sessionId: string,
     messageId: string,

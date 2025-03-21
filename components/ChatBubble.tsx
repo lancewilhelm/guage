@@ -14,8 +14,8 @@ import XMarkIcon from "@/components/Icon/XMark";
 import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import Pre from "@/components/Pre";
-import { useSession } from "@/context/session-context";
 import { LocalMessage } from "@/utils/db/localDb";
+import { useSessionStore } from "@/store/sessionStore";
 
 interface ComputedVersionInfo {
   total: number;
@@ -130,7 +130,7 @@ function ChatBubble({
   const [isButtonRowVisible, setIsButtonRowVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const { session } = useSession();
+  const { session } = useSessionStore();
 
   const handleCopy = useCallback(() => {
     logger.debug("Copying message to clipboard");
@@ -231,7 +231,7 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="flex flex-col gap-2 rounded-lg p-3 w-full"
+            className="flex flex-col gap-2 rounded-lg p-3"
             style={{ backgroundColor }}
           >
             <MessageContent content={editedContent} role={message.role} />

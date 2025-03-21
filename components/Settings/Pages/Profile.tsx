@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useSession } from "@/context/session-context";
+import { useSessionStore } from "@/store/sessionStore";
 import InputElement from "@/components/Settings/InputElement";
 
 export default function ProfilePage() {
-  const { session } = useSession();
+  const { session } = useSessionStore();
   const [newPassword, setNewPassword] = useState("");
+  console.log(session);
 
   return (
     <div className="flex flex-col gap-2">

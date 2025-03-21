@@ -5,6 +5,7 @@ import ChatBox from "@/components/ChatBox";
 import InputRow, { InputRowHandle } from "@/components/InputRow";
 import ChatList from "@/components/ChatList";
 import Header from "@/components/Header";
+import AngleDownIcon from "@/components/Icon/AngleDown";
 import { useChatStore } from "@/store/chatStore";
 import {
   retrieveChatsLocalDB,
@@ -37,12 +38,12 @@ export default function ChatPage() {
   const [chats, setChats] = useState<Array<LocalChat>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
-  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [showSessionPanel, setShowSessionPanel] = useState(true);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const shouldAutoScrollRef = useRef<boolean>(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<InputRowHandle>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const scrollDebounceRef = useRef<number | null>(null);
 
   // Load chat messages from IndexedDB and update the store for the current session.
   const loadChat = useCallback(
@@ -90,50 +91,46 @@ export default function ChatPage() {
 
   // Scroll to the bottom when chat is loaded or messsages are updated.
   useEffect(() => {
-    if (currentChatId && chatContainerRef.current && shouldAutoScroll) {
+    if (
+      currentChatId &&
+      chatContainerRef.current &&
+      shouldAutoScrollRef.current &&
+      !isStreaming &&
+      !isLoading
+    ) {
       chatContainerRef.current.scrollTo({
         top: chatContainerRef.current.scrollHeight,
         behavior: "instant",
       });
     }
-  }, [currentChatId, isStreaming, shouldAutoScroll]);
+  }, [currentChatId, isStreaming, isLoading]);
 
-  // Debounce function
-  const debounce = (func: Function, wait: number) => {
-    return (...args: any[]) => {
-      if (scrollDebounceRef.current) {
-        window.clearTimeout(scrollDebounceRef.current);
-      }
-      scrollDebounceRef.current = window.setTimeout(() => {
-        func(...args);
-      }, wait);
-    };
-  };
-
-  // Detect manual scrolling with debounce
+  // Detect manual scrolling
   useEffect(() => {
     const chatContainer = chatContainerRef.current;
-
-    const checkScrollPosition = () => {
+    const handleScroll = () => {
       if (!chatContainer) return;
       const { scrollTop, scrollHeight, clientHeight } = chatContainer;
       const isScrolledToBottom = scrollHeight - scrollTop - clientHeight < 50;
 
-      if (isScrolledToBottom !== shouldAutoScroll) {
-        setShouldAutoScroll(isScrolledToBottom);
-      }
+      // Update the ref immediately for use during streaming
+      shouldAutoScrollRef.current = isScrolledToBottom;
+      setShowScrollToBottom(!isScrolledToBottom);
     };
 
-    const debouncedScrollHandler = debounce(checkScrollPosition, 200);
+    chatContainer?.addEventListener("scroll", handleScroll);
+    return () => chatContainer?.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    chatContainer?.addEventListener("scroll", debouncedScrollHandler);
-    return () => {
-      chatContainer?.removeEventListener("scroll", debouncedScrollHandler);
-      if (scrollDebounceRef.current) {
-        window.clearTimeout(scrollDebounceRef.current);
-      }
-    };
-  }, [shouldAutoScroll]);
+  const handleScrollToBottom = useCallback(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+      shouldAutoScrollRef.current = true;
+    }
+  }, []);
 
   // Streaming response logic. As chunks arrive, we update the assistant's message in the store.
   const streamResponse = useCallback(
@@ -179,10 +176,7 @@ export default function ChatPage() {
               });
 
               // Scroll to bottom during streaming
-              if (chatContainerRef.current && shouldAutoScroll) {
-                if (scrollDebounceRef.current) {
-                  window.clearTimeout(scrollDebounceRef.current);
-                }
+              if (chatContainerRef.current && shouldAutoScrollRef.current) {
                 chatContainerRef.current.scrollTo({
                   top: chatContainerRef.current.scrollHeight,
                   behavior: "instant",
@@ -212,7 +206,7 @@ export default function ChatPage() {
         abortControllerRef.current = null;
       }
     },
-    [currentChatId, updateMessage, shouldAutoScroll],
+    [currentChatId, updateMessage],
   );
 
   // Submit handler: create new user and assistant messages, persist them, and stream the response.
@@ -223,7 +217,7 @@ export default function ChatPage() {
     inputRef.current?.clear();
 
     // Reset shouldAutoScroll to true when a new message is sent
-    setShouldAutoScroll(true);
+    shouldAutoScrollRef.current = true;
 
     // Determine parent and depth for the new messages.
     let parentId: string | null = null;
@@ -375,10 +369,8 @@ export default function ChatPage() {
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
       <div className="col-start-2">
         <Header
-          isSessionButtonVisible={!isSessionPanelVisible}
-          toggleSessionPanel={() =>
-            setIsSessionPanelVisible(!isSessionPanelVisible)
-          }
+          isSessionButtonVisible={!showSessionPanel}
+          toggleSessionPanel={() => setShowSessionPanel(!showSessionPanel)}
           createChatSession={async () => {
             const newChat = await createChatLocalDB();
             if (newChat) {
@@ -397,8 +389,8 @@ export default function ChatPage() {
           setCurrentChatId={(id: string) => {
             setCurrentChat(id);
           }}
-          isVisible={isSessionPanelVisible}
-          setIsVisible={setIsSessionPanelVisible}
+          isVisible={showSessionPanel}
+          setIsVisible={setShowSessionPanel}
           createHandler={async () => {
             const newChat = await createChatLocalDB();
             if (newChat) {
@@ -442,6 +434,17 @@ export default function ChatPage() {
             />
           </div>
         </div>
+
+        {showScrollToBottom && (
+          <button
+            onClick={handleScrollToBottom}
+            className="fixed bottom-28 right-8 flex items-center justify-center bg-(--color-bg2) hover:bg-(--color-bg1) text-white rounded-full p-2 shadow-lg z-10 cursor-pointer w-10 h-10"
+            aria-label="Scroll to bottom"
+          >
+            <AngleDownIcon fill="var(--color-fg0)" className="scale-125" />
+          </button>
+        )}
+
         <div className="mx-auto w-full max-w-[1000px]">
           <InputRow
             ref={inputRef}

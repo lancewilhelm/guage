@@ -73,7 +73,7 @@ export default function ChatBox({
 
   return (
     <div
-      className={`flex flex-col gap-2 w-full p-2 ${
+      className={`flex flex-col gap-2 w-full p-2 pb-15 ${
         activeThread.length === 0 || !isSessionLoaded ? "h-full" : ""
       }`}
     >
