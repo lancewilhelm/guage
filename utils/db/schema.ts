@@ -27,7 +27,7 @@ export const usersTable = pgTable("users", {
 });
 
 // CHAT SESSIONS TABLE (Stores type of session)
-export const chatSessionsTable = pgTable("chat_sessions", {
+export const chatsTable = pgTable("chats", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
@@ -41,17 +41,16 @@ export const chatSessionsTable = pgTable("chat_sessions", {
   updatedAt: timestamp("updated_at", { mode: "date" })
     .default(sql`now()`)
     .notNull(),
-  conversationType: text("conversation_type").notNull(), // "chat" or "role-play"
 });
 
 // ROLE-PLAY SESSIONS TABLE (Stores special role-play information)
-export const rolePlaySessionsTable = pgTable("role_play_sessions", {
+export const rolePlaysTable = pgTable("role_plays", {
   id: uuid("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()), // Unique role-play session ID
   sessionId: uuid("session_id")
     .notNull()
-    .references(() => chatSessionsTable.id, { onDelete: "cascade" }),
+    .references(() => chatsTable.id, { onDelete: "cascade" }),
   scenario: text("scenario").notNull(), // Custom role-play scenario
   actorName: text("actor_name").notNull(), // Name of the role-play character
   additionalRules: text("additional_rules"), // Any special rules
@@ -64,7 +63,7 @@ export const messagesTable = pgTable("messages", {
     .$defaultFn(() => uuidv4()),
   sessionId: uuid("session_id")
     .notNull()
-    .references(() => chatSessionsTable.id, { onDelete: "cascade" }),
+    .references(() => chatsTable.id, { onDelete: "cascade" }),
   userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
@@ -82,15 +81,11 @@ export const messagesTable = pgTable("messages", {
 
 // Define the types
 export type SelectUser = InferSelectModel<typeof usersTable>;
-export type SelectChatSession = InferSelectModel<typeof chatSessionsTable>;
-export type SelectRolePlaySession = InferSelectModel<
-  typeof rolePlaySessionsTable
->;
+export type SelectChatSession = InferSelectModel<typeof chatsTable>;
+export type SelectRolePlaySession = InferSelectModel<typeof rolePlaysTable>;
 export type SelectMessage = InferSelectModel<typeof messagesTable>;
 
 export type InsertUser = InferInsertModel<typeof usersTable>;
-export type InsertChatSession = InferInsertModel<typeof chatSessionsTable>;
-export type InsertRolePlaySession = InferInsertModel<
-  typeof rolePlaySessionsTable
->;
+export type InsertChatSession = InferInsertModel<typeof chatsTable>;
+export type InsertRolePlaySession = InferInsertModel<typeof rolePlaysTable>;
 export type InsertMessage = InferInsertModel<typeof messagesTable>;

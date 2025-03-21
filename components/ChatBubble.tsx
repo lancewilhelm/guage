@@ -15,12 +15,12 @@ import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import Pre from "@/components/Pre";
 import { useSession } from "@/context/session-context";
-import { DisplayMessage } from "@/app/(auth)/chat/page";
+import { LocalMessage } from "@/utils/db/localDb";
 
-interface VersionInfo {
-  total: number; // Total versions at this level
-  currentIndex: number; // Current index among versions
-  versionIds: string[]; // Ids of all versions
+interface ComputedVersionInfo {
+  total: number;
+  currentIndex: number;
+  versionIds: string[];
 }
 
 const customComponents = {
@@ -36,7 +36,6 @@ const customComponents = {
   },
 };
 
-// Memoized markdown component to prevent unnecessary re-renders
 const MessageContent = memo(
   ({ content, role }: { content: string; role: string }) =>
     role === "user" ? (
@@ -53,17 +52,16 @@ const MessageContent = memo(
 );
 MessageContent.displayName = "MessageContent";
 
-// Extract navigation controls to a separate component
 const VersionNavigation = memo(
   ({
     versionInfo,
     onBranchChange,
   }: {
-    versionInfo: VersionInfo;
+    versionInfo?: ComputedVersionInfo;
     onBranchChange: (versionIndex: number) => void;
   }) => {
     const handlePrevVersion = useCallback(() => {
-      if (versionInfo.currentIndex !== 0) {
+      if (versionInfo && versionInfo.currentIndex !== 0) {
         onBranchChange(
           (versionInfo.currentIndex - 1 + versionInfo.total) %
             versionInfo.total,
@@ -72,18 +70,21 @@ const VersionNavigation = memo(
     }, [versionInfo, onBranchChange]);
 
     const handleNextVersion = useCallback(() => {
-      if (versionInfo.currentIndex !== versionInfo.total - 1) {
+      if (versionInfo && versionInfo.currentIndex !== versionInfo.total - 1) {
         onBranchChange((versionInfo.currentIndex + 1) % versionInfo.total);
       }
     }, [versionInfo, onBranchChange]);
 
-    if (versionInfo.total <= 1) return null;
+    // Now conditionally render, after the hooks have been called.
+    if (!versionInfo || versionInfo.total <= 1) return null;
 
     return (
       <div className="flex items-center gap-1">
         <AngleLeftIcon
           fill="var(--color-acc)"
-          className={`cursor-pointer ${versionInfo.currentIndex === 0 ? "opacity-50" : ""}`}
+          className={`cursor-pointer ${
+            versionInfo.currentIndex === 0 ? "opacity-50" : ""
+          }`}
           onClick={handlePrevVersion}
         />
         <div className="text-[var(--color-acc)]">
@@ -91,7 +92,11 @@ const VersionNavigation = memo(
         </div>
         <AngleRightIcon
           fill="var(--color-acc)"
-          className={`cursor-pointer ${versionInfo.currentIndex === versionInfo.total - 1 ? "opacity-50" : ""}`}
+          className={`cursor-pointer ${
+            versionInfo.currentIndex === versionInfo.total - 1
+              ? "opacity-50"
+              : ""
+          }`}
           onClick={handleNextVersion}
         />
       </div>
@@ -110,9 +115,9 @@ function ChatBubble({
   backgroundColor,
   showName,
 }: {
-  message: DisplayMessage;
-  onEdit: (message: DisplayMessage) => void;
-  versionInfo: VersionInfo;
+  message: LocalMessage;
+  onEdit: (message: LocalMessage) => void;
+  versionInfo?: ComputedVersionInfo;
   onBranchChange: (versionIndex: number) => void;
   width?: string;
   maxWidth?: string;
@@ -120,7 +125,7 @@ function ChatBubble({
   showName: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(message.content || "");
+  const [editedContent, setEditedContent] = useState(message.content);
   const [isCopied, setIsCopied] = useState(false);
   const [isButtonRowVisible, setIsButtonRowVisible] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -140,8 +145,7 @@ function ChatBubble({
 
   const handleEditClick = useCallback(() => {
     setIsEditing(true);
-    setEditedContent(message.content || "");
-    // Focus the textarea after it renders
+    setEditedContent(message.content);
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -161,7 +165,7 @@ function ChatBubble({
 
   const handleCancelEdit = useCallback(() => {
     setIsEditing(false);
-    setEditedContent(message.content || "");
+    setEditedContent(message.content);
   }, [message.content]);
 
   const handleTextareaKeyDown = useCallback(
@@ -176,25 +180,28 @@ function ChatBubble({
     [handleSaveEdit, handleCancelEdit],
   );
 
-  // Update edited content when message content changes
   useEffect(() => {
-    setEditedContent(message.content || "");
+    setEditedContent(message.content);
   }, [message.content]);
 
   return (
     <div
-      className={`flex cursor-default w-full ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+      className={`flex cursor-default w-full ${
+        message.role === "user" ? "flex-row-reverse" : "flex-row"
+      }`}
       onMouseEnter={() => setIsButtonRowVisible(true)}
       onMouseLeave={() => setIsButtonRowVisible(false)}
     >
       <div
-        className={`flex flex-col gap-1 ${isEditing && "w-full"} ${message.role === "user" ? "items-end" : "items-start"}`}
+        className={`flex flex-col gap-1 ${isEditing && "w-full"} ${
+          message.role === "user" ? "items-end" : "items-start"
+        }`}
         style={{ width, maxWidth }}
       >
         {showName && <div className="px-1">{interlocutorName}</div>}
         {isEditing ? (
           <div
-            className="flex flex-col w-[100%] gap-2 rounded-lg p-2"
+            className="flex flex-col w-full gap-2 rounded-lg p-2"
             style={{ width, maxWidth: width, backgroundColor }}
           >
             <textarea
@@ -208,9 +215,7 @@ function ChatBubble({
               onKeyDown={handleTextareaKeyDown}
               className="w-full p-1 focus:outline-none"
             />
-            <div
-              className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-            >
+            <div className="flex gap-3 justify-end">
               <CheckIcon
                 onClick={handleSaveEdit}
                 fill="var(--color-yes)"
@@ -233,17 +238,19 @@ function ChatBubble({
           </div>
         ) : (
           <div
-            className="flex flex-col gap-2 rounded-lg p-2 overflow-hidden max-w-full"
+            className="flex flex-col gap-2 rounded-lg p-3"
             style={{ backgroundColor }}
           >
             <BouncingDotsIcon fill="var(--color-fg0)" />
           </div>
         )}
-
-        {/* Buttons */}
         {!isEditing && (
           <div
-            className={`flex gap-2 items-center ${message.role === "user" ? "flex-row-reverse mr-3" : "flex-row ml-3"}`}
+            className={`flex gap-2 items-center ${
+              message.role === "user"
+                ? "flex-row-reverse mr-3"
+                : "flex-row ml-3"
+            }`}
           >
             <VersionNavigation
               versionInfo={versionInfo}

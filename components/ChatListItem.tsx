@@ -9,7 +9,7 @@ import DropDownMenu, {
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
-import { SelectChatSession } from "@/utils/db/schema";
+import { LocalChat } from "@/utils/db/localDb";
 
 export default function ChatListItem({
   session,
@@ -18,7 +18,7 @@ export default function ChatListItem({
   deleteHandler,
   renameHandler,
 }: {
-  session: SelectChatSession;
+  session: LocalChat;
   currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   deleteHandler: (sessionId: string) => void;

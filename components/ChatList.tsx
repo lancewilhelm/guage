@@ -3,21 +3,21 @@ import { useState, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
 import ChatListItem from "./ChatListItem";
-import { SelectChatSession } from "@/utils/db/schema";
+import { LocalChat } from "@/utils/db/localDb";
 
-export default function SessionsPanel({
-  chatSessions,
-  currentChatSessionId,
-  setCurrentChatSessionId,
+export default function ChatsPanel({
+  chats,
+  currentChatId,
+  setCurrentChatId,
   isVisible,
   setIsVisible,
   createHandler,
   deleteHandler,
   renameHandler,
 }: {
-  chatSessions: SelectChatSession[];
-  currentChatSessionId: string | undefined;
-  setCurrentChatSessionId: (sessionId: string) => void;
+  chats: LocalChat[];
+  currentChatId: string | undefined;
+  setCurrentChatId: (sessionId: string) => void;
   isVisible: boolean;
   setIsVisible: (isVisible: boolean) => void;
   createHandler: () => void;
@@ -87,12 +87,12 @@ export default function SessionsPanel({
           <div className="w-full h-[1px] bg-(--color-bg2)" />
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
-            {chatSessions.map((session) => (
+            {chats.map((session) => (
               <ChatListItem
                 key={session.id}
                 session={session}
-                currentChatSessionId={currentChatSessionId}
-                setCurrentChatSessionId={setCurrentChatSessionId}
+                currentChatSessionId={currentChatId}
+                setCurrentChatSessionId={setCurrentChatId}
                 deleteHandler={deleteHandler}
                 renameHandler={renameHandler}
               />

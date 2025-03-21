@@ -1,0 +1,167 @@
+import Dexie, { type EntityTable } from "dexie";
+import { v4 as uuidv4 } from "uuid";
+
+// Define local message type
+export interface LocalMessage {
+  id: string;
+  sessionId: string;
+  parentId: string | null;
+  childrenIds: string[] | null;
+  content: string;
+  role: "user" | "assistant";
+  depth: number;
+  createdAt: Date;
+  lastUpdated: Date;
+  synced: boolean; // Used to track messages that need syncing
+}
+
+// Define local chat type
+export interface LocalChat {
+  id: string;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+  synced: boolean; // Used to track sessions that need syncing
+}
+
+// Define the local database
+class ChatDatabase extends Dexie {
+  messagesTable!: EntityTable<LocalMessage, "id">;
+  chatsTable!: EntityTable<LocalChat, "id">;
+
+  constructor() {
+    super("guage");
+
+    this.version(1).stores({
+      messages: "&id, sessionId, lastUpdated",
+      chatSessions: "&id, userId, updatedAt",
+    });
+  }
+}
+
+// Initialize database
+export const localDb = new ChatDatabase();
+
+// ------------------------------
+// Functions to interact with the local database
+// ------------------------------
+/**
+ * Create a new message in the local database
+ * @param sessionId - The ID of the chat session (required)
+ * @param role - The role of the user sending the message (required)
+ * @param content - The content of the message (default: "")
+ * @param parentId - The ID of the parent message (if any) (default: null)
+ * @param childrenIds - An array of children message IDs (if any) (default: null)
+ * @param depth - The depth of the message in the conversation tree (default: 0)
+ * @returns Promise<LocalMessage> - The newly created message
+ */
+export async function createMessageLocalDb({
+  sessionId,
+  role,
+  content = "",
+  parentId = null,
+  childrenIds = null,
+  depth = 0,
+}: LocalMessage): Promise<LocalMessage> {
+  const newMessage = {
+    id: uuidv4(),
+    sessionId,
+    parentId,
+    childrenIds,
+    content,
+    role,
+    depth,
+    createdAt: new Date(),
+    lastUpdated: new Date(),
+    synced: false,
+  };
+  await localDb.messagesTable.put(newMessage);
+  return newMessage;
+}
+
+/**
+ * Retrieve messages from the local database for a given chat session
+ * @param sessionId - The ID of the chat session
+ * @returns Promise<LocalMessage[]> - An array of messages for the chat session
+ */
+export async function retrieveMessagesLocalDB(sessionId: string) {
+  return await localDb.messagesTable
+    .where("sessionId")
+    .equals(sessionId)
+    .toArray();
+}
+
+/**
+ * Create a new chat session in the local database
+ * @param title - The title of the chat session (default: "New Chat")
+ * @returns Promise<LocalChat> - The newly created chat session
+ */
+export async function createChatLocalDB({ title = "New Chat" }: LocalChat) {
+  const newChat = {
+    id: uuidv4(),
+    title,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    synced: false, // Used to track sessions that need syncing
+  };
+  await localDb.chatsTable.put(newChat);
+  return newChat;
+}
+
+/**
+ * Retrieve all chat sessions from the local database
+ * @returns Promise<LocalChat[]> - An array of chat sessions
+ */
+export async function retrieveChatsLocalDB() {
+  return await localDb.chatsTable.toArray();
+}
+
+// ------------------------------
+// Sync local database with remote database
+// ------------------------------
+/**
+ * Sync the local databse with the remote database
+ */
+export async function syncWithPostgres() {
+  const unsyncedMessages = await localDb.messagesTable
+    .where("synced")
+    .equals(false)
+    .toArray();
+  const unsyncedSessions = await localDb.chatsTable
+    .where("synced")
+    .equals(false)
+    .toArray();
+
+  for (const msg of unsyncedMessages) {
+    try {
+      await fetch("/api/messages", {
+        method: "POST",
+        body: JSON.stringify(msg),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Mark as synced in IndexedDB
+      await localDb.messagesTable.update(msg.id, { synced: true });
+    } catch (error) {
+      console.error("Sync failed for message:", msg.id, error);
+    }
+  }
+
+  for (const session of unsyncedSessions) {
+    try {
+      await fetch("/api/chat_sessions", {
+        method: "POST",
+        body: JSON.stringify(session),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Mark as synced
+      await localDb.chatsTable.update(session.id, { synced: true });
+    } catch (error) {
+      console.error("Sync failed for session:", session.id, error);
+    }
+  }
+}
+
+// Run sync every 30 seconds
+setInterval(syncWithPostgres, 30000);

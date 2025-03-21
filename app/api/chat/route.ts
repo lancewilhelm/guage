@@ -1,60 +1,11 @@
 import { logger } from "@/utils/logger";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { db } from "@/utils/db";
-import { messagesTable, type InsertMessage } from "@/utils/db/schema";
-import { sql, eq } from "drizzle-orm";
-import { SelectMessage } from "@/utils/db/schema";
+import { LocalMessage } from "@/utils/db/localDb";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-// Helper function to save a message in the db
-async function saveMessage(
-  sessionId: string,
-  userId: string,
-  content: string,
-  parentId: string | null | undefined,
-  role: "assistant" | "user" | "system",
-) {
-  try {
-    let depth = 0;
-
-    if (parentId) {
-      const parentMessage = await db.query.messagesTable.findFirst({
-        where: eq(messagesTable.id, parentId),
-      });
-
-      if (parentMessage) {
-        depth = parentMessage.depth + 1;
-      }
-    }
-
-    const result = (await db
-      .insert(messagesTable)
-      .values({
-        sessionId,
-        userId,
-        parentId,
-        content,
-        role,
-        depth,
-      })
-      .returning()) as SelectMessage[];
-
-    // Update the childrenIds of the parent message
-    if (parentId) {
-      await db.execute(
-        sql`UPDATE ${messagesTable} SET children_ids = children_ids || ARRAY[${result[0].id}::uuid] WHERE ${messagesTable.id} = ${parentId}`,
-      );
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error saving message:", error);
-  }
-}
 
 export async function POST(req: Request) {
   logger.info("POST /api/chat");
@@ -73,8 +24,8 @@ export async function POST(req: Request) {
     userMessage,
     sessionId,
   }: {
-    history: InsertMessage[];
-    userMessage: InsertMessage;
+    history: LocalMessage[];
+    userMessage: LocalMessage;
     sessionId: string;
   } = await req.json();
   if (!history || !Array.isArray(history) || !userMessage) {
@@ -83,41 +34,18 @@ export async function POST(req: Request) {
     });
   }
 
+  logger.debug({ history, userMessage }, "POST /api/chat: Request body");
+
   try {
     logger.debug(
       { userId, sessionId, userMessage },
       "POST /api/chat: Processing user message",
     );
-    // Store the user message
-    const insertUserMessageResult = await saveMessage(
-      sessionId,
-      userId,
-      userMessage.content,
-      userMessage.parentId,
-      "user",
-    );
-
-    if (!insertUserMessageResult) {
-      logger.error("Failed to save user message");
-      return new Response("Failed to save user message", { status: 500 });
-    }
 
     const encoder = new TextEncoder();
-    let fullAsssistantResponse = "";
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // First send the user message data back to the client
-          logger.debug(
-            { userMessage: insertUserMessageResult[0] },
-            "POST /api/chat: Sending user message",
-          );
-          controller.enqueue(
-            encoder.encode(
-              `event: userMessage\ndata: ${JSON.stringify(insertUserMessageResult[0])}\n\n`,
-            ),
-          );
-
           // Start the OpenAI completion
           logger.debug(
             { history, userMessage },
@@ -137,7 +65,6 @@ export async function POST(req: Request) {
           // Now handle the completion chunks from LLM service
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
-            fullAsssistantResponse += text;
             logger.debug({ text }, "POST /api/chat: Streaming response");
             controller.enqueue(
               encoder.encode(
@@ -153,32 +80,6 @@ export async function POST(req: Request) {
             ),
           );
         } finally {
-          // Insert whatever we have for the completion into the database and send it to client
-          logger.debug(
-            { fullAsssistantResponse },
-            "POST /api/chat: Saving assistant message",
-          );
-          const insertAsssistantMessageResult = await saveMessage(
-            sessionId,
-            userId,
-            fullAsssistantResponse,
-            insertUserMessageResult[0].id,
-            "assistant",
-          );
-          if (insertAsssistantMessageResult) {
-            controller.enqueue(
-              encoder.encode(
-                `event: assistantMessage\ndata: ${JSON.stringify(insertAsssistantMessageResult[0])}\n\n`,
-              ),
-            );
-          } else {
-            logger.error("Failed to save assistant message");
-            controller.enqueue(
-              encoder.encode(
-                "event: error\n data: Failed to save assistant message.\n\n",
-              ),
-            );
-          }
           controller.close();
         }
       },

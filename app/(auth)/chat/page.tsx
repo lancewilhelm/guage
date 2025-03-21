@@ -1,761 +1,376 @@
 "use client";
-import { logger } from "@/utils/logger";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
 import ChatBox from "@/components/ChatBox";
 import InputRow, { InputRowHandle } from "@/components/InputRow";
-import SessionsSidePanel from "@/components/ChatList";
+import ChatList from "@/components/ChatList";
 import Header from "@/components/Header";
-import { SelectChatSession, SelectMessage } from "@/utils/db/schema";
+import { useChatStore } from "@/store/chatStore";
 import {
-  fetchChatSessions,
-  createChatSession,
-  deleteChatSession,
-  updateChatSession,
-  streamLlmResponse,
-  SSEChunk,
-} from "@/utils/apiHelpers";
-import { v4 as uuidv4 } from "uuid";
+  retrieveChatsLocalDB,
+  retrieveMessagesLocalDB,
+  createChatLocalDB,
+  insertMessageLocalDb,
+  updateChatLocalDB,
+  updateMessageLocalDB,
+  LocalChat,
+  LocalMessage,
+  deleteChatLocalDB,
+} from "@/utils/db/localDb";
+import { generateSessionTitle } from "@/utils/apiHelpers";
+import { parseSSEChunk } from "@/utils/apiHelpers";
+import { logger } from "@/utils/logger";
 
-export interface TempMessage {
-  role: string;
-  content: string;
-  parentId: string | null;
-  createdAt: Date;
-  id: string;
-  childrenIds: string[] | null;
-  depth: number;
-}
+export default function ChatPage() {
+  // Extract actions and current session id from the store.
+  const {
+    currentChatId,
+    setCurrentChat,
+    addMessage,
+    updateMessage,
+    changeBranch,
+    rebuildBranch,
+    editBranch,
+    deleteChat,
+  } = useChatStore();
 
-export type DisplayMessage = SelectMessage | TempMessage;
-
-export type MessageMap = Record<string, DisplayMessage>;
-
-// Tracks the state of the currently active thread
-export interface ThreadState {
-  activePath: string[]; // Ordered list of message IDs forming the active conversation path
-  versionInfo: Record<
-    string,
-    {
-      total: number;
-      currentIndex: number;
-      versionIds: string[];
-    }
-  >;
-}
-
-export default function Chat() {
-  const [chatSessions, setChatSessions] = useState<SelectChatSession[]>([]);
-  const [messages, setMessages] = useState<DisplayMessage[]>([]);
-  const [messageMap, setMessageMap] = useState<MessageMap>({});
-  const [threadState, setThreadState] = useState<ThreadState>({
-    activePath: [],
-    versionInfo: {},
-  });
-  const [currentChatSessionId, setCurrentChatSessionId] = useState<
-    string | undefined
-  >(undefined);
+  const [chats, setChats] = useState<Array<LocalChat>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSessionPanelVisible, setIsSessionPanelVisible] = useState(true);
-  const pendingBranchChange = useRef<{
-    messageId: string;
-    versionIndex: number;
-  } | null>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<InputRowHandle>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const scrollDebounceRef = useRef<number | null>(null);
 
-  // Derive the active thread from the thread state and message map
-  const thread = useMemo(() => {
-    if (!threadState.activePath.length) return [];
-    return threadState.activePath
-      .map((id) => messageMap[id])
-      .filter(Boolean) as DisplayMessage[];
-  }, [threadState.activePath, messageMap]);
-
-  /**
-   * Generate a new message map from messages
-   */
-  const generateMessageMap = useCallback(
-    (messages: DisplayMessage[]): MessageMap => {
-      const map: MessageMap = {};
-      messages.forEach((msg) => {
-        map[msg.id] = msg;
-      });
-      return map;
-    },
-    [],
-  );
-
-  /**
-   * Generate thread state from the message map
-   */
-  const generateThreadState = useCallback(
-    (messageMap: MessageMap): ThreadState => {
-      const threadState: ThreadState = {
-        activePath: [],
-        versionInfo: {},
-      };
-
-      // Find the root message(s)
-      const rootMessages = Object.values(messageMap)
-        .filter((msg) => msg.parentId === null)
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        );
-
-      if (rootMessages.length === 0) return threadState; // No messages
-
-      // Start at the first root message
-      let currentNode = rootMessages[0];
-
-      // Handle info for the root level
-      threadState.versionInfo[currentNode.id] = {
-        total: rootMessages.length,
-        currentIndex: 0,
-        versionIds: rootMessages.map((msg) => msg.id),
-      };
-      threadState.activePath.push(currentNode.id);
-
-      // Traverse down following the first child at each level
-      while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-        const versionCount = currentNode.childrenIds.length;
-        const versionIds = currentNode.childrenIds;
-        currentNode = messageMap[currentNode.childrenIds[0]];
-
-        // Add version information for this parent
-        threadState.versionInfo[currentNode.id] = {
-          total: versionCount,
-          currentIndex: 0,
-          versionIds: [...versionIds],
-        };
-        threadState.activePath.push(currentNode.id);
-      }
-
-      return threadState;
-    },
-    [],
-  );
-
-  /**
-   * Fetch messages from the backend
-   */
-  const fetchMessages = useCallback(async (sessionId: string) => {
-    try {
-      const response = await fetch(
-        `/api/chat/messages?sessionId=${encodeURIComponent(sessionId)}`,
-        { cache: "no-store" },
-      );
-      if (!response.ok) throw new Error("Failed to fetch chat messages");
-      return await response.json();
-    } catch (error) {
-      logger.error("Error fetching chat messages:", error);
-    }
-  }, []);
-
-  /**
-   * Stop the stream of messages from the LLM API
-   */
-  const handleStopStream = useCallback(async () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsStreaming(false);
-
-      if (currentChatSessionId) {
-        setTimeout(async () => {
-          const updatedMessages = await fetchMessages(currentChatSessionId);
-          if (updatedMessages) {
-            setMessages(updatedMessages);
-            const newMessageMap = generateMessageMap(updatedMessages);
-            setMessageMap(newMessageMap);
-            setThreadState(generateThreadState(newMessageMap));
-          }
-        }, 500);
-      }
-    }
-  }, [
-    currentChatSessionId,
-    fetchMessages,
-    generateMessageMap,
-    generateThreadState,
-  ]);
-
-  /**
-   * Load a chat session by ID
-   */
-  const loadSession = useCallback(
+  // Load chat messages from IndexedDB and update the store for the current session.
+  const loadChat = useCallback(
     async (sessionId: string) => {
-      setMessages([]);
-      setThreadState({ activePath: [], versionInfo: {} });
-      setMessageMap({});
-      setCurrentChatSessionId(sessionId);
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        const data = await fetchMessages(sessionId);
+        const data = await retrieveMessagesLocalDB(sessionId);
         if (data) {
-          setMessages(data);
+          // Clear the current session messages in your store as needed.
+          data.forEach((msg: LocalMessage) => {
+            addMessage(sessionId, msg);
+          });
+          rebuildBranch(sessionId);
         }
       } catch (error) {
-        logger.error("Error fetching chat messages:", error);
+        logger.error("Error loading chat:", error);
       } finally {
         setIsLoading(false);
-
-        // Focus the input after loading a session
         setTimeout(() => {
           inputRef.current?.focus();
-        }, 100);
+        }, 0);
       }
     },
-    [fetchMessages],
+    [addMessage, rebuildBranch],
   );
 
-  /**
-   * Fetch the chat sessions from the backend
-   */
-  const fetchSessions = useCallback(async () => {
-    const data = await fetchChatSessions();
-    if (data) {
-      setChatSessions(data);
+  // Fetch chat sessions from IndexedDB.
+  const fetchChats = useCallback(async () => {
+    const result = await retrieveChatsLocalDB();
+    if (result && result.length > 0) {
+      setChats(result);
     }
   }, []);
 
-  /**
-   * Helper function to update messages with new content
-   */
-  const updateMessageContent = useCallback(
-    (messageId: string, content: string) => {
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === messageId ? { ...msg, content } : msg)),
-      );
-    },
-    [],
-  );
+  useEffect(() => {
+    fetchChats();
+  }, [fetchChats]);
 
-  /**
-   * Helper function to update IDs from client-generated to server-generated
-   */
-  const updateMessageIds = useCallback(
-    (originalMessage: DisplayMessage, serverMessage: DisplayMessage) => {
-      setMessages((prev) => {
-        return prev.map((msg) => {
-          // Replace the message with server version
-          if (msg.id === originalMessage.id) {
-            return {
-              ...serverMessage,
-              childrenIds: originalMessage.childrenIds,
-            };
-          }
+  // When the current session changes, load its messages.
+  useEffect(() => {
+    if (currentChatId) {
+      loadChat(currentChatId);
+    }
+  }, [currentChatId, loadChat]);
 
-          // Update any references to the old ID in parentId
-          if (msg.parentId === originalMessage.id) {
-            return { ...msg, parentId: serverMessage.id };
-          }
-
-          // Update any references in childrenIds array
-          if (msg.childrenIds && msg.childrenIds.includes(originalMessage.id)) {
-            const newChildrenIds = msg.childrenIds.map((childId) =>
-              childId === originalMessage.id ? serverMessage.id : childId,
-            );
-            return { ...msg, childrenIds: newChildrenIds };
-          }
-
-          return msg;
-        });
+  // Scroll to the bottom when chat is loaded or messsages are updated.
+  useEffect(() => {
+    if (currentChatId && chatContainerRef.current && shouldAutoScroll) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "instant",
       });
+    }
+  }, [currentChatId, isStreaming, shouldAutoScroll]);
 
-      // Also update thread state to reflect the new message ID
-      setThreadState((prev) => {
-        const newActivePath = prev.activePath.map((id) =>
-          id === originalMessage.id ? serverMessage.id : id,
-        );
+  // Debounce function
+  const debounce = (func: Function, wait: number) => {
+    return (...args: any[]) => {
+      if (scrollDebounceRef.current) {
+        window.clearTimeout(scrollDebounceRef.current);
+      }
+      scrollDebounceRef.current = window.setTimeout(() => {
+        func(...args);
+      }, wait);
+    };
+  };
 
-        // Clone and update versionInfo to use new IDs
-        const newVersionInfo = { ...prev.versionInfo };
+  // Detect manual scrolling with debounce
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
 
-        // If the message ID is a key in versionInfo, update it
-        if (prev.versionInfo[originalMessage.id]) {
-          newVersionInfo[serverMessage.id] =
-            prev.versionInfo[originalMessage.id];
-          delete newVersionInfo[originalMessage.id];
-        }
+    const checkScrollPosition = () => {
+      if (!chatContainer) return;
+      const { scrollTop, scrollHeight, clientHeight } = chatContainer;
+      const isScrolledToBottom = scrollHeight - scrollTop - clientHeight < 50;
 
-        // For all version infos, update IDs in versionIds arrays
-        Object.keys(newVersionInfo).forEach((key) => {
-          newVersionInfo[key] = {
-            ...newVersionInfo[key],
-            versionIds: newVersionInfo[key].versionIds.map((id) =>
-              id === originalMessage.id ? serverMessage.id : id,
-            ),
-          };
-        });
+      if (isScrolledToBottom !== shouldAutoScroll) {
+        setShouldAutoScroll(isScrolledToBottom);
+      }
+    };
 
-        return {
-          activePath: newActivePath,
-          versionInfo: newVersionInfo,
-        };
-      });
-    },
-    [],
-  );
+    const debouncedScrollHandler = debounce(checkScrollPosition, 200);
 
-  /**
-   * Core function to handle message creation and response generation
-   */
-  const createMessagePairAndStream = useCallback(
+    chatContainer?.addEventListener("scroll", debouncedScrollHandler);
+    return () => {
+      chatContainer?.removeEventListener("scroll", debouncedScrollHandler);
+      if (scrollDebounceRef.current) {
+        window.clearTimeout(scrollDebounceRef.current);
+      }
+    };
+  }, [shouldAutoScroll]);
+
+  // Streaming response logic. As chunks arrive, we update the assistant's message in the store.
+  const streamResponse = useCallback(
     async (
-      newMessage: TempMessage,
-      responseMessage: TempMessage,
-      contextMessages: DisplayMessage[],
-      isFirstResponse: boolean = false,
+      userMessage: LocalMessage,
+      assistantMessage: LocalMessage,
+      history?: LocalMessage[],
     ) => {
-      // Update messages with the new message pair
-      setMessages((prev) => [...prev, newMessage, responseMessage]);
-
-      // Set up streaming state
+      if (!currentChatId) return;
       setIsStreaming(true);
       abortControllerRef.current = new AbortController();
-
       let accumulatedResponse = "";
-
-      const handleMessageChunk = ({ eventType, data }: SSEChunk) => {
-        if (eventType === "messageChunk") {
-          accumulatedResponse += JSON.parse(data);
-          updateMessageContent(responseMessage.id, accumulatedResponse);
-        } else if (
-          eventType === "userMessage" ||
-          eventType === "assistantMessage"
-        ) {
-          const messageResult = JSON.parse(data);
-          const originalMessage =
-            eventType === "userMessage" ? newMessage : responseMessage;
-          updateMessageIds(originalMessage, messageResult);
-        } else if (eventType === "error") {
-          logger.error("Error streaming response:", data);
-        }
-      };
-
       try {
-        await streamLlmResponse(
-          contextMessages,
-          newMessage,
-          currentChatSessionId!,
-          handleMessageChunk,
-          abortControllerRef.current,
-          isFirstResponse,
-        );
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            history: history ? history : [],
+            userMessage,
+            sessionId: currentChatId,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+        if (!response.ok || !response.body) {
+          throw new Error("Failed to fetch chat response");
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunks = parseSSEChunk(decoder.decode(value));
+          for (const chunk of chunks) {
+            if (chunk.eventType === "messageChunk") {
+              accumulatedResponse += JSON.parse(chunk.data);
+              updateMessage(
+                currentChatId,
+                assistantMessage.id,
+                accumulatedResponse,
+              );
+              updateMessageLocalDB(assistantMessage.id, {
+                content: accumulatedResponse,
+              });
+
+              // Scroll to bottom during streaming
+              if (chatContainerRef.current && shouldAutoScroll) {
+                if (scrollDebounceRef.current) {
+                  window.clearTimeout(scrollDebounceRef.current);
+                }
+                chatContainerRef.current.scrollTo({
+                  top: chatContainerRef.current.scrollHeight,
+                  behavior: "instant",
+                });
+              }
+            }
+          }
+        }
+
+        // Update the session title if the session is new
+        if (!history || history.length === 0) {
+          const title = await generateSessionTitle([
+            userMessage,
+            assistantMessage,
+          ]);
+          updateChatLocalDB(currentChatId, { title });
+          setChats((prev) =>
+            prev.map((chat) =>
+              chat.id === currentChatId ? { ...chat, title } : chat,
+            ),
+          );
+        }
       } catch (error) {
-        logger.error("Error connecting to the chat API:", error);
+        logger.error("Error during streaming:", error);
       } finally {
         setIsStreaming(false);
         abortControllerRef.current = null;
-
-        if (isFirstResponse) {
-          await fetchSessions();
-        }
-
-        return responseMessage.id;
       }
     },
-    [
-      currentChatSessionId,
-      updateMessageContent,
-      updateMessageIds,
-      fetchSessions,
-    ],
+    [currentChatId, updateMessage, shouldAutoScroll],
   );
 
-  /**
-   * Handle the submission of new messages to the backend
-   */
+  // Submit handler: create new user and assistant messages, persist them, and stream the response.
   const handleSubmit = useCallback(async () => {
+    if (!currentChatId) return;
     const userInput = inputRef.current?.getValue();
-
-    if (!userInput?.trim() || isLoading || currentChatSessionId === undefined)
-      return;
-
+    if (!userInput?.trim() || isLoading) return;
     inputRef.current?.clear();
 
-    // Add the user message to the list
+    // Reset shouldAutoScroll to true when a new message is sent
+    setShouldAutoScroll(true);
+
+    // Determine parent and depth for the new messages.
     let parentId: string | null = null;
     let depth = 0;
-    if (threadState.activePath.length > 0) {
-      const lastMessage = messageMap[threadState.activePath.slice(-1)[0]];
-      if (lastMessage?.role === "assistant") {
+    const session = useChatStore.getState().chats[currentChatId];
+    if (session && session.activeBranch.length > 0) {
+      const lastMessageId =
+        session.activeBranch[session.activeBranch.length - 1];
+      const lastMessage = session.messages[lastMessageId];
+      if (lastMessage && lastMessage.role === "assistant") {
         parentId = lastMessage.id;
         depth = lastMessage.depth + 1;
       }
     }
 
-    // Generate the client UUIDs for the messages
+    // Create new messages.
     const userMessageId = uuidv4();
     const assistantMessageId = uuidv4();
-
-    const userMessage: TempMessage = {
-      role: "user",
-      content: userInput,
-      parentId: parentId,
-      createdAt: new Date(),
+    const now = new Date();
+    const userMessage: LocalMessage = {
       id: userMessageId,
+      sessionId: currentChatId,
+      content: userInput,
+      role: "user",
+      parentId,
       childrenIds: [assistantMessageId],
-      depth: depth,
+      depth,
+      createdAt: now,
+      lastUpdated: now,
+      synced: false,
     };
-
-    // Increase the depth for the response
-    depth += 1;
-
-    const assistantMessage: TempMessage = {
-      role: "assistant",
-      content: "",
-      parentId: userMessageId,
-      createdAt: new Date(),
+    const assistantMessage: LocalMessage = {
       id: assistantMessageId,
-      childrenIds: null,
-      depth: depth,
+      sessionId: currentChatId,
+      content: "",
+      role: "assistant",
+      parentId: userMessageId,
+      childrenIds: [],
+      depth: depth + 1,
+      createdAt: now,
+      lastUpdated: now,
+      synced: false,
     };
 
-    // Update the childrenIds of the parent message
+    // Persist new messages to IndexedDB.
+    insertMessageLocalDb([userMessage, assistantMessage]);
+
+    // If there is a parent, update its childrenIds.
     if (parentId) {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === parentId
-            ? {
-                ...msg,
-                childrenIds: Array.isArray(msg.childrenIds)
-                  ? [...msg.childrenIds, userMessageId]
-                  : [userMessageId],
-              }
-            : msg,
-        ),
-      );
+      const parent = session?.messages[parentId];
+      if (parent) {
+        const updatedChildren = parent.childrenIds
+          ? [...parent.childrenIds, userMessage.id]
+          : [userMessage.id];
+        updateMessageLocalDB(parentId, { childrenIds: updatedChildren });
+        const updatedParent = { ...parent, childrenIds: updatedChildren };
+        addMessage(currentChatId, updatedParent);
+      }
     }
 
-    // Add the assistant message to messages, and thread state
-    setMessages((prev) => [...prev, userMessage, assistantMessage]);
-    setThreadState((prev) => {
-      return {
-        activePath: [...prev.activePath, userMessage.id, assistantMessage.id],
-        versionInfo: {
-          ...prev.versionInfo,
-          [assistantMessage.id]: {
-            total: 1,
-            currentIndex: 0,
-            versionIds: [assistantMessage.id],
-          },
-          [userMessage.id]: {
-            total: 1,
-            currentIndex: 0,
-            versionIds: [userMessage.id],
-          },
-        },
-      };
-    });
+    // Create history for the stream response.
+    const history = session.activeBranch
+      .map((id) => session.messages[id])
+      .filter(Boolean) as LocalMessage[];
 
-    // Determine if this is the first response
-    const isFirstResponse =
-      messages.filter((msg) => msg.role === "assistant").length === 0;
+    // Update Zustand store (add messages and update activeBranch).
+    addMessage(currentChatId, userMessage);
+    addMessage(currentChatId, assistantMessage);
+    editBranch(currentChatId, parentId, userMessageId);
 
-    // Create message pair and stream response
-    await createMessagePairAndStream(
-      userMessage,
-      assistantMessage,
-      thread.length > 0 ? [...thread] : [],
-      isFirstResponse,
-    );
-  }, [
-    isLoading,
-    currentChatSessionId,
-    threadState,
-    messageMap,
-    messages,
-    thread,
-    createMessagePairAndStream,
-  ]);
+    // Stream the response.
+    streamResponse(userMessage, assistantMessage, history);
+  }, [currentChatId, isLoading, addMessage, editBranch, streamResponse]);
 
-  /**
-   * Create a new chat session
-   */
-  const createSession = useCallback(async () => {
-    const newChatSession = await createChatSession();
-    if (!newChatSession) {
-      logger.error("Failed to create chat session");
-      return;
-    }
-
-    setMessages([]);
-    setThreadState({ activePath: [], versionInfo: {} });
-    setMessageMap({});
-    setCurrentChatSessionId(newChatSession.id);
-    setChatSessions((prev) => [newChatSession, ...prev]);
-
-    // Focus the input after creating a new session
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 100);
-  }, []);
-
-  /**
-   * Update the chat session title
-   */
-  const renameSession = useCallback(
-    async (sessionId: string, title: string) => {
-      const updatedSession = await updateChatSession(sessionId, { title });
-      if (updatedSession) {
-        setChatSessions((prev) =>
-          prev.map((session) =>
-            session.id === sessionId ? { ...session, title } : session,
-          ),
-        );
-      } else {
-        logger.error("Failed to update chat session");
-      }
-    },
-    [],
-  );
-
-  /**
-   * Delete a chat session
-   */
-  const deleteSession = useCallback(
-    async (sessionId: string) => {
-      const result = await deleteChatSession(sessionId);
-      if (result) {
-        setChatSessions((prev) =>
-          prev.filter((session) => session.id !== sessionId),
-        );
-        if (sessionId === currentChatSessionId) {
-          setMessages([]);
-          setThreadState({ activePath: [], versionInfo: {} });
-          setCurrentChatSessionId(undefined);
-        }
-      } else {
-        logger.error("Failed to delete chat session");
-      }
-    },
-    [currentChatSessionId],
-  );
-
-  /**
-   * Change to a different message branch
-   */
-  const changeBranch = useCallback(
-    (messageId: string, newVersionIndex: number) => {
-      setThreadState((prev) => {
-        // Get version info
-        const versionInfo = prev.versionInfo[messageId];
-        if (!versionInfo || newVersionIndex >= versionInfo.total) return prev;
-
-        // Get the version ID to switch to
-        const newVersionId = versionInfo.versionIds[newVersionIndex];
-
-        // Create new version info
-        const newVersionInfo = {
-          ...prev.versionInfo,
-          [newVersionId]: {
-            ...versionInfo,
-            currentIndex: newVersionIndex,
-          },
-        };
-
-        // Determine where in the path to make the change
-        const messageIndex = messageId
-          ? prev.activePath.indexOf(messageId)
-          : -1;
-        let newPath: string[];
-
-        if (messageId === null || messageIndex === -1) {
-          // Root level change or parent not in path
-          newPath = [newVersionId];
-        } else {
-          // Truncate path at parent and add new version
-          newPath = [...prev.activePath.slice(0, messageIndex)];
-          newPath.push(newVersionId);
-        }
-
-        // Build the rest of the path following first children
-        let currentNode = messageMap[newVersionId];
-        if (!currentNode) return prev;
-
-        while (currentNode.childrenIds && currentNode.childrenIds.length > 0) {
-          const versionCount = currentNode.childrenIds.length;
-          const versionIds = currentNode.childrenIds;
-          const nextNodeId = currentNode.childrenIds[0];
-          currentNode = messageMap[nextNodeId];
-          if (!currentNode) break;
-
-          // Add version information for this new parent if not already present
-          if (!newVersionInfo[currentNode.id]) {
-            newVersionInfo[currentNode.id] = {
-              total: versionCount,
-              currentIndex: 0,
-              versionIds: [...versionIds],
-            };
-          }
-          newPath.push(currentNode.id);
-        }
-
-        return {
-          activePath: newPath,
-          versionInfo: newVersionInfo,
-        };
-      });
-    },
-    [messageMap],
-  );
-
-  /**
-   * Handle message edits - create a new branch when a message is edited
-   */
+  // Edit an existing message by creating a new branch from its parent.
   const handleEditMessage = useCallback(
-    async (message: DisplayMessage) => {
-      // Generate new UUIDs for the edited message and its response
-      const editedMessageId = uuidv4();
-      const responseMessageId = uuidv4();
-
-      // Create the edited message as a new branch
-      const userMessage: TempMessage = {
-        role: message.role,
-        content: message.content,
-        parentId: message.parentId,
-        createdAt: new Date(),
-        id: editedMessageId,
-        childrenIds: [responseMessageId],
-        depth: message.depth,
-      };
-
-      // Create a placeholder for the assistant's response
-      const assistantMessage: TempMessage = {
-        role: "assistant",
-        content: "",
-        parentId: editedMessageId,
-        createdAt: new Date(),
-        id: responseMessageId,
-        childrenIds: null,
-        depth: message.depth + 1,
-      };
-
-      // Get context for this message by finding parent in thread
-      const parentIndex = thread.findIndex(
-        (msg) => msg.id === message.parentId,
-      );
-      let contextMessages: DisplayMessage[];
-
-      if (parentIndex === -1) {
-        // Parent not found in thread, assume root message
-        contextMessages = [];
-      } else {
-        // Get thread up to the parent + the edited message
-        contextMessages = [...thread.slice(0, parentIndex + 1)];
+    async (editedMessage: LocalMessage) => {
+      if (!currentChatId) return;
+      const parentId = editedMessage.parentId;
+      let history: LocalMessage[] = [];
+      const session = useChatStore.getState().chats[currentChatId];
+      if (parentId && session) {
+        const parentIndex = session.activeBranch.indexOf(parentId);
+        if (parentIndex !== -1) {
+          history = session.activeBranch
+            .slice(0, parentIndex + 1)
+            .map((id) => session.messages[id])
+            .filter(Boolean) as LocalMessage[];
+        }
       }
 
-      // Create a new active path with the context messages
-      const newActivePath = contextMessages.map((msg) => msg.id);
-
-      // Update the version information with the new message
-      const versionInfo = threadState.versionInfo[message.id];
-      if (!versionInfo) return;
-
-      const versionPrevTotal = versionInfo.total;
-      const versionPrevIndex = versionInfo.currentIndex;
-      const versionPrevIds = versionInfo.versionIds;
-      const newVersionIds = [...versionPrevIds, userMessage.id];
-
-      setMessages((prev) => [...prev, userMessage, assistantMessage]);
-      setThreadState((prev) => {
-        return {
-          activePath: [...newActivePath, userMessage.id, assistantMessage.id],
-          versionInfo: {
-            ...prev.versionInfo,
-            [message.id]: {
-              total: versionPrevTotal + 1,
-              currentIndex: versionPrevIndex,
-              versionIds: newVersionIds,
-            },
-            [userMessage.id]: {
-              total: versionPrevTotal + 1,
-              currentIndex: versionPrevTotal,
-              versionIds: newVersionIds,
-            },
-            [assistantMessage.id]: {
-              total: 1,
-              currentIndex: 0,
-              versionIds: [assistantMessage.id],
-            },
-          },
-        };
-      });
-
-      // Now that map is updated, we can safely change branch
-      pendingBranchChange.current = {
-        messageId: message.id,
-        versionIndex: versionPrevTotal,
+      // Create new messages.
+      const userMessageId = uuidv4();
+      const assistantMessageId = uuidv4();
+      const now = new Date();
+      const userMessage: LocalMessage = {
+        id: userMessageId,
+        sessionId: currentChatId,
+        content: editedMessage.content,
+        role: "user",
+        parentId: editedMessage.parentId,
+        childrenIds: [assistantMessageId],
+        depth: editedMessage.depth,
+        createdAt: now,
+        lastUpdated: now,
+        synced: false,
+      };
+      const assistantMessage: LocalMessage = {
+        id: assistantMessageId,
+        sessionId: currentChatId,
+        content: "",
+        role: "assistant",
+        parentId: userMessageId,
+        childrenIds: [],
+        depth: editedMessage.depth + 1,
+        createdAt: now,
+        lastUpdated: now,
+        synced: false,
       };
 
-      // Create message pair and stream response
-      await createMessagePairAndStream(
-        userMessage,
-        assistantMessage,
-        [...contextMessages],
-        false,
-      );
+      // Persist new messages to IndexedDB.
+      insertMessageLocalDb([userMessage, assistantMessage]);
+
+      // If there is a parent, update its childrenIds.
+      if (parentId) {
+        const parent = session?.messages[parentId];
+        if (parent) {
+          const updatedChildren = parent.childrenIds
+            ? [...parent.childrenIds, userMessage.id]
+            : [userMessage.id];
+          updateMessageLocalDB(parentId, { childrenIds: updatedChildren });
+          const updatedParent = { ...parent, childrenIds: updatedChildren };
+          addMessage(currentChatId, updatedParent);
+        }
+      }
+
+      // Update Zustand store (add messages and update activeBranch).
+      addMessage(currentChatId, userMessage);
+      addMessage(currentChatId, assistantMessage);
+      editBranch(currentChatId, parentId, userMessageId);
+
+      // Stream the response.
+      await streamResponse(userMessage, assistantMessage, history);
     },
-    [thread, threadState, createMessagePairAndStream],
+    [currentChatId, addMessage, editBranch, streamResponse],
   );
 
-  // Create a debug logger for threadState
-  useEffect(() => {
-    logger.debug("Thread state updated:", threadState);
-  }, [threadState]);
-
-  // Load sessions on initial render
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
-
-  // Load the chat session when it changes
-  useEffect(() => {
-    if (currentChatSessionId) {
-      loadSession(currentChatSessionId);
-    }
-  }, [currentChatSessionId, loadSession]);
-
-  // Update message map when messages change
-  useEffect(() => {
-    if (!messages.length) return;
-    const map = generateMessageMap(messages);
-    setMessageMap(map);
-  }, [messages, generateMessageMap]);
-
-  // Initialize thread state when messageMap changes, only if it's empty
-  useEffect(() => {
-    if (Object.keys(messageMap).length === 0 || !currentChatSessionId) return;
-
-    // Check if we need to regenerate thread state
-    const isThreadEmpty = threadState.activePath.length === 0;
-    const hasFirstMessageChanged =
-      threadState.activePath.length > 0 &&
-      !messageMap[threadState.activePath[0]];
-
-    if (isThreadEmpty || hasFirstMessageChanged) {
-      const newThreadState = generateThreadState(messageMap);
-      // Only update if something actually changed to avoid render loops
-      if (JSON.stringify(newThreadState) !== JSON.stringify(threadState)) {
-        setThreadState(newThreadState);
-      }
-    }
-  }, [messageMap, currentChatSessionId, threadState, generateThreadState]);
-
-  // Handle pending branch changes after message map updates
-  useEffect(() => {
-    if (pendingBranchChange.current) {
-      const { messageId, versionIndex: versionIndex } =
-        pendingBranchChange.current;
-      changeBranch(messageId, versionIndex);
-      pendingBranchChange.current = null;
-    }
-  }, [messageMap, changeBranch]);
-
-  // UI Layout and component rendering
   return (
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
       <div className="col-start-2">
@@ -764,34 +379,66 @@ export default function Chat() {
           toggleSessionPanel={() =>
             setIsSessionPanelVisible(!isSessionPanelVisible)
           }
-          createChatSession={createSession}
+          createChatSession={async () => {
+            const newChat = await createChatLocalDB();
+            if (newChat) {
+              // Set current session in the store.
+              setCurrentChat(newChat.id);
+              setChats((prev) => [newChat, ...prev]);
+            }
+          }}
         />
       </div>
 
       <div className="col-start-1 row-start-1 row-span-3">
-        <SessionsSidePanel
-          chatSessions={chatSessions}
-          currentChatSessionId={currentChatSessionId}
-          setCurrentChatSessionId={setCurrentChatSessionId}
+        <ChatList
+          chats={chats}
+          currentChatId={currentChatId}
+          setCurrentChatId={(id: string) => {
+            setCurrentChat(id);
+          }}
           isVisible={isSessionPanelVisible}
           setIsVisible={setIsSessionPanelVisible}
-          createHandler={createSession}
-          deleteHandler={deleteSession}
-          renameHandler={renameSession}
+          createHandler={async () => {
+            const newChat = await createChatLocalDB();
+            if (newChat) {
+              setCurrentChat(newChat.id);
+              setChats((prev) => [newChat, ...prev]);
+            }
+          }}
+          deleteHandler={async (chatId: string) => {
+            deleteChat(chatId);
+            deleteChatLocalDB(chatId);
+            setChats((prev) => prev.filter((chat) => chat.id !== chatId));
+            setCurrentChat(undefined);
+          }}
+          renameHandler={async (chatId: string, title: string) => {
+            const chat = chats.find((c) => c.id === chatId);
+            if (chat) {
+              const updatedChat = { ...chat, title };
+              updateChatLocalDB(chatId, { title });
+              setChats((prev) =>
+                prev.map((c) => (c.id === chatId ? updatedChat : c)),
+              );
+            }
+          }}
         />
       </div>
 
-      {/* Center: Chat & InputRow */}
       <div className="col-start-2 row-start-2 row-span-2 h-full w-full flex flex-col overflow-hidden">
-        <div className="flex flex-grow overflow-y-auto chat-container">
+        <div
+          ref={chatContainerRef}
+          className="flex flex-grow overflow-y-auto chat-container"
+        >
           <div className="mx-auto w-full max-w-[1000px] px-5">
             <ChatBox
-              thread={thread}
-              threadState={threadState}
-              isSessionLoaded={!!currentChatSessionId}
-              onMessageEdit={handleEditMessage}
-              onBranchChange={changeBranch}
-              assistantBubbleBg="var(--color-bg0)"
+              isSessionLoaded={!!currentChatId}
+              onMessageEdit={(msg) => {
+                handleEditMessage(msg);
+              }}
+              onBranchChange={(messageId: string, versionIndex: number) =>
+                changeBranch(currentChatId!, messageId, versionIndex)
+              }
             />
           </div>
         </div>
@@ -799,7 +446,13 @@ export default function Chat() {
           <InputRow
             ref={inputRef}
             submitHandler={handleSubmit}
-            stopHandler={handleStopStream}
+            stopHandler={() => {
+              if (abortControllerRef.current) {
+                abortControllerRef.current.abort();
+              }
+              abortControllerRef.current = null;
+              setIsStreaming(false);
+            }}
             isLoading={isLoading}
             isStreaming={isStreaming}
           />

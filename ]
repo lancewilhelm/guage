@@ -1,0 +1,88 @@
+import Dexie, { Table } from "dexie";
+import { v4 as uuidv4 } from "uuid";
+
+// Define local message type
+export interface insertLocalMessage {
+  id?: string;
+  sessionId: string;
+  parentId: string;
+  childrenIds: string[];
+  content: string;
+  role: "user" | "assistant";
+  depth: number;
+  createdAt?: Date;
+  lastUpdated?: Date;
+  synced?: boolean; // Used to track messages that need syncing
+}
+
+// Define local message type
+export interface LocalMessage {
+  id: string;
+  sessionId: string;
+  content: string;
+  role: "user" | "assistant";
+  createdAt: Date;
+  lastUpdated: Date;
+  synced: boolean; // Used to track messages that need syncing
+}
+
+// Define local chat session type
+export interface LocalChatSession {
+  id: string;
+  title: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  conversationType: string;
+  synced: boolean; // Used to track sessions that need syncing
+}
+
+// Dexie Database Class
+class ChatDatabase extends Dexie {
+  messagesTable!: Table<LocalMessage>;
+  chatSessionsTable!: Table<LocalChatSession>;
+
+  constructor() {
+    super("chatDB");
+
+    this.version(1).stores({
+      messages: "id, sessionId, lastUpdated, synced",
+      chatSessions: "id, userId, updatedAt, synced",
+    });
+  }
+}
+
+// Initialize database
+export const localDb = new ChatDatabase();
+
+// Helper functions
+// Messages
+export async function createMessageLocalDb({
+  sessionId,
+  role,
+  content,
+}: insertLocalMessage) {
+  const newMessage = {
+    id: uuidv4(),
+    sessionId,
+    role,
+    content,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    synced: false,
+  };
+  await localDb.messages.put(newMessage);
+}
+
+export async function getMessagesLocalDB(sessionId: string) {
+  return await localDb.messages.where("sessionId").equals(sessionId).toArray();
+}
+
+// Chat Sessions
+export async function createChatSessionLocalDB(session: LocalChatSession) {
+  await localDb.chatSessions.put({ ...session, synced: false });
+}
+
+export async function getChatSessionsLocalDB() {
+  return await localDb.chatSessions.toArray();
+}

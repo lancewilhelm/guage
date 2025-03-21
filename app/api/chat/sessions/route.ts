@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/utils/db";
-import { chatSessionsTable } from "@/utils/db/schema";
+import { chatsTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { eq, desc, and } from "drizzle-orm";
 
@@ -22,15 +22,14 @@ export async function GET() {
     logger.debug({ userId }, "GET /api/chat/sessions: Fetching chat sessions");
     const userChatSessions = await db
       .select({
-        id: chatSessionsTable.id,
-        title: chatSessionsTable.title,
-        createdAt: chatSessionsTable.createdAt,
-        updatedAt: chatSessionsTable.updatedAt,
-        conversationType: chatSessionsTable.conversationType,
+        id: chatsTable.id,
+        title: chatsTable.title,
+        createdAt: chatsTable.createdAt,
+        updatedAt: chatsTable.updatedAt,
       })
-      .from(chatSessionsTable)
-      .where(eq(chatSessionsTable.userId, userId))
-      .orderBy(desc(chatSessionsTable.updatedAt));
+      .from(chatsTable)
+      .where(eq(chatsTable.userId, userId))
+      .orderBy(desc(chatsTable.updatedAt));
 
     logger.debug(
       {
@@ -69,7 +68,7 @@ export async function POST(req: NextRequest) {
       "POST /api/chat/sessions: Creating chat session",
     );
     const [newSession] = await db
-      .insert(chatSessionsTable)
+      .insert(chatsTable)
       .values({
         title,
         userId,
@@ -111,14 +110,9 @@ export async function PUT(req: NextRequest) {
       "PUT /api/chat/sessions: Updating chat session",
     );
     const result = await db
-      .update(chatSessionsTable)
+      .update(chatsTable)
       .set(updateData)
-      .where(
-        and(
-          eq(chatSessionsTable.id, sessionId),
-          eq(chatSessionsTable.userId, userId),
-        ),
-      );
+      .where(and(eq(chatsTable.id, sessionId), eq(chatsTable.userId, userId)));
 
     if (result.rowCount === 0) {
       logger.warn("PUT /api/chat/sessions: Chat session not found");
@@ -162,13 +156,8 @@ export async function DELETE(req: NextRequest) {
       "DELETE /api/chat/sessions: Deleting chat session",
     );
     const result = await db
-      .delete(chatSessionsTable)
-      .where(
-        and(
-          eq(chatSessionsTable.id, sessionId),
-          eq(chatSessionsTable.userId, userId),
-        ),
-      );
+      .delete(chatsTable)
+      .where(and(eq(chatsTable.id, sessionId), eq(chatsTable.userId, userId)));
 
     if (result.rowCount === 0) {
       logger.warn("DELETE /api/chat/sessions: Chat session not found");
