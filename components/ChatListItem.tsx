@@ -35,6 +35,10 @@ export default function ChatListItem({
     }
   }, [isRenaming]);
 
+  useEffect(() => {
+    setNewTitle(session.title);
+  }, [session.title]);
+
   return (
     <div
       className={`flex gap-1 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
@@ -60,11 +64,11 @@ export default function ChatListItem({
                 setIsRenaming(false);
               }
             }}
-            className="border px-1 rounded w-full"
+            className="border px-1 rounded w-full border-none"
           />
         ) : (
           <div className="text-nowrap overflow-hidden text-ellipsis">
-            {session.title}
+            {newTitle}
           </div>
         )}
       </div>
@@ -77,6 +81,7 @@ export default function ChatListItem({
               }
               setIsRenaming(false);
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="p-1 cursor-pointer"
           >
             <CheckIcon fill="var(--color-yes)" />
@@ -86,6 +91,7 @@ export default function ChatListItem({
               setNewTitle(session.title);
               setIsRenaming(false);
             }}
+            onMouseDown={(e) => e.stopPropagation()}
             className="p-1 cursor-pointer"
           >
             <XMarkIcon fill="var(--color-no)" />
@@ -95,7 +101,7 @@ export default function ChatListItem({
         <DropDownMenu>
           <DropDownMenuButton>
             {isMenuButtonVisible ? (
-              <DotsIcon fill="var(--color-acc)" />
+              <DotsIcon fill="var(--color-acc)" className="scale-125" />
             ) : (
               <DotsIcon
                 fill={`${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
@@ -104,8 +110,13 @@ export default function ChatListItem({
           </DropDownMenuButton>
           <DropDownMenuList align="right">
             <DropDownMenuItem
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
                 setIsRenaming(true);
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
               }}
             >
               <div className="grid grid-cols-[20px_auto] items-center ">

@@ -11,7 +11,7 @@ export interface LocalMessage {
   role: "user" | "assistant";
   depth: number;
   createdAt: Date;
-  lastUpdated: Date;
+  updatedAt: Date;
   synced: boolean; // Used to track messages that need syncing
 }
 
@@ -89,7 +89,7 @@ export function createMessageObject(
     role,
     depth,
     createdAt: new Date(),
-    lastUpdated: new Date(),
+    updatedAt: new Date(),
     synced: false,
   };
 }
@@ -120,7 +120,7 @@ export async function updateMessageLocalDB(
 ) {
   await localDb.messagesTable.update(messageId, {
     ...update,
-    lastUpdated: new Date(),
+    updatedAt: new Date(),
     synced: false,
   });
 }
@@ -139,11 +139,13 @@ export async function deleteMessageLocalDB(messageId: string) {
  * @returns Promise<LocalChat> - The newly created chat session
  */
 export async function createChatLocalDB(title: string = "New Chat") {
+  const now = new Date();
+  now.setDate(now.getDate() - 100);
   const newChat = {
     id: uuidv4(),
     title,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: now,
+    updatedAt: now,
     synced: false, // Used to track sessions that need syncing
   };
   await localDb.chatsTable.put(newChat);
@@ -179,11 +181,12 @@ export async function retrieveChatsLocalDB() {
 }
 
 /**
- * Delete a chat session from the local database
+ * Delete a chat session from the local database and all associated messages
  * @param chatId - The ID of the chat session to delete
  */
 export async function deleteChatLocalDB(chatId: string) {
   await localDb.chatsTable.delete(chatId);
+  await localDb.messagesTable.where("sessionId").equals(chatId).delete();
 }
 
 // // ------------------------------

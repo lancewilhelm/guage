@@ -84,13 +84,13 @@ export async function deleteChatSession(sessionId: string) {
 /**
  * Generate a title from the assistant's response
  */
-export async function generateSessionTitle(messages: LocalMessage[]) {
+export async function generateSessionTitle(userMessage: LocalMessage) {
   try {
     const response = await fetch("/api/chat/generate-title", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        messages,
+        userMessage,
       }),
     });
 

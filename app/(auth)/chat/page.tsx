@@ -185,20 +185,6 @@ export default function ChatPage() {
             }
           }
         }
-
-        // Update the session title if the session is new
-        if (!history || history.length === 0) {
-          const title = await generateSessionTitle([
-            userMessage,
-            assistantMessage,
-          ]);
-          updateChatLocalDB(currentChatId, { title });
-          setChats((prev) =>
-            prev.map((chat) =>
-              chat.id === currentChatId ? { ...chat, title } : chat,
-            ),
-          );
-        }
       } catch (error) {
         logger.error("Error during streaming:", error);
       } finally {
@@ -246,7 +232,7 @@ export default function ChatPage() {
       childrenIds: [assistantMessageId],
       depth,
       createdAt: now,
-      lastUpdated: now,
+      updatedAt: now,
       synced: false,
     };
     const assistantMessage: LocalMessage = {
@@ -258,7 +244,7 @@ export default function ChatPage() {
       childrenIds: [],
       depth: depth + 1,
       createdAt: now,
-      lastUpdated: now,
+      updatedAt: now,
       synced: false,
     };
 
@@ -290,6 +276,27 @@ export default function ChatPage() {
 
     // Stream the response.
     streamResponse(userMessage, assistantMessage, history);
+
+    // Update the chat title if this is the first message in the session
+    if (!history || history.length === 0) {
+      const title = await generateSessionTitle(userMessage);
+      updateChatLocalDB(currentChatId, { title });
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === currentChatId ? { ...chat, title } : chat,
+        ),
+      );
+    }
+
+    // Update the chat updatedAt timestamp
+    updateChatLocalDB(currentChatId, { updatedAt: now });
+    setChats((prev) =>
+      prev
+        .map((chat) =>
+          chat.id === currentChatId ? { ...chat, updatedAt: now } : chat,
+        )
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+    );
   }, [currentChatId, isLoading, addMessage, editBranch, streamResponse]);
 
   // Edit an existing message by creating a new branch from its parent.
@@ -322,7 +329,7 @@ export default function ChatPage() {
         childrenIds: [assistantMessageId],
         depth: editedMessage.depth,
         createdAt: now,
-        lastUpdated: now,
+        updatedAt: now,
         synced: false,
       };
       const assistantMessage: LocalMessage = {
@@ -334,7 +341,7 @@ export default function ChatPage() {
         childrenIds: [],
         depth: editedMessage.depth + 1,
         createdAt: now,
-        lastUpdated: now,
+        updatedAt: now,
         synced: false,
       };
 
@@ -361,6 +368,27 @@ export default function ChatPage() {
 
       // Stream the response.
       await streamResponse(userMessage, assistantMessage, history);
+
+      // Update the chat title if this is the first message in the session
+      if (!history || history.length === 0) {
+        const title = await generateSessionTitle(userMessage);
+        updateChatLocalDB(currentChatId, { title });
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === currentChatId ? { ...chat, title } : chat,
+          ),
+        );
+      }
+
+      // Update the chat updatedAt timestamp
+      updateChatLocalDB(currentChatId, { updatedAt: now });
+      setChats((prev) =>
+        prev
+          .map((chat) =>
+            chat.id === currentChatId ? { ...chat, updatedAt: now } : chat,
+          )
+          .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+      );
     },
     [currentChatId, addMessage, editBranch, streamResponse],
   );
@@ -386,25 +414,25 @@ export default function ChatPage() {
         <ChatList
           chats={chats}
           currentChatId={currentChatId}
-          setCurrentChatId={(id: string) => {
+          setCurrentChatIdAction={(id: string) => {
             setCurrentChat(id);
           }}
           isVisible={showSessionPanel}
-          setIsVisible={setShowSessionPanel}
-          createHandler={async () => {
+          setIsVisibleAction={setShowSessionPanel}
+          createAction={async () => {
             const newChat = await createChatLocalDB();
             if (newChat) {
               setCurrentChat(newChat.id);
               setChats((prev) => [newChat, ...prev]);
             }
           }}
-          deleteHandler={async (chatId: string) => {
+          deleteAction={async (chatId: string) => {
             deleteChat(chatId);
             deleteChatLocalDB(chatId);
             setChats((prev) => prev.filter((chat) => chat.id !== chatId));
             setCurrentChat(undefined);
           }}
-          renameHandler={async (chatId: string, title: string) => {
+          renameAction={async (chatId: string, title: string) => {
             const chat = chats.find((c) => c.id === chatId);
             if (chat) {
               const updatedChat = { ...chat, title };

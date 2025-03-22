@@ -107,9 +107,11 @@ export function DropDownMenuList({
 export function DropDownMenuItem({
   children,
   onClick,
+  onMouseDown,
 }: {
   children: React.ReactNode;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }) {
   const context = useContext(DropDownMenuContext);
   if (!context) {
@@ -120,9 +122,12 @@ export function DropDownMenuItem({
   return (
     <div
       className="cursor-pointer bg-(--color-bg1) rounded-xl p-2 hover:opacity-80 active:opacity-60"
-      onClick={() => {
-        onClick();
+      onClick={(e) => {
+        onClick(e);
         setIsOpen(false);
+      }}
+      onMouseDown={(e) => {
+        if (onMouseDown) onMouseDown(e);
       }}
     >
       {children}

@@ -1,28 +1,38 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useMemo, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
 import ChatListItem from "./ChatListItem";
 import { LocalChat } from "@/utils/db/localDb";
 
+function ChatListGroupTitle({ title }: { title: string }) {
+  return (
+    <div className="flex w-full items-center justify-center text-center text-sm font-thin text-(--color-fg2) mb-1">
+      <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
+      <div className="flex justify-center text-nowrap">{title}</div>
+      <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
+    </div>
+  );
+}
+
 export default function ChatsPanel({
   chats,
   currentChatId,
-  setCurrentChatId,
+  setCurrentChatIdAction,
   isVisible,
-  setIsVisible,
-  createHandler,
-  deleteHandler,
-  renameHandler,
+  setIsVisibleAction,
+  createAction,
+  deleteAction,
+  renameAction,
 }: {
   chats: LocalChat[];
   currentChatId: string | undefined;
-  setCurrentChatId: (sessionId: string) => void;
+  setCurrentChatIdAction: (sessionId: string) => void;
   isVisible: boolean;
-  setIsVisible: (isVisible: boolean) => void;
-  createHandler: () => void;
-  deleteHandler: (sessionId: string) => void;
-  renameHandler: (sessionId: string, newName: string) => void;
+  setIsVisibleAction: (isVisible: boolean) => void;
+  createAction: () => void;
+  deleteAction: (sessionId: string) => void;
+  renameAction: (sessionId: string, newName: string) => void;
 }) {
   const minWidth = 250;
   const maxWidth = 600;
@@ -56,13 +66,37 @@ export default function ChatsPanel({
 
     let newWidth = width;
     if (width < minWidth / 2) {
-      setIsVisible(false);
+      setIsVisibleAction(false);
       newWidth = minWidth;
     } else {
       newWidth = Math.max(minWidth, Math.min(width, maxWidth));
     }
     setSessionPanelWidth(newWidth);
   };
+
+  // Define date boundaries
+  const sortedChats: Record<string, LocalChat[]> = useMemo(() => {
+    const today = new Date(new Date().setHours(0, 0, 0, 0));
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    const lastMonth = new Date(today);
+    lastMonth.setDate(lastMonth.getDate() - 30);
+    return {
+      Today: chats.filter((chat) => chat.updatedAt >= today),
+      Yesterday: chats.filter(
+        (chat) => chat.updatedAt >= yesterday && chat.updatedAt < today,
+      ),
+      "Last 7 Days": chats.filter(
+        (chat) => chat.updatedAt >= lastWeek && chat.updatedAt < yesterday,
+      ),
+      "Last 30 Days": chats.filter(
+        (chat) => chat.updatedAt >= lastMonth && chat.updatedAt < lastWeek,
+      ),
+      Older: chats.filter((chat) => chat.updatedAt < lastMonth),
+    };
+  }, [chats]);
 
   return (
     <div className={`h-full bg-(--color-bg1) ${isVisible ? "flex" : "hidden"}`}>
@@ -75,28 +109,38 @@ export default function ChatsPanel({
             <TableListIcon
               fill="var(--color-acc)"
               className="cursor-pointer"
-              onMouseDown={() => setIsVisible(false)}
+              onMouseDown={() => setIsVisibleAction(false)}
             />
             <div className="grow text-center">Chats</div>
             <PlusIcon
               fill="var(--color-acc)"
               className="cursor-pointer"
-              onClick={createHandler}
+              onClick={createAction}
             />
           </div>
           <div className="w-full h-[1px] bg-(--color-bg2)" />
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
-            {chats.map((session) => (
-              <ChatListItem
-                key={session.id}
-                session={session}
-                currentChatSessionId={currentChatId}
-                setCurrentChatSessionId={setCurrentChatId}
-                deleteHandler={deleteHandler}
-                renameHandler={renameHandler}
-              />
-            ))}
+            {Object.keys(sortedChats).map((key) => {
+              return sortedChats[key].length > 0 ? (
+                <div
+                  key={key}
+                  className="flex flex-col w-full text-center text-sm mb-2"
+                >
+                  <ChatListGroupTitle title={key} />
+                  {sortedChats[key].map((session) => (
+                    <ChatListItem
+                      key={session.id}
+                      session={session}
+                      currentChatSessionId={currentChatId}
+                      setCurrentChatSessionId={setCurrentChatIdAction}
+                      deleteHandler={deleteAction}
+                      renameHandler={renameAction}
+                    />
+                  ))}
+                </div>
+              ) : null;
+            })}
           </div>
         </div>
       </div>

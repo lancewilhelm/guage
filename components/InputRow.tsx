@@ -24,12 +24,7 @@ const SubmitButton = memo(
     onStop: () => void;
   }) => {
     const isDisabled = isLoading || (!hasInput && !isStreaming);
-    const buttonClasses = `
-    flex items-center justify-center
-    border rounded-full p-2 w-10 h-10 
-    bg-(--color-fg0) text-(--color-bg0)
-    ${isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}
-  `;
+    const buttonClasses = `flex flex-shrink-0 items-center justify-center border rounded-full p-2 w-10 h-10 bg-(--color-fg0) text-(--color-bg0) ${isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}`;
 
     const handleClick = () => {
       if (isStreaming) {
