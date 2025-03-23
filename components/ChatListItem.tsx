@@ -9,16 +9,16 @@ import DropDownMenu, {
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
-import { LocalChat } from "@/utils/db/localDb";
+import { ChatItem } from "@/app/(auth)/chat/page";
 
 export default function ChatListItem({
-  session,
+  chat,
   currentChatSessionId,
   setCurrentChatSessionId,
   deleteHandler,
   renameHandler,
 }: {
-  session: LocalChat;
+  chat: ChatItem;
   currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   deleteHandler: (sessionId: string) => void;
@@ -26,7 +26,7 @@ export default function ChatListItem({
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [isMenuButtonVisible, setIsMenuButtonVisible] = useState(false);
-  const [newTitle, setNewTitle] = useState(session.title);
+  const [newTitle, setNewTitle] = useState(chat.title);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -36,15 +36,15 @@ export default function ChatListItem({
   }, [isRenaming]);
 
   useEffect(() => {
-    setNewTitle(session.title);
-  }, [session.title]);
+    setNewTitle(chat.title);
+  }, [chat.title]);
 
   return (
     <div
-      className={`flex gap-1 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
+      className={`flex gap-1 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
-      onMouseDown={() => setCurrentChatSessionId(session.id)}
+      onMouseDown={() => setCurrentChatSessionId(chat.id)}
     >
       <div className="cursor-pointer hover:opacity-80 overflow-hidden">
         {isRenaming ? (
@@ -55,12 +55,12 @@ export default function ChatListItem({
             onChange={(e) => setNewTitle(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                if (session.title !== newTitle) {
-                  renameHandler(session.id, newTitle);
+                if (chat.title !== newTitle) {
+                  renameHandler(chat.id, newTitle);
                 }
                 setIsRenaming(false);
               } else if (e.key === "Escape") {
-                setNewTitle(session.title);
+                setNewTitle(chat.title);
                 setIsRenaming(false);
               }
             }}
@@ -76,8 +76,8 @@ export default function ChatListItem({
         <div className="flex">
           <button
             onClick={() => {
-              if (session.title !== newTitle) {
-                renameHandler(session.id, newTitle);
+              if (chat.title !== newTitle) {
+                renameHandler(chat.id, newTitle);
               }
               setIsRenaming(false);
             }}
@@ -88,7 +88,7 @@ export default function ChatListItem({
           </button>
           <button
             onClick={() => {
-              setNewTitle(session.title);
+              setNewTitle(chat.title);
               setIsRenaming(false);
             }}
             onMouseDown={(e) => e.stopPropagation()}
@@ -104,7 +104,7 @@ export default function ChatListItem({
               <DotsIcon fill="var(--color-acc)" className="scale-125" />
             ) : (
               <DotsIcon
-                fill={`${currentChatSessionId === session.id && "bg-(--color-bg2)"}`}
+                fill={`${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
               />
             )}
           </DropDownMenuButton>
@@ -124,7 +124,7 @@ export default function ChatListItem({
                 Rename
               </div>
             </DropDownMenuItem>
-            <DropDownMenuItem onClick={() => deleteHandler(session.id)}>
+            <DropDownMenuItem onClick={() => deleteHandler(chat.id)}>
               <div className="grid grid-cols-[20px_auto] items-center text-(--error-color)">
                 <TrashCanIcon
                   fill="var(--color-no)"

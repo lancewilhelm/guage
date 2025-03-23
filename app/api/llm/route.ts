@@ -8,11 +8,11 @@ const openai = new OpenAI({
 });
 
 export async function POST(req: Request) {
-  logger.info("POST /api/chat");
+  logger.info("POST /api/llm");
   // Check for authorized user
   const session = await getSession();
   if (!session) {
-    logger.warn("POST /api/chat: Unauthorized access attempt");
+    logger.warn("POST /api/llm: Unauthorized access attempt");
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -22,11 +22,11 @@ export async function POST(req: Request) {
   const {
     history,
     userMessage,
-    sessionId,
+    chatId,
   }: {
     history: LocalMessage[];
     userMessage: LocalMessage;
-    sessionId: string;
+    chatId: string;
   } = await req.json();
   if (!history || !Array.isArray(history) || !userMessage) {
     return new Response("Invalid request: messages are required", {
@@ -34,12 +34,12 @@ export async function POST(req: Request) {
     });
   }
 
-  logger.debug({ history, userMessage }, "POST /api/chat: Request body");
+  logger.debug({ history, userMessage }, "POST /api/llm: Request body");
 
   try {
     logger.debug(
-      { userId, sessionId, userMessage },
-      "POST /api/chat: Processing user message",
+      { userId, chatId: chatId, userMessage },
+      "POST /api/llm: Processing user message",
     );
 
     const encoder = new TextEncoder();
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
           // Start the OpenAI completion
           logger.debug(
             { history, userMessage },
-            "POST /api/chat: Starting OpenAI completion",
+            "POST /api/llm: Starting OpenAI completion",
           );
           const messages = history.concat([userMessage]);
           const params: OpenAI.Chat.ChatCompletionCreateParams = {
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
           // Now handle the completion chunks from LLM service
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
-            logger.debug({ text }, "POST /api/chat: Streaming response");
+            logger.debug({ text }, "POST /api/llm: Streaming response");
             controller.enqueue(
               encoder.encode(
                 `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,

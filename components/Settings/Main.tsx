@@ -1,12 +1,12 @@
 import { useState } from "react";
 import Modal from "@/components/Modal";
 import XMarkIcon from "@/components/Icon/XMark";
-import ProfilePage from "@/components/Settings/Pages/Profile";
+import GeneralPage from "@/components/Settings/Pages/General";
 import ModelsPage from "@/components/Settings/Pages/Models";
 import ThemePage from "@/components/Settings/Pages/Theme";
 
 const settingsPages = {
-  profile: { name: "Profile", component: <ProfilePage /> },
+  profile: { name: "General", component: <GeneralPage /> },
   models: { name: "Models", component: <ModelsPage /> },
   theme: { name: "Theme", component: <ThemePage /> },
 };

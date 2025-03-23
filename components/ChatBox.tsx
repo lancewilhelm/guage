@@ -3,7 +3,7 @@ import { useChatStore } from "@/store/chatStore";
 import { LocalMessage } from "@/utils/db/localDb";
 
 interface ChatBoxProps {
-  isSessionLoaded?: boolean;
+  isChatLoaded?: boolean;
   onMessageEdit: (message: LocalMessage) => void;
   onBranchChange: (messageId: string, versionIndex: number) => void;
   userBubbleWidth?: string;
@@ -50,7 +50,7 @@ function computeVersionInfo(
 }
 
 export default function ChatBox({
-  isSessionLoaded = false,
+  isChatLoaded = false,
   onMessageEdit,
   onBranchChange,
   userBubbleWidth,
@@ -61,36 +61,36 @@ export default function ChatBox({
   assistantBubbleBg = "var(--color-bg0)",
   showNames = false,
 }: ChatBoxProps) {
-  const currentSessionId = useChatStore((state) => state.currentChatId);
-  const session = useChatStore((state) =>
-    currentSessionId ? state.chats[currentSessionId] : undefined,
+  const currentChatId = useChatStore((state) => state.currentChatId);
+  const chat = useChatStore((state) =>
+    currentChatId ? state.chats[currentChatId] : undefined,
   );
-  const activeThread = session
-    ? (session.activeBranch
-        .map((id) => session.messages[id])
+  const activeThread = chat
+    ? (chat.activeBranch
+        .map((id) => chat.messages[id])
         .filter(Boolean) as LocalMessage[])
     : [];
 
   return (
     <div
-      className={`flex flex-col gap-2 w-full p-2 pb-15 ${
-        activeThread.length === 0 || !isSessionLoaded ? "h-full" : ""
+      className={`flex flex-col gap-2 w-full pb-15 ${
+        activeThread.length === 0 || !isChatLoaded ? "h-full" : ""
       }`}
     >
       {activeThread.length === 0 ? (
-        <div className="flex flex-col grow text-center justify-center">
+        <div className="w-full flex flex-col grow text-center justify-center">
           <div className="text-3xl">
-            {isSessionLoaded ? "No messages" : "No session loaded"}
+            {isChatLoaded ? "No messages" : "No session loaded"}
           </div>
           <div className="italic">
-            {isSessionLoaded
+            {isChatLoaded
               ? "Send your first message in the input box below"
               : "Load a session in the panel on the left"}
           </div>
         </div>
       ) : (
         activeThread.map((message) => {
-          const versionInfo = computeVersionInfo(message, session!.messages);
+          const versionInfo = computeVersionInfo(message, chat!.messages);
           return (
             <ChatBubble
               key={message.id}

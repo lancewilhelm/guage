@@ -1,26 +1,80 @@
 import { create } from "zustand";
 import { LocalMessage } from "@/utils/db/localDb";
+import { persist } from "zustand/middleware";
+import { logger } from "@/utils/logger";
 
 /**
- * ChatsState: State for a chat session.
- * Maintains messages and active branch.
+ * Generate an active branch starting from the latest message.
+ * @param messages - Record of messages
+ * @returns Array of message IDs in the branch
  */
-export interface ChatsState {
-  messages: Record<string, LocalMessage>;
-  activeBranch: string[]; // the branch of messages currently displayed
-  isStreaming: boolean;
-  abortController?: AbortController;
+export function generateActiveBranchFromLatest(
+  messages: Record<string, LocalMessage>,
+): string[] {
+  const allMessages = Object.values(messages);
+  if (allMessages.length === 0) return [];
+  // Get the latest message based on createdAt.
+  const latest = allMessages.reduce((prev, curr) =>
+    new Date(curr.updatedAt) > new Date(prev.updatedAt) ? curr : prev,
+  );
+  const branch: string[] = [];
+  let current: LocalMessage | undefined = latest;
+  while (current) {
+    branch.push(current.id);
+    if (!current.parentId) break;
+    current = messages[current.parentId];
+  }
+  return branch.reverse();
 }
 
 /**
- * ChatStore: Zustand store for chat sessions.
- * Maintains chat sessions, messages, and active branches.
+ * Build a branch starting from a message and following the first-child chain.
+ * @param chat - Chat state
+ * @param startId - Starting message ID
+ * @returns Array of message IDs in the branch
+ */
+function buildBranchFrom(chat: ChatState, startId: string): string[] {
+  const branch: string[] = [];
+  branch.push(startId);
+  let current = chat.messages[startId];
+  while (current && current.childrenIds && current.childrenIds.length > 0) {
+    const firstChildId = current.childrenIds[0];
+    branch.push(firstChildId);
+    current = chat.messages[firstChildId];
+  }
+  return branch;
+}
+
+/**
+ * ChatsState: State for a chat.
+ * Maintains messages and active branch.
+ */
+export interface ChatState {
+  messages: Record<string, LocalMessage>;
+  activeBranch: string[];
+  isStreaming: boolean;
+  abortController?: AbortController;
+  title: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * ChatStore: Zustand store for chats.
+ * Maintains chats, messages, and active branches.
  */
 export interface ChatStore {
-  chats: Record<string, ChatsState>;
+  chats: Record<string, ChatState>;
   currentChatId?: string;
   // Actions
-  setCurrentChat: (chatId: string | undefined) => void;
+  createChat: (
+    chatId: string,
+    title?: string,
+    createdAt?: Date,
+    updatedAt?: Date,
+    activeBranch?: string[],
+  ) => void;
+  setCurrentChatId: (chatId: string | undefined) => void;
   updateChatMessages: (
     chatId: string,
     messages: Record<string, LocalMessage>,
@@ -32,7 +86,7 @@ export interface ChatStore {
   ) => void;
   addMessage: (chatId: string, message: LocalMessage) => void;
   updateMessage: (chatId: string, id: string, content: string) => void;
-  rebuildBranch: (chatId: string) => void;
+  setActiveBranch: (chatId: string, branch?: string[]) => void;
   editBranch: (
     chatId: string,
     parentId: string | null,
@@ -42,243 +96,215 @@ export interface ChatStore {
     chatId: string,
     messageId: string,
     newVersionIndex: number,
+  ) => void;
+  updateChatMetadata: (
+    chatId: string,
+    metadata: Partial<Pick<ChatState, "title" | "createdAt" | "updatedAt">>,
   ) => void;
   deleteChat: (chatId: string) => void;
+  resetChatStore: () => void;
 }
 
 /**
- * Generate the active branch from scratch.
- * We assume that the “root” messages are those with no parent.
- * We sort roots by createdAt, pick the first root, then follow the first-child
- * chain (using each message’s childrenIds) until no more children exist.
- * @param messages - Record of messages
- * @returns Array of message IDs in the active branch
+ * ChatStore: Zustand store for chats.
+ * Maintains chats, messages, and active branches.
  */
-function generateActiveBranch(
-  messages: Record<string, LocalMessage>,
-): string[] {
-  const allMessages = Object.values(messages);
-  // Get root messages (no parent) sorted by createdAt.
-  const roots = allMessages
-    .filter((msg) => msg.parentId === null)
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  if (roots.length === 0) return [];
-  const branch: string[] = [];
-  let current = roots[0];
-  branch.push(current.id);
-  // Follow the first child chain as long as childrenIds is available and nonempty.
-  while (current.childrenIds && current.childrenIds.length > 0) {
-    const firstChildId = current.childrenIds[0];
-    branch.push(firstChildId);
-    current = messages[firstChildId];
-    if (!current) break;
-  }
-  return branch;
-}
-
-/**
- * Build a branch starting from a message and following the first-child chain.
- * @param session - Chat session state
- * @param startId - Starting message ID
- * @returns Array of message IDs in the branch
- */
-function buildBranchFrom(session: ChatsState, startId: string): string[] {
-  const branch: string[] = [];
-  branch.push(startId);
-  let current = session.messages[startId];
-  while (current && current.childrenIds && current.childrenIds.length > 0) {
-    const firstChildId = current.childrenIds[0];
-    branch.push(firstChildId);
-    current = session.messages[firstChildId];
-  }
-  return branch;
-}
-
-/**
- * ChatStore: Zustand store for chat sessions.
- * Maintains chat sessions, messages, and active branches.
- */
-export const useChatStore = create<ChatStore>((set) => ({
-  chats: {},
-  currentChatId: undefined,
-  setCurrentChat: (chatId) =>
-    set((state) => {
-      if (chatId === undefined) return { currentChatId: undefined };
-      return {
-        currentChatId: chatId,
-        chats: {
-          ...state.chats,
-          [chatId]: state.chats[chatId] || {
+export const useChatStore = create<ChatStore>()(
+  persist(
+    (set) => ({
+      chats: {},
+      currentChatId: undefined,
+      setCurrentChatId: (chatId) =>
+        set((state) => {
+          if (chatId === undefined) {
+            return { currentChatId: undefined };
+          } else if (!state.chats[chatId]) {
+            logger.warn(`Chat ${chatId} does not exist.`);
+            return { currentChatId: undefined };
+          }
+          return {
+            currentChatId: chatId,
+          };
+        }),
+      createChat: (chatId, title?, createdAt?, updatedAt?, activeBranch?) =>
+        set((state) => {
+          if (state.chats[chatId]) {
+            logger.warn(`Chat ${chatId} already exists.`);
+            return state;
+          }
+          const newChat: ChatState = {
             messages: {},
-            activeBranch: [],
+            activeBranch: activeBranch ?? [],
             isStreaming: false,
+            title: title ?? "New Chat",
+            createdAt: createdAt ?? new Date(),
+            updatedAt: updatedAt ?? new Date(),
+          };
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: newChat,
+            },
+          };
+        }),
+      updateChatMessages: (chatId, messages) =>
+        set((state) => ({
+          chats: {
+            ...state.chats,
+            [chatId]: {
+              ...state.chats[chatId],
+              messages,
+            },
           },
-        },
-      };
-    }),
-  updateChatMessages: (sessionId, messages) =>
-    set((state) => ({
-      chats: {
-        ...state.chats,
-        [sessionId]: {
-          ...state.chats[sessionId],
-          messages,
-        },
-      },
-    })),
-  setChatStreaming: (sessionId, isStreaming) =>
-    set((state) => ({
-      chats: {
-        ...state.chats,
-        [sessionId]: {
-          ...state.chats[sessionId],
-          isStreaming,
-        },
-      },
-    })),
-  setChatAbortController: (sessionId, controller) =>
-    set((state) => ({
-      chats: {
-        ...state.chats,
-        [sessionId]: {
-          ...state.chats[sessionId],
-          abortController: controller,
-        },
-      },
-    })),
-  addMessage: (sessionId, message) =>
-    set((state) => {
-      const session = state.chats[sessionId];
-      const newMessages = { ...session.messages, [message.id]: message };
-      return {
-        chats: {
-          ...state.chats,
-          [sessionId]: { ...session, messages: newMessages },
-        },
-      };
-    }),
-  updateMessage: (sessionId, id, content) =>
-    set((state) => {
-      const session = state.chats[sessionId];
-      const updatedMessages = {
-        ...session.messages,
-        [id]: { ...session.messages[id], content },
-      };
-      return {
-        chats: {
-          ...state.chats,
-          [sessionId]: { ...session, messages: updatedMessages },
-        },
-      };
-    }),
-  // Build the active branch from scratch.
-  rebuildBranch: (sessionId) =>
-    set((state) => {
-      const session = state.chats[sessionId];
-      const newActiveBranch = generateActiveBranch(session.messages);
-      return {
-        chats: {
-          ...state.chats,
-          [sessionId]: { ...session, activeBranch: newActiveBranch },
-        },
-      };
-    }),
-  // Edit a branch by setting the active branch to the branch from the new user message.
-  editBranch: (
-    sessionId: string,
-    parentId: string | null,
-    newUserMessageId: string,
-  ) =>
-    set((state) => {
-      const session = state.chats[sessionId];
-      if (!session) return state;
-      let newActiveBranch: string[];
-      // If there is no parent (i.e. editing a root message), then the new branch is just the branch from the new message.
-      if (!parentId) {
-        newActiveBranch = buildBranchFrom(session, newUserMessageId);
-      } else {
-        // Otherwise, get the prefix (branch up to and including the parent).
-        const parentIndex = session.activeBranch.indexOf(parentId);
-        const prefix =
-          parentIndex !== -1
-            ? session.activeBranch.slice(0, parentIndex + 1)
-            : [];
-        // Build the new branch from the new user message.
-        const newSegment = buildBranchFrom(session, newUserMessageId);
-        newActiveBranch = [...prefix, ...newSegment];
-      }
-      return {
-        chats: {
-          ...state.chats,
-          [sessionId]: {
-            ...session,
-            activeBranch: newActiveBranch,
+        })),
+      setChatStreaming: (chatId, isStreaming) =>
+        set((state) => ({
+          chats: {
+            ...state.chats,
+            [chatId]: {
+              ...state.chats[chatId],
+              isStreaming,
+            },
           },
-        },
-      };
-    }),
-  changeBranch: (
-    sessionId: string,
-    messageId: string,
-    newVersionIndex: number,
-  ) =>
-    set((state) => {
-      const session = state.chats[sessionId];
-      if (!session) return state;
-      const targetMessage = session.messages[messageId];
-      if (!targetMessage) return state;
-
-      let versions: (LocalMessage | string)[] = [];
-      let prefix: string[] = [];
-      let newVersionId: string;
-
-      // If target is a root message
-      if (targetMessage.parentId === null) {
-        // Get all root messages, sorted by creation time.
-        versions = Object.values(session.messages)
-          .filter((msg) => msg.parentId === null)
-          .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-        if (newVersionIndex < 0 || newVersionIndex >= versions.length)
-          return state;
-        newVersionId = (versions[newVersionIndex] as LocalMessage).id;
-        // For a root, there is no prefix.
-        prefix = [];
-      } else {
-        // Otherwise, get parent's childrenIds (which are strings).
-        const parent = session.messages[targetMessage.parentId];
-        if (!parent || !parent.childrenIds) return state;
-        versions = parent.childrenIds; // array of string IDs
-        if (newVersionIndex < 0 || newVersionIndex >= versions.length)
-          return state;
-        newVersionId = versions[newVersionIndex] as string;
-        // Compute prefix: the branch up to and including the parent.
-        const parentIndex = session.activeBranch.indexOf(parent.id);
-        prefix =
-          parentIndex !== -1
-            ? session.activeBranch.slice(0, parentIndex + 1)
-            : [];
-      }
-
-      // Build the new active branch by concatenating the prefix with the branch from the newVersionId.
-      const newActiveBranch = [
-        ...prefix,
-        ...buildBranchFrom(session, newVersionId),
-      ];
-
-      return {
-        chats: {
-          ...state.chats,
-          [sessionId]: {
-            ...session,
-            activeBranch: newActiveBranch,
+        })),
+      setChatAbortController: (chatId, controller) =>
+        set((state) => ({
+          chats: {
+            ...state.chats,
+            [chatId]: {
+              ...state.chats[chatId],
+              abortController: controller,
+            },
           },
-        },
-      };
+        })),
+      addMessage: (chatId, message) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          const newMessages = { ...chat.messages, [message.id]: message };
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, messages: newMessages },
+            },
+          };
+        }),
+      updateMessage: (chatId, id, content) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          const updatedMessages = {
+            ...chat.messages,
+            [id]: { ...chat.messages[id], content },
+          };
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, messages: updatedMessages },
+            },
+          };
+        }),
+      setActiveBranch: (chatId: string, branch?: string[]) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          if (!chat) return state;
+          const newBranch =
+            branch ?? generateActiveBranchFromLatest(chat.messages);
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, activeBranch: newBranch },
+            },
+          };
+        }),
+      editBranch: (chatId, parentId, newUserMessageId) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          if (!chat) return state;
+          let newActiveBranch: string[];
+          if (!parentId) {
+            newActiveBranch = buildBranchFrom(chat, newUserMessageId);
+          } else {
+            const parentIndex = chat.activeBranch.indexOf(parentId);
+            const prefix =
+              parentIndex !== -1
+                ? chat.activeBranch.slice(0, parentIndex + 1)
+                : [];
+            const newSegment = buildBranchFrom(chat, newUserMessageId);
+            newActiveBranch = [...prefix, ...newSegment];
+          }
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, activeBranch: newActiveBranch },
+            },
+          };
+        }),
+      changeBranch: (chatId, messageId, newVersionIndex) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          if (!chat) return state;
+          const targetMessage = chat.messages[messageId];
+          if (!targetMessage) return state;
+          let versions: (LocalMessage | string)[] = [];
+          let prefix: string[] = [];
+          let newVersionId: string;
+          if (targetMessage.parentId === null) {
+            versions = Object.values(chat.messages)
+              .filter((msg) => msg.parentId === null)
+              .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+            if (newVersionIndex < 0 || newVersionIndex >= versions.length)
+              return state;
+            newVersionId = (versions[newVersionIndex] as LocalMessage).id;
+            prefix = [];
+          } else {
+            const parent = chat.messages[targetMessage.parentId];
+            if (!parent || !parent.childrenIds) return state;
+            versions = parent.childrenIds;
+            if (newVersionIndex < 0 || newVersionIndex >= versions.length)
+              return state;
+            newVersionId = versions[newVersionIndex] as string;
+            const parentIndex = chat.activeBranch.indexOf(parent.id);
+            prefix =
+              parentIndex !== -1
+                ? chat.activeBranch.slice(0, parentIndex + 1)
+                : [];
+          }
+          const newActiveBranch = [
+            ...prefix,
+            ...buildBranchFrom(chat, newVersionId),
+          ];
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, activeBranch: newActiveBranch },
+            },
+          };
+        }),
+      updateChatMetadata: (chatId, metadata) =>
+        set((state) => {
+          const chat = state.chats[chatId];
+          if (!chat) return state;
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: { ...chat, ...metadata },
+            },
+          };
+        }),
+      deleteChat: (chatId) =>
+        set((state) => {
+          const chats = { ...state.chats };
+          delete chats[chatId];
+          return { chats };
+        }),
+      resetChatStore: () => set({ chats: {}, currentChatId: undefined }),
     }),
-  deleteChat: (sessionId) =>
-    set((state) => {
-      const sessions = { ...state.chats };
-      delete sessions[sessionId];
-      return { chats: sessions };
-    }),
-}));
+    {
+      name: "chat-store", // key in localStorage
+      // Only persist currentChatId
+      partialize: (state) => ({
+        currentChatId: state.currentChatId,
+        // chats: state.chats,
+      }),
+    },
+  ),
+);

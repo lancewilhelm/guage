@@ -140,3 +140,11 @@ textarea:focus {
 ::-webkit-scrollbar-track {
   background: var(--color-bg0);
 }
+
+.input-row textarea::-webkit-scrollbar-track {
+  background: var(--color-bg1);
+}
+
+.input-row textarea::-webkit-scrollbar-thumb {
+  border: 5px solid var(--color-bg1);
+}

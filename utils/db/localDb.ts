@@ -1,27 +1,30 @@
+import { logger } from "@/utils/logger";
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
+import { debounce } from "../debounce";
 
 // Define local message type
 export interface LocalMessage {
   id: string;
-  sessionId: string;
+  chatId: string;
   parentId: string | null;
   childrenIds: string[] | null;
   content: string;
   role: "user" | "assistant";
-  depth: number;
   createdAt: Date;
   updatedAt: Date;
-  synced: boolean; // Used to track messages that need syncing
+  synced: boolean;
+  deleted?: boolean;
 }
 
-// Define local chat type
 export interface LocalChat {
   id: string;
   title: string;
   createdAt: Date;
   updatedAt: Date;
-  synced: boolean; // Used to track sessions that need syncing
+  synced: boolean;
+  deleted?: boolean;
+  activeBranch: string[];
 }
 
 // Define the local database
@@ -31,9 +34,8 @@ class ChatDatabase extends Dexie {
 
   constructor() {
     super("guage");
-
     this.version(1).stores({
-      messagesTable: "&id, sessionId, lastUpdated",
+      messagesTable: "&id, chatId, lastUpdated",
       chatsTable: "&id, updatedAt",
     });
   }
@@ -42,15 +44,42 @@ class ChatDatabase extends Dexie {
 // Initialize database
 export const localDb = new ChatDatabase();
 
-// ------------------------------
-// Functions to interact with the local database
-// ------------------------------
+// ----------------------------------------------//
+// Functions to interact with the local database //
+// ----------------------------------------------//
+
 /**
- * Create a new message in the local database
- * @param message - The message object to insert in the local database
- * @returns Promise<void> - Resolves when the message has been inserted
+ * Insert a chat or an array of chats into the local database.
+ * @param chat The chat or array of chats to insert.
+ * @returns Promise that resolves when the operation is complete.
  */
-export async function insertMessageLocalDb(
+export function createMessageObject(
+  id: string | null = null,
+  chatId: string,
+  role: "user" | "assistant",
+  content: string = "",
+  parentId: string | null = null,
+  childrenIds: Array<string> | null = null,
+): LocalMessage {
+  return {
+    id: id || uuidv4(),
+    chatId,
+    parentId,
+    childrenIds,
+    content,
+    role,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    synced: false,
+  };
+}
+
+/**
+ * Insert a message or an array of messages into the local database.
+ * @param message The message or array of messages to insert.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export async function createMessageLocalDb(
   message: LocalMessage | LocalMessage[],
 ): Promise<void> {
   try {
@@ -65,44 +94,19 @@ export async function insertMessageLocalDb(
       `Failed to insert message(s): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+  debouncedTwoWaySync();
 }
 
 /**
- * Create a message object with default values
- * @returns LocalMessage - A new message object with generated ID and timestamps
+ * Retrieve messages from the local database for a given chat.
+ * @param chatId The ID of the chat to retrieve messages for.
+ * @returns Promise that resolves with an array of messages.
  */
-export function createMessageObject(
-  id: string | null = null,
-  sessionId: string,
-  role: "user" | "assistant",
-  content: string = "",
-  parentId: string | null = null,
-  childrenIds: Array<string> | null = null,
-  depth: number = 0,
-): LocalMessage {
-  return {
-    id: id || uuidv4(),
-    sessionId,
-    parentId,
-    childrenIds,
-    content,
-    role,
-    depth,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    synced: false,
-  };
-}
-
-/**
- * Retrieve messages from the local database for a given chat session
- * @param sessionId - The ID of the chat session
- * @returns Promise<LocalMessage[]> - An array of messages for the chat session
- */
-export async function retrieveMessagesLocalDB(sessionId: string) {
+export async function retrieveMessagesLocalDb(chatId: string) {
   return await localDb.messagesTable
-    .where("sessionId")
-    .equals(sessionId)
+    .where("chatId")
+    .equals(chatId)
+    .filter((msg) => !msg.deleted)
     .toArray()
     .then((messages) =>
       messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()),
@@ -110,11 +114,12 @@ export async function retrieveMessagesLocalDB(sessionId: string) {
 }
 
 /**
- * Update the content of a message in the local database
- * @param messageId - The ID of the message to update
- * @param update - Object containing the new content
+ * Update a message in the local database.
+ * @param messageId The ID of the message to update.
+ * @param update The properties to update.
+ * @returns Promise that resolves when the operation is complete.
  */
-export async function updateMessageLocalDB(
+export async function updateMessageLocalDb(
   messageId: string,
   update: Partial<LocalMessage>,
 ) {
@@ -123,41 +128,52 @@ export async function updateMessageLocalDB(
     updatedAt: new Date(),
     synced: false,
   });
+  debouncedTwoWaySync();
 }
 
 /**
- * Delete a message from the local database
- * @param messageId - The ID of the message to delete
+ * Mark a message as deleted in the local database.
+ * @param messageId The ID of the message to mark as deleted.
+ * @returns Promise that resolves when the operation is complete.
  */
-export async function deleteMessageLocalDB(messageId: string) {
-  await localDb.messagesTable.delete(messageId);
+export async function markMessageAsDeletedLocalDb(messageId: string) {
+  await localDb.messagesTable.update(messageId, {
+    deleted: true,
+    synced: false,
+    updatedAt: new Date(),
+  });
+  debouncedTwoWaySync();
 }
 
 /**
- * Create a new chat in the local database
- * @param title - The title of the chat session (default: "New Chat")
- * @returns Promise<LocalChat> - The newly created chat session
+ * Create a chat in the local database.
+ * @param title The title of the chat.
+ * @returns Promise that resolves with the created chat.
  */
-export async function createChatLocalDB(title: string = "New Chat") {
-  const now = new Date();
-  now.setDate(now.getDate() - 100);
+export async function createChatLocalDb(
+  title: string = "New Chat",
+  date: Date = new Date(),
+) {
   const newChat = {
     id: uuidv4(),
     title,
-    createdAt: now,
-    updatedAt: now,
-    synced: false, // Used to track sessions that need syncing
+    createdAt: date,
+    updatedAt: date,
+    synced: false,
+    activeBranch: [],
   };
   await localDb.chatsTable.put(newChat);
+  debouncedTwoWaySync();
   return newChat;
 }
 
 /**
- * Update the title of a chat session in the local database
- * @param chatId - The ID of the chat session to update
- * @param update - Object containing the new title
+ * Update a chat in the local database.
+ * @param chatId The ID of the chat to update.
+ * @param update The properties to update.
+ * @returns Promise that resolves when the operation is complete.
  */
-export async function updateChatLocalDB(
+export async function updateChatLocalDb(
   chatId: string,
   update: Partial<LocalChat>,
 ) {
@@ -166,14 +182,16 @@ export async function updateChatLocalDB(
     updatedAt: new Date(),
     synced: false,
   });
+  debouncedTwoWaySync();
 }
 
 /**
- * Retrieve all chat sessions from the local database
- * @returns Promise<LocalChat[]> - An array of chat sessions
+ * Retrieve chats from the local database.
+ * @returns Promise that resolves with an array of chats.
  */
-export async function retrieveChatsLocalDB() {
+export async function retrieveChatsLocalDb() {
   return await localDb.chatsTable
+    .filter((chat) => !chat.deleted)
     .toArray()
     .then((chats) =>
       chats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
@@ -181,58 +199,161 @@ export async function retrieveChatsLocalDB() {
 }
 
 /**
- * Delete a chat session from the local database and all associated messages
- * @param chatId - The ID of the chat session to delete
+ * Mark a chat as deleted in the local database.
+ * @param chatId The ID of the chat to mark as deleted.
+ * @returns Promise that resolves when the operation is complete.
  */
-export async function deleteChatLocalDB(chatId: string) {
-  await localDb.chatsTable.delete(chatId);
-  await localDb.messagesTable.where("sessionId").equals(chatId).delete();
+export async function markChatAsDeletedLocalDb(chatId: string) {
+  await localDb.chatsTable.update(chatId, {
+    deleted: true,
+    synced: false,
+    updatedAt: new Date(),
+  });
+  // Update the deleted flag for all messages in the chat
+  await localDb.messagesTable
+    .where("chatId")
+    .equals(chatId)
+    .modify({ deleted: true, synced: false, updatedAt: new Date() });
+  debouncedTwoWaySync();
 }
 
-// // ------------------------------
-// // Sync local database with remote database
-// // ------------------------------
-// /**
-//  * Sync the local databse with the remote database
-//  */
-// export async function syncWithPostgres() {
-//   const unsyncedMessages = await localDb.messagesTable
-//     .filter((msg) => !msg.synced)
-//     .toArray();
-//   const unsyncedSessions = await localDb.chatsTable
-//     .filter((session) => !session.synced)
-//     .toArray();
-//
-//   for (const msg of unsyncedMessages) {
-//     try {
-//       await fetch("/api/messages", {
-//         method: "POST",
-//         body: JSON.stringify(msg),
-//         headers: { "Content-Type": "application/json" },
-//       });
-//
-//       // Mark as synced in IndexedDB
-//       await localDb.messagesTable.update(msg.id, { synced: true });
-//     } catch (error) {
-//       console.error("Sync failed for message:", msg.id, error);
-//     }
-//   }
-//
-//   for (const session of unsyncedSessions) {
-//     try {
-//       await fetch("/api/chat_sessions", {
-//         method: "POST",
-//         body: JSON.stringify(session),
-//         headers: { "Content-Type": "application/json" },
-//       });
-//
-//       // Mark as synced
-//       await localDb.chatsTable.update(session.id, { synced: true });
-//     } catch (error) {
-//       console.error("Sync failed for session:", session.id, error);
-//     }
-//   }
-// }
+/**
+ * Delete all data from the local database.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export async function nukeLocalDb() {
+  await localDb.messagesTable.clear();
+  await localDb.chatsTable.clear();
+}
 
-// // Run sync every 30 seconds
-// setInterval(syncWithPostgres, 30000);
+//----------------//
+// Sync Functions //
+//----------------//
+
+/**
+ * Push local unsynced chats, including deleted flags.
+ * @returns Promise that resolves when the operation is complete.
+ */
+async function pushLocalChats() {
+  const unsyncedChats = await localDb.chatsTable
+    .filter((chat) => !chat.synced)
+    .toArray();
+  if (unsyncedChats.length === 0) return;
+  try {
+    const response = await fetch("/api/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Each chat object includes the deleted flag if it has been marked as deleted.
+      body: JSON.stringify({ unsyncedChats }),
+    });
+    if (response.ok) {
+      const update = unsyncedChats.map((chat) => ({
+        key: chat.id,
+        changes: { synced: true },
+      }));
+      await localDb.chatsTable.bulkUpdate(update);
+    } else {
+      logger.error("Server error syncing chats:", unsyncedChats);
+    }
+  } catch (error) {
+    logger.error("Sync failed for chats:", unsyncedChats, error);
+  }
+}
+
+/**
+ * Push local unsynced messages, including deleted flags.
+ * @returns Promise that resolves when the operation is complete.
+ */
+async function pushLocalMessages() {
+  const unsyncedMessages = await localDb.messagesTable
+    .filter((msg) => !msg.synced)
+    .toArray();
+  if (unsyncedMessages.length === 0) return;
+  try {
+    const response = await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Unsynced messages include the deleted property if set.
+      body: JSON.stringify({ unsyncedMessages }),
+    });
+    if (response.ok) {
+      const update = unsyncedMessages.map((msg) => ({
+        key: msg.id,
+        changes: { synced: true },
+      }));
+      await localDb.messagesTable.bulkUpdate(update);
+    } else {
+      logger.error("Server error syncing messages:", unsyncedMessages);
+    }
+  } catch (error) {
+    logger.error("Sync failed for messages:", unsyncedMessages, error);
+  }
+}
+
+/**
+ * Push local changes to the server.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export async function pushLocalChanges() {
+  await pushLocalChats();
+  await pushLocalMessages();
+}
+
+// Pull remote changes (including deletion updates) and update local DB.
+export async function pullRemoteChanges() {
+  const lastSync =
+    localStorage.getItem("lastSyncTimestamp") || new Date(0).toISOString();
+  try {
+    const response = await fetch(
+      `/api/sync?since=${encodeURIComponent(lastSync)}`,
+    );
+    if (response.ok) {
+      const { messages, chats } = await response.json();
+      // Process remote messages
+      for (const remoteMsg of messages) {
+        const localMsg = await localDb.messagesTable.get(remoteMsg.id);
+        if (!localMsg || new Date(remoteMsg.updatedAt) > localMsg.updatedAt) {
+          await localDb.messagesTable.put({
+            ...remoteMsg,
+            createdAt: new Date(remoteMsg.createdAt),
+            updatedAt: new Date(remoteMsg.updatedAt),
+          });
+        }
+      }
+      // Process remote chats
+      for (const remoteChat of chats) {
+        const localChat = await localDb.chatsTable.get(remoteChat.id);
+        if (
+          !localChat ||
+          new Date(remoteChat.updatedAt) > localChat.updatedAt
+        ) {
+          await localDb.chatsTable.put({
+            ...remoteChat,
+            createdAt: new Date(remoteChat.createdAt),
+            updatedAt: new Date(remoteChat.updatedAt),
+          });
+        }
+      }
+      localStorage.setItem("lastSyncTimestamp", new Date().toISOString());
+    } else {
+      console.error("Pull sync failed with status:", response.status);
+    }
+  } catch (error) {
+    console.error("Pull sync error:", error);
+  }
+}
+
+/**
+ * Perform a two-way sync with the server.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export async function twoWaySync() {
+  await pushLocalChanges();
+  await pullRemoteChanges();
+}
+
+/**
+ * Debounced version of two-way sync function.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export const debouncedTwoWaySync = debounce(twoWaySync, 500);

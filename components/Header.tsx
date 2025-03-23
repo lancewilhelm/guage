@@ -6,21 +6,21 @@ import PlusIcon from "@/components/Icon/Plus";
 
 export default function Header({
   className,
-  isSessionButtonVisible = false,
-  toggleSessionPanel,
-  createChatSession,
+  isChatsButtonVisible = false,
+  toggleChatsPanel,
+  createChat,
 }: {
   className?: string;
-  isSessionButtonVisible?: boolean;
-  toggleSessionPanel?: () => void;
-  createChatSession?: () => void;
+  isChatsButtonVisible?: boolean;
+  toggleChatsPanel?: () => void;
+  createChat?: () => void;
 }) {
   return (
     <div
       className={`flex justify-between py-2 px-4 items-center gap-4 ${className}`}
     >
       <div className="flex gap-4 items-center">
-        {isSessionButtonVisible && (
+        {isChatsButtonVisible && (
           <div className="flex gap-4">
             <TableListIcon
               fill="var(--color-acc)"
@@ -28,13 +28,13 @@ export default function Header({
               onMouseDown={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (toggleSessionPanel) toggleSessionPanel();
+                if (toggleChatsPanel) toggleChatsPanel();
               }}
             />
             <PlusIcon
               fill="var(--color-acc)"
               className="cursor-pointer"
-              onClick={createChatSession}
+              onClick={createChat}
             />
           </div>
         )}

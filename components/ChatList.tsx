@@ -2,8 +2,8 @@
 import { useState, useMemo, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
-import ChatListItem from "./ChatListItem";
-import { LocalChat } from "@/utils/db/localDb";
+import ChatListItem from "@/components/ChatListItem";
+import { ChatItem } from "@/app/(auth)/chat/page";
 
 function ChatListGroupTitle({ title }: { title: string }) {
   return (
@@ -25,7 +25,7 @@ export default function ChatsPanel({
   deleteAction,
   renameAction,
 }: {
-  chats: LocalChat[];
+  chats: ChatItem[];
   currentChatId: string | undefined;
   setCurrentChatIdAction: (sessionId: string) => void;
   isVisible: boolean;
@@ -75,7 +75,7 @@ export default function ChatsPanel({
   };
 
   // Define date boundaries
-  const sortedChats: Record<string, LocalChat[]> = useMemo(() => {
+  const sortedChats: Record<string, ChatItem[]> = useMemo(() => {
     const today = new Date(new Date().setHours(0, 0, 0, 0));
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -128,10 +128,10 @@ export default function ChatsPanel({
                   className="flex flex-col w-full text-center text-sm mb-2"
                 >
                   <ChatListGroupTitle title={key} />
-                  {sortedChats[key].map((session) => (
+                  {sortedChats[key].map((chat) => (
                     <ChatListItem
-                      key={session.id}
-                      session={session}
+                      key={chat.id}
+                      chat={chat}
                       currentChatSessionId={currentChatId}
                       setCurrentChatSessionId={setCurrentChatIdAction}
                       deleteHandler={deleteAction}
