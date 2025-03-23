@@ -18,7 +18,6 @@ export default function Dashboard() {
         </div>
         <div id="cards" className="flex flex-wrap justify-center gap-4">
           <Chat />
-          <div>Role-Play</div>
         </div>
       </div>
     </div>

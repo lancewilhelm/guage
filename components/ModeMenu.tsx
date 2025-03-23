@@ -9,7 +9,6 @@ import DropDownMenu, {
 const routes = [
   { path: "/dashboard", label: "Dashboard" },
   { path: "/chat", label: "Chat" },
-  { path: "/roleplay", label: "Role Play" },
 ];
 
 export default function ModeMenu() {
