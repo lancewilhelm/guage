@@ -520,7 +520,7 @@ export default function ChatPage() {
         {showScrollToBottom && (
           <button
             onClick={handleScrollToBottom}
-            className="absolute bottom-[calc(50px+var(--input-row-height))] right-8 flex items-center justify-center bg-(--color-bg2) hover:bg-(--color-bg1) text-white rounded-full p-2 shadow-lg z-10 cursor-pointer w-10 h-10"
+            className="absolute bottom-[calc(35px+var(--input-row-height))] right-8 flex items-center justify-center bg-(--color-bg2) hover:bg-(--color-bg1) text-white rounded-full p-2 shadow-lg z-10 cursor-pointer w-10 h-10"
             aria-label="Scroll to bottom"
           >
             <AngleDownIcon fill="var(--color-fg0)" className="scale-125" />

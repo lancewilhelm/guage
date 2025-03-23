@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useCallback,
   memo,
   useState,
@@ -83,8 +84,8 @@ const InputRow = forwardRef<
 ) {
   const [inputValue, setInputValueState] = useState(initialValue);
   const [hasInput, setHasInput] = useState(Boolean(initialValue.trim()));
-  const [textareaHeight, setTextareaHeight] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRowRef = useRef<HTMLDivElement>(null);
 
   useImperativeHandle(
     ref,
@@ -105,6 +106,7 @@ const InputRow = forwardRef<
 
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
+    const inputRow = inputRowRef.current;
     if (!textarea) return;
 
     textarea.style.height = "auto";
@@ -114,11 +116,12 @@ const InputRow = forwardRef<
     const newHeight = Math.min(maxHeight, textarea.scrollHeight);
 
     textarea.style.height = `${newHeight}px`;
+
+    const inputRowHeight = inputRow?.clientHeight;
     document.documentElement.style.setProperty(
       "--input-row-height",
-      `${newHeight}px`,
+      `${inputRowHeight}px`,
     );
-    setTextareaHeight(newHeight);
   }, []);
 
   const handleInputChange = useCallback(
@@ -131,6 +134,11 @@ const InputRow = forwardRef<
     [adjustHeight],
   );
 
+  // Initialize the height of the input box
+  useEffect(() => {
+    adjustHeight();
+  }, [adjustHeight]);
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -142,7 +150,10 @@ const InputRow = forwardRef<
   );
 
   return (
-    <div className="input-row col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4">
+    <div
+      ref={inputRowRef}
+      className="input-row col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4"
+    >
       <textarea
         ref={textareaRef}
         className={`input-box rounded grow p-1 resize-none focus:outline-none ${disabled ? "bg-(--color-bg2)" : ""}`}
