@@ -57,6 +57,7 @@ export interface ChatState {
   title: string;
   createdAt: Date;
   updatedAt: Date;
+  pinned: boolean;
 }
 
 /**
@@ -73,6 +74,7 @@ export interface ChatStore {
     createdAt?: Date,
     updatedAt?: Date,
     activeBranch?: string[],
+    pinned?: boolean,
   ) => void;
   setCurrentChatId: (chatId: string | undefined) => void;
   updateChatMessages: (
@@ -99,7 +101,9 @@ export interface ChatStore {
   ) => void;
   updateChatMetadata: (
     chatId: string,
-    metadata: Partial<Pick<ChatState, "title" | "createdAt" | "updatedAt">>,
+    metadata: Partial<
+      Pick<ChatState, "title" | "createdAt" | "updatedAt" | "pinned">
+    >,
   ) => void;
   deleteChat: (chatId: string) => void;
   resetChatStore: () => void;
@@ -126,7 +130,14 @@ export const useChatStore = create<ChatStore>()(
             currentChatId: chatId,
           };
         }),
-      createChat: (chatId, title?, createdAt?, updatedAt?, activeBranch?) =>
+      createChat: (
+        chatId,
+        title?,
+        createdAt?,
+        updatedAt?,
+        activeBranch?,
+        pinned?,
+      ) =>
         set((state) => {
           if (state.chats[chatId]) {
             logger.warn(`Chat ${chatId} already exists.`);
@@ -139,6 +150,7 @@ export const useChatStore = create<ChatStore>()(
             title: title ?? "New Chat",
             createdAt: createdAt ?? new Date(),
             updatedAt: updatedAt ?? new Date(),
+            pinned: pinned ?? false,
           };
           return {
             chats: {

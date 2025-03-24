@@ -41,6 +41,7 @@ export const chatsTable = pgTable("chats", {
     .default(sql`'[]'`),
   createdAt: timestamp("created_at", { mode: "date" }).notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
+  pinned: boolean("pinned"),
   deleted: boolean("deleted"),
 });
 

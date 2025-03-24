@@ -24,6 +24,7 @@ export default function ChatsPanel({
   createAction,
   deleteAction,
   renameAction,
+  pinAction,
 }: {
   chats: ChatItem[];
   currentChatId: string | undefined;
@@ -33,6 +34,7 @@ export default function ChatsPanel({
   createAction: () => void;
   deleteAction: (sessionId: string) => void;
   renameAction: (sessionId: string, newName: string) => void;
+  pinAction: (sessionId: string, state: boolean) => void;
 }) {
   const minWidth = 250;
   const maxWidth = 600;
@@ -84,17 +86,25 @@ export default function ChatsPanel({
     const lastMonth = new Date(today);
     lastMonth.setDate(lastMonth.getDate() - 30);
     return {
-      Today: chats.filter((chat) => chat.updatedAt >= today),
+      Pinned: chats.filter((chat) => chat.pinned),
+      Today: chats.filter((chat) => !chat.pinned && chat.updatedAt >= today),
       Yesterday: chats.filter(
-        (chat) => chat.updatedAt >= yesterday && chat.updatedAt < today,
+        (chat) =>
+          !chat.pinned && chat.updatedAt >= yesterday && chat.updatedAt < today,
       ),
       "Last 7 Days": chats.filter(
-        (chat) => chat.updatedAt >= lastWeek && chat.updatedAt < yesterday,
+        (chat) =>
+          !chat.pinned &&
+          chat.updatedAt >= lastWeek &&
+          chat.updatedAt < yesterday,
       ),
       "Last 30 Days": chats.filter(
-        (chat) => chat.updatedAt >= lastMonth && chat.updatedAt < lastWeek,
+        (chat) =>
+          !chat.pinned &&
+          chat.updatedAt >= lastMonth &&
+          chat.updatedAt < lastWeek,
       ),
-      Older: chats.filter((chat) => chat.updatedAt < lastMonth),
+      Older: chats.filter((chat) => !chat.pinned && chat.updatedAt < lastMonth),
     };
   }, [chats]);
 
@@ -136,6 +146,7 @@ export default function ChatsPanel({
                       setCurrentChatSessionId={setCurrentChatIdAction}
                       deleteHandler={deleteAction}
                       renameHandler={renameAction}
+                      pinHandler={pinAction}
                     />
                   ))}
                 </div>

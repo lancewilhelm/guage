@@ -24,6 +24,7 @@ export interface LocalChat {
   updatedAt: Date;
   synced: boolean;
   deleted?: boolean;
+  pinned: boolean;
   activeBranch: string[];
 }
 
@@ -161,6 +162,7 @@ export async function createChatLocalDb(
     updatedAt: date,
     synced: false,
     activeBranch: [],
+    pinned: false,
   };
   await localDb.chatsTable.put(newChat);
   debouncedTwoWaySync();
@@ -224,6 +226,15 @@ export async function markChatAsDeletedLocalDb(chatId: string) {
 export async function nukeLocalDb() {
   await localDb.messagesTable.clear();
   await localDb.chatsTable.clear();
+}
+
+/**
+ * Reset the sync status for all chats and messages in the local database.
+ * @returns Promise that resolves when the operation is complete.
+ */
+export async function resetSyncStatus() {
+  await localDb.messagesTable.toCollection().modify({ synced: false });
+  await localDb.chatsTable.toCollection().modify({ synced: false });
 }
 
 //----------------//
@@ -299,27 +310,37 @@ export async function pushLocalChanges() {
   await pushLocalMessages();
 }
 
-// Pull remote changes (including deletion updates) and update local DB.
+/**
+ * Pull remote changes from the server.
+ * @returns Promise that resolves with the updated messages and chats.
+ */
 export async function pullRemoteChanges() {
   const lastSync =
-    localStorage.getItem("lastSyncTimestamp") || new Date(0).toISOString();
+    localStorage.getItem("lastSync") || new Date(0).toISOString();
   try {
     const response = await fetch(
       `/api/sync?since=${encodeURIComponent(lastSync)}`,
     );
     if (response.ok) {
       const { messages, chats } = await response.json();
+
+      const updatedMessages = [];
+      const updatedChats = [];
+
       // Process remote messages
       for (const remoteMsg of messages) {
         const localMsg = await localDb.messagesTable.get(remoteMsg.id);
         if (!localMsg || new Date(remoteMsg.updatedAt) > localMsg.updatedAt) {
-          await localDb.messagesTable.put({
+          const processedMessage = {
             ...remoteMsg,
             createdAt: new Date(remoteMsg.createdAt),
             updatedAt: new Date(remoteMsg.updatedAt),
-          });
+          };
+          await localDb.messagesTable.put(processedMessage);
+          updatedMessages.push(processedMessage);
         }
       }
+
       // Process remote chats
       for (const remoteChat of chats) {
         const localChat = await localDb.chatsTable.get(remoteChat.id);
@@ -327,19 +348,25 @@ export async function pullRemoteChanges() {
           !localChat ||
           new Date(remoteChat.updatedAt) > localChat.updatedAt
         ) {
-          await localDb.chatsTable.put({
+          const processedChat = {
             ...remoteChat,
             createdAt: new Date(remoteChat.createdAt),
             updatedAt: new Date(remoteChat.updatedAt),
-          });
+          };
+          await localDb.chatsTable.put(processedChat);
+          updatedChats.push(processedChat);
         }
       }
-      localStorage.setItem("lastSyncTimestamp", new Date().toISOString());
+
+      localStorage.setItem("lastSync", new Date().toISOString());
+      return { updatedMessages, updatedChats };
     } else {
       console.error("Pull sync failed with status:", response.status);
+      return { updatedMessages: [], updatedChats: [] };
     }
   } catch (error) {
     console.error("Pull sync error:", error);
+    return { updatedMessages: [], updatedChats: [] };
   }
 }
 

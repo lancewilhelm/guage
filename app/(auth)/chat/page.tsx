@@ -13,6 +13,7 @@ import ChatList from "@/components/ChatList";
 import Header from "@/components/Header";
 import AngleDownIcon from "@/components/Icon/AngleDown";
 import { useChatStore } from "@/store/chatStore";
+import { useSyncStore } from "@/store/syncStore";
 import {
   retrieveChatsLocalDb,
   retrieveMessagesLocalDb,
@@ -21,18 +22,19 @@ import {
   updateChatLocalDb,
   updateMessageLocalDb,
   LocalMessage,
+  LocalChat,
   markChatAsDeletedLocalDb,
 } from "@/utils/db/localDb";
 import { generateChatTitle } from "@/utils/apiHelpers";
 import { parseSSEChunk } from "@/utils/apiHelpers";
 import { logger } from "@/utils/logger";
-import { twoWaySync } from "@/utils/db/localDb";
 
 export interface ChatItem {
   id: string;
   title: string;
   createdAt: Date;
   updatedAt: Date;
+  pinned: boolean;
 }
 
 export default function ChatPage() {
@@ -58,6 +60,7 @@ export default function ChatPage() {
         title: chat.title,
         createdAt: chat.createdAt,
         updatedAt: chat.updatedAt,
+        pinned: chat.pinned,
       }))
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [chats]);
@@ -107,10 +110,10 @@ export default function ChatPage() {
     const result = await retrieveChatsLocalDb();
     if (result && result.length > 0) {
       result.forEach((chat) => {
-        const { id, title, createdAt, updatedAt, activeBranch } = chat;
+        const { id, title, createdAt, updatedAt, activeBranch, pinned } = chat;
         const currentChats = useChatStore.getState().chats;
         if (!currentChats[id]) {
-          createChat(id, title, createdAt, updatedAt);
+          createChat(id, title, createdAt, updatedAt, activeBranch, pinned);
         }
         if (activeBranch && activeBranch.length > 0) {
           setActiveBranch(id, activeBranch);
@@ -427,24 +430,86 @@ export default function ChatPage() {
 
   // Sync effect: runs on mount, focus, online, and every 30 seconds.
   useEffect(() => {
-    const handleSync = async () => {
-      await twoWaySync();
+    // Get synchronization methods from the store state
+    const syncState = useSyncStore.getState();
+
+    // Trigger initial sync
+    syncState.sync();
+
+    // Set up periodic and event-based sync
+    const handleSync = () => {
+      useSyncStore.getState().sync();
+    };
+
+    window.addEventListener("focus", handleSync);
+    window.addEventListener("online", handleSync);
+    const syncInterval = setInterval(handleSync, 30000);
+
+    // Listen for chat updates and update the chat store accordingly
+    const handleChatsUpdated = (updatedChats: LocalChat[]) => {
+      if (!updatedChats || updatedChats.length === 0) return;
+
+      updatedChats.forEach((chat) => {
+        const { id, title, createdAt, updatedAt, activeBranch, pinned } = chat;
+        const currentChats = useChatStore.getState().chats;
+        if (!currentChats[id]) {
+          createChat(id, title, createdAt, updatedAt, activeBranch, pinned);
+        } else {
+          updateChatMetadata(id, { title, updatedAt, pinned });
+          if (activeBranch && activeBranch.length > 0) {
+            setActiveBranch(id, activeBranch);
+          }
+        }
+      });
+
+      // Refresh the chat list
       fetchChats();
+    };
+
+    // Listen for message updates and update the chat store accordingly
+    const handleMessagesUpdated = (updatedMessages: LocalMessage[]) => {
+      if (!updatedMessages || updatedMessages.length === 0) return;
+
+      updatedMessages.forEach((message) => {
+        if (message.chatId && useChatStore.getState().chats[message.chatId]) {
+          addMessage(message.chatId, message);
+        }
+      });
+
+      // Refresh messages for current chat
       if (currentChatId) {
         loadMessages(currentChatId);
       }
     };
 
-    handleSync();
-    window.addEventListener("focus", handleSync);
-    window.addEventListener("online", handleSync);
-    const syncInterval = setInterval(twoWaySync, 30000);
+    // Subscribe to store update events
+    const unsubscribe = useSyncStore.subscribe((state) => {
+      // Check for chat updates
+      if (state.updatedChats && state.updatedChats.length > 0) {
+        handleChatsUpdated(state.updatedChats);
+      }
+
+      // Check for message updates
+      if (state.updatedMessages && state.updatedMessages.length > 0) {
+        handleMessagesUpdated(state.updatedMessages);
+      }
+    });
+
     return () => {
+      unsubscribe();
       clearInterval(syncInterval);
       window.removeEventListener("focus", handleSync);
       window.removeEventListener("online", handleSync);
     };
-  }, [currentChatId, loadMessages, fetchChats]);
+  }, [
+    currentChatId,
+    createChat,
+    updateChatMetadata,
+    setActiveBranch,
+    addMessage,
+    fetchChats,
+    loadMessages,
+  ]);
 
   return (
     <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
@@ -494,6 +559,10 @@ export default function ChatPage() {
           renameAction={async (chatId: string, title: string) => {
             updateChatLocalDb(chatId, { title });
             updateChatMetadata(chatId, { title });
+          }}
+          pinAction={async (chatId: string, state: boolean) => {
+            updateChatLocalDb(chatId, { pinned: !state });
+            updateChatMetadata(chatId, { pinned: !state });
           }}
         />
       </div>

@@ -121,7 +121,7 @@ export function DropDownMenuItem({
   const { setIsOpen } = context;
   return (
     <div
-      className="cursor-pointer bg-(--color-bg1) rounded-xl p-2 hover:opacity-80 active:opacity-60"
+      className="text-left cursor-pointer bg-(--color-bg1) rounded-xl p-2 hover:opacity-80 active:opacity-60"
       onClick={(e) => {
         onClick(e);
         setIsOpen(false);

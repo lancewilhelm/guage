@@ -34,6 +34,7 @@ export async function POST(req: Request) {
           updatedAt: sql.raw("EXCLUDED.updated_at"),
           deleted: sql.raw("EXCLUDED.deleted"),
           activeBranch: sql.raw("EXCLUDED.active_branch"),
+          pinned: sql.raw("EXCLUDED.pinned"),
         },
       })
       .returning();

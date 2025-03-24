@@ -4,6 +4,8 @@ import TrashCanIcon from "@/components/Icon/TrashCan";
 import PencilIcon from "@/components/Icon/Pencil";
 import CheckIcon from "@/components/Icon/Check";
 import XMarkIcon from "@/components/Icon/XMark";
+import ThumbtackIcon from "@/components/Icon/Thumbtack";
+import ThumbtackSlashIcon from "@/components/Icon/ThumbtackSlash";
 import DropDownMenu, {
   DropDownMenuButton,
   DropDownMenuItem,
@@ -17,12 +19,14 @@ export default function ChatListItem({
   setCurrentChatSessionId,
   deleteHandler,
   renameHandler,
+  pinHandler,
 }: {
   chat: ChatItem;
   currentChatSessionId: string | undefined;
   setCurrentChatSessionId: (sessionId: string) => void;
   deleteHandler: (sessionId: string) => void;
   renameHandler: (sessionId: string, newTitle: string) => void;
+  pinHandler: (sessionId: string, state: boolean) => void;
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [isMenuButtonVisible, setIsMenuButtonVisible] = useState(false);
@@ -110,6 +114,19 @@ export default function ChatListItem({
           </DropDownMenuButton>
           <DropDownMenuList align="right">
             <DropDownMenuItem
+              onClick={() => pinHandler(chat.id, chat.pinned)}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div className="grid grid-cols-[20px_auto] items-center ">
+                {chat.pinned ? (
+                  <ThumbtackSlashIcon fill="var(--color-acc)" />
+                ) : (
+                  <ThumbtackIcon fill="var(--color-acc)" />
+                )}
+                {chat.pinned ? "Unpin" : "Pin"}
+              </div>
+            </DropDownMenuItem>
+            <DropDownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -124,7 +141,10 @@ export default function ChatListItem({
                 Rename
               </div>
             </DropDownMenuItem>
-            <DropDownMenuItem onClick={() => deleteHandler(chat.id)}>
+            <DropDownMenuItem
+              onClick={() => deleteHandler(chat.id)}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <div className="grid grid-cols-[20px_auto] items-center text-(--error-color)">
                 <TrashCanIcon
                   fill="var(--color-no)"
