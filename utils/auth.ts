@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
+import { logger } from "./logger";
 
 /**
  * The session object
@@ -48,7 +49,7 @@ export async function getSession(): Promise<Session | null> {
   try {
     return jwt.verify(token, SECRET) as Session;
   } catch (error) {
-    console.log("Error verifying token:", error);
+    logger.error("Error verifying session token:", error);
     return null;
   }
 }

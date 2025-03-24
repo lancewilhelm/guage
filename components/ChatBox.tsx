@@ -2,19 +2,6 @@ import ChatBubble from "@/components/ChatBubble";
 import { useChatStore } from "@/store/chatStore";
 import { LocalMessage } from "@/utils/db/localDb";
 
-interface ChatBoxProps {
-  isChatLoaded?: boolean;
-  onMessageEdit: (message: LocalMessage) => void;
-  onBranchChange: (messageId: string, versionIndex: number) => void;
-  userBubbleWidth?: string;
-  userBubbleMaxWidth?: string;
-  assistantBubbleWidth?: string;
-  assistantBubbleMaxWidth?: string;
-  userBubbleBg?: string;
-  assistantBubbleBg?: string;
-  showNames?: boolean;
-}
-
 interface ComputedVersionInfo {
   total: number;
   currentIndex: number;
@@ -60,7 +47,18 @@ export default function ChatBox({
   userBubbleBg = "var(--color-bg2)",
   assistantBubbleBg = "var(--color-bg0)",
   showNames = false,
-}: ChatBoxProps) {
+}: {
+  isChatLoaded?: boolean;
+  onMessageEdit: (message: LocalMessage) => void;
+  onBranchChange: (messageId: string, versionIndex: number) => void;
+  userBubbleWidth?: string;
+  userBubbleMaxWidth?: string;
+  assistantBubbleWidth?: string;
+  assistantBubbleMaxWidth?: string;
+  userBubbleBg?: string;
+  assistantBubbleBg?: string;
+  showNames?: boolean;
+}) {
   const currentChatId = useChatStore((state) => state.currentChatId);
   const chat = useChatStore((state) =>
     currentChatId ? state.chats[currentChatId] : undefined,
@@ -78,7 +76,7 @@ export default function ChatBox({
       }`}
     >
       {activeThread.length === 0 ? (
-        <div className="w-full flex flex-col grow text-center justify-center">
+        <div className="w-full flex flex-col grow text-center justify-center items-center opacity-50">
           <div className="text-3xl">
             {isChatLoaded ? "No messages" : "No session loaded"}
           </div>
@@ -97,9 +95,9 @@ export default function ChatBox({
               message={message}
               onEdit={onMessageEdit}
               versionInfo={versionInfo}
-              onBranchChange={(versionIndex) =>
-                onBranchChange(message.id, versionIndex)
-              }
+              onBranchChange={(versionIndex) => {
+                onBranchChange(message.id, versionIndex);
+              }}
               width={
                 message.role === "user" ? userBubbleWidth : assistantBubbleWidth
               }

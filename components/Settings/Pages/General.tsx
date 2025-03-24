@@ -24,7 +24,6 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { resetChatStore } = useChatStore();
-  console.log(session);
 
   const { sync, lastSyncTime } = useSyncStore();
 

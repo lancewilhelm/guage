@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import DotsIcon from "@/components/Icon/Dots";
+import DotsSpinnerIcon from "@/components/Icon/DotsSpinner";
 import TrashCanIcon from "@/components/Icon/TrashCan";
 import PencilIcon from "@/components/Icon/Pencil";
 import CheckIcon from "@/components/Icon/Check";
@@ -11,7 +12,7 @@ import DropDownMenu, {
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
-import { ChatItem } from "@/app/(auth)/chat/page";
+import { ChatItem } from "@/app/(auth)/chat/layout";
 
 export default function ChatListItem({
   chat,
@@ -45,7 +46,7 @@ export default function ChatListItem({
 
   return (
     <div
-      className={`flex gap-1 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
+      className={`flex gap-1.5 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
       onMouseDown={() => setCurrentChatSessionId(chat.id)}
@@ -71,8 +72,13 @@ export default function ChatListItem({
             className="border px-1 rounded w-full border-none"
           />
         ) : (
-          <div className="text-nowrap overflow-hidden text-ellipsis">
-            {newTitle}
+          <div className="flex gap-1.5 items-center">
+            <div className="text-nowrap overflow-hidden text-ellipsis">
+              {newTitle}
+            </div>
+            {chat.isStreaming && (
+              <DotsSpinnerIcon fill="var(--color-fg0)" className="scale-120" />
+            )}
           </div>
         )}
       </div>

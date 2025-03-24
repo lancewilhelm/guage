@@ -102,7 +102,15 @@ export interface ChatStore {
   updateChatMetadata: (
     chatId: string,
     metadata: Partial<
-      Pick<ChatState, "title" | "createdAt" | "updatedAt" | "pinned">
+      Pick<
+        ChatState,
+        | "title"
+        | "createdAt"
+        | "updatedAt"
+        | "pinned"
+        | "isStreaming"
+        | "abortController"
+      >
     >,
   ) => void;
   deleteChat: (chatId: string) => void;

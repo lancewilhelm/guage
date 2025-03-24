@@ -14,7 +14,7 @@ const routes = [
 export default function ModeMenu() {
   const router = useRouter();
   const pathname = usePathname();
-  const currentRoute = routes.find((route) => route.path === pathname);
+  const currentRoute = routes.find((route) => pathname.startsWith(route.path));
 
   const handleRouteChange = (path: string) => {
     router.push(path);
@@ -30,7 +30,7 @@ export default function ModeMenu() {
       </DropDownMenuButton>
       <DropDownMenuList>
         {routes
-          .filter((route) => route.path !== pathname)
+          .filter((route) => !pathname.startsWith(route.path))
           .map((route, index) => (
             <DropDownMenuItem
               key={index}
