@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useSessionStore } from "@/store/sessionStore";
 import InputElement from "@/components/Settings/InputElement";
-import { nukeLocalDb, resetSyncStatus, twoWaySync } from "@/utils/db/localDb";
+import { nukeLocalDb, resetSyncStatus } from "@/utils/db/localDb";
 import { useChatStore } from "@/store/chatStore";
 import { logger } from "@/utils/logger";
 import RefreshIcon from "@/components/Icon/Refresh";
@@ -46,14 +46,14 @@ export default function ProfilePage() {
       <div className="flex flex-col gap-2">
         <div>Change Password</div>
         <input
-          type="text"
+          type="password"
           value={newPassword}
           placeholder="new password"
           onChange={(e) => setNewPassword(e.target.value)}
           className="w-[250px] border border-(--color-bg2) p-1 rounded"
         />
         <input
-          type="text"
+          type="password"
           value={confirmPassword}
           placeholder="confirm password"
           onChange={(e) => setConfirmPassword(e.target.value)}
