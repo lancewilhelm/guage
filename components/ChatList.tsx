@@ -3,12 +3,16 @@ import { useState, useMemo, useRef } from "react";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
 import ChatListItem from "@/components/ChatListItem";
-import { ChatItem } from "@/app/(auth)/chat/page";
+import ThumbtackIcon from "@/components/Icon/Thumbtack";
+import { ChatItem } from "@/app/(auth)/chat/layout";
 
 function ChatListGroupTitle({ title }: { title: string }) {
   return (
     <div className="flex w-full items-center justify-center text-center text-sm font-thin text-(--color-fg2) mb-1">
       <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
+      {title === "Pinned" && (
+        <ThumbtackIcon fill="var(--color-acc)" className="scale-300 mr-2" />
+      )}
       <div className="flex justify-center text-nowrap">{title}</div>
       <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
     </div>
