@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSessionStore } from "@/store/sessionStore";
 import InputElement from "@/components/Settings/InputElement";
+import ToggleElement from "../ToggleElement";
 import { dbNuke, dbResetSyncStatus } from "@/utils/db/local";
 import { useChatStore } from "@/store/chatStore";
 import { logger } from "@/utils/logger";
@@ -9,6 +10,7 @@ import UpArrowIcon from "@/components/Icon/UpArrow";
 import FloppyDiskIcon from "@/components/Icon/FloppyDisk";
 import SkullCrossbonesIcon from "@/components/Icon/SkullCrossbones";
 import { useSyncStore } from "@/store/syncStore";
+import { useSettingsStore } from "@/store/settingsStore";
 
 async function nukeCloudDb() {
   const response = await fetch("/api/nuke");
@@ -21,14 +23,21 @@ async function nukeCloudDb() {
 
 export default function ProfilePage() {
   const { session } = useSessionStore();
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { resetChatStore } = useChatStore();
-
+  const { user, updateSetting } = useSettingsStore();
   const { sync, lastSyncTime } = useSyncStore();
 
   return (
     <div className="flex flex-col gap-2">
+      <ToggleElement
+        title="Restore Last Chat"
+        description="Restore the last chat you were in when you open the app"
+        value={user.restoreLastChat}
+        onChange={(value) => updateSetting("user", "restoreLastChat", value)}
+      />
       <InputElement
         type="text"
         title="Name"
@@ -37,33 +46,46 @@ export default function ProfilePage() {
         autoSave={false}
       />
       <InputElement
-        type="text"
+        type="email"
         title="Email"
         value={session?.user.email}
         onSave={() => console.log("Save")}
       />
       <div className="flex flex-col gap-2">
         <div>Change Password</div>
-        <input
-          type="password"
-          value={newPassword}
-          placeholder="new password"
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="w-[250px] border border-(--color-bg2) p-1 rounded"
-        />
-        <input
-          type="password"
-          value={confirmPassword}
-          placeholder="confirm password"
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-[250px] border border-(--color-bg2) p-1 rounded"
-        />
-        <button
-          onClick={() => console.log("Save")}
-          className="flex items-center gap-2 w-min bg-(--color-acc) text-(--color-bg2) p-2 rounded cursor-pointer hover:opacity-80 active:opacity-60"
-        >
-          <FloppyDiskIcon fill="var(--color-bg2)" /> Save
-        </button>
+        <form className="flex flex-col gap-2">
+          <input type="username" className="hidden" disabled />
+          <input
+            type="password"
+            value={currentPassword}
+            autoComplete="current-password"
+            placeholder="current password"
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="w-[250px] border border-(--color-bg2) p-1 rounded"
+          />
+          <input
+            type="password"
+            value={newPassword}
+            autoComplete="new-password"
+            placeholder="new password"
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="w-[250px] border border-(--color-bg2) p-1 rounded"
+          />
+          <input
+            type="password"
+            value={confirmPassword}
+            autoComplete="new-password"
+            placeholder="confirm password"
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className="w-[250px] border border-(--color-bg2) p-1 rounded"
+          />
+          <button
+            onClick={() => console.log("Save")}
+            className="flex items-center gap-2 w-min bg-(--color-acc) text-(--color-bg2) p-2 rounded cursor-pointer hover:opacity-80 active:opacity-60"
+          >
+            <FloppyDiskIcon fill="var(--color-bg2)" /> Save
+          </button>
+        </form>
       </div>
       <hr />
       <div className="flex flex-col gap-2">

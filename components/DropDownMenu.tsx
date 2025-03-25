@@ -16,11 +16,11 @@ const DropDownMenuContext = createContext<DropDownMenuContextProps | undefined>(
   undefined,
 );
 
-interface DropDownMenuProps {
+export default function DropDownMenu({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export default function DropDownMenu({ children }: DropDownMenuProps) {
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { LocalMessage } from "@/utils/db/local";
+import { LocalMessage } from "@/types/db";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

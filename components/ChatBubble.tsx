@@ -14,8 +14,8 @@ import XMarkIcon from "@/components/Icon/XMark";
 import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import Pre from "@/components/Pre";
-import { LocalMessage } from "@/utils/db/local";
 import { useSessionStore } from "@/store/sessionStore";
+import { LocalMessage } from "@/types/db";
 
 interface ComputedVersionInfo {
   total: number;

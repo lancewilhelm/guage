@@ -1,54 +1,9 @@
 import { create } from "zustand";
-import { LocalMessage } from "@/utils/db/local";
 import { persist } from "zustand/middleware";
 import { logger } from "@/utils/logger";
+// Types
+import { LocalMessage } from "@/types/db";
 
-/**
- * Generate an active branch starting from the latest message.
- * @param messages - Record of messages
- * @returns Array of message IDs in the branch
- */
-export function generateActiveBranchFromLatest(
-  messages: Record<string, LocalMessage>,
-): string[] {
-  const allMessages = Object.values(messages);
-  if (allMessages.length === 0) return [];
-  // Get the latest message based on createdAt.
-  const latest = allMessages.reduce((prev, curr) =>
-    new Date(curr.updatedAt) > new Date(prev.updatedAt) ? curr : prev,
-  );
-  const branch: string[] = [];
-  let current: LocalMessage | undefined = latest;
-  while (current) {
-    branch.push(current.id);
-    if (!current.parentId) break;
-    current = messages[current.parentId];
-  }
-  return branch.reverse();
-}
-
-/**
- * Build a branch starting from a message and following the first-child chain.
- * @param chat - Chat state
- * @param startId - Starting message ID
- * @returns Array of message IDs in the branch
- */
-function buildBranchFrom(chat: ChatState, startId: string): string[] {
-  const branch: string[] = [];
-  branch.push(startId);
-  let current = chat.messages[startId];
-  while (current && current.childrenIds && current.childrenIds.length > 0) {
-    const firstChildId = current.childrenIds[0];
-    branch.push(firstChildId);
-    current = chat.messages[firstChildId];
-  }
-  return branch;
-}
-
-/**
- * ChatsState: State for a chat.
- * Maintains messages and active branch.
- */
 export interface ChatState {
   messages: Record<string, LocalMessage>;
   activeBranch: string[];
@@ -60,10 +15,6 @@ export interface ChatState {
   pinned: boolean;
 }
 
-/**
- * ChatStore: Zustand store for chats.
- * Maintains chats, messages, and active branches.
- */
 export interface ChatStore {
   chats: Record<string, ChatState>;
   currentChatId?: string;
@@ -115,6 +66,48 @@ export interface ChatStore {
   ) => void;
   deleteChat: (chatId: string) => void;
   resetChatStore: () => void;
+}
+
+/**
+ * Generate an active branch starting from the latest message.
+ * @param messages - Record of messages
+ * @returns Array of message IDs in the branch
+ */
+export function generateActiveBranchFromLatest(
+  messages: Record<string, LocalMessage>,
+): string[] {
+  const allMessages = Object.values(messages);
+  if (allMessages.length === 0) return [];
+  // Get the latest message based on createdAt.
+  const latest = allMessages.reduce((prev, curr) =>
+    new Date(curr.updatedAt) > new Date(prev.updatedAt) ? curr : prev,
+  );
+  const branch: string[] = [];
+  let current: LocalMessage | undefined = latest;
+  while (current) {
+    branch.push(current.id);
+    if (!current.parentId) break;
+    current = messages[current.parentId];
+  }
+  return branch.reverse();
+}
+
+/**
+ * Build a branch starting from a message and following the first-child chain.
+ * @param chat - Chat state
+ * @param startId - Starting message ID
+ * @returns Array of message IDs in the branch
+ */
+function buildBranchFrom(chat: ChatState, startId: string): string[] {
+  const branch: string[] = [];
+  branch.push(startId);
+  let current = chat.messages[startId];
+  while (current && current.childrenIds && current.childrenIds.length > 0) {
+    const firstChildId = current.childrenIds[0];
+    branch.push(firstChildId);
+    current = chat.messages[firstChildId];
+  }
+  return branch;
 }
 
 /**
@@ -328,7 +321,6 @@ export const useChatStore = create<ChatStore>()(
       // Only persist currentChatId
       partialize: (state) => ({
         currentChatId: state.currentChatId,
-        // chats: state.chats,
       }),
     },
   ),

@@ -14,15 +14,13 @@ import { useChatStore } from "@/store/chatStore";
 import { useSyncStore } from "@/store/syncStore";
 import {
   dbRetrieveChats,
-  dbCreateChat,
   dbUpdateChat,
-  LocalMessage,
-  LocalChat,
   dbMarkChatDeleted,
 } from "@/utils/db/local";
 import { handleSubmitMessage, preloadChats } from "@/utils/chat";
 import { useRouter } from "next/navigation";
 import { logger } from "@/utils/logger";
+import { LocalMessage, LocalChat } from "@/types/db";
 
 export interface ChatItem {
   id: string;
@@ -235,17 +233,8 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
         <Header
           isChatsButtonVisible={!showChatsPanel}
           toggleChatsPanel={() => setShowChatsPanel(!showChatsPanel)}
-          createChat={async () => {
-            const newChat = await dbCreateChat();
-            if (newChat) {
-              setCurrentChatId(newChat.id);
-              updateChatMetadata(newChat.id, {
-                title: newChat.title,
-                createdAt: newChat.createdAt,
-                updatedAt: newChat.updatedAt,
-              });
-              router.push(`/chat/${newChat.id}`);
-            }
+          createChat={() => {
+            router.push("/chat", { scroll: false });
           }}
         />
       </div>
@@ -260,24 +249,15 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           }}
           isVisible={showChatsPanel}
           setIsVisibleAction={setShowChatsPanel}
-          createAction={async () => {
-            const newChat = await dbCreateChat();
-            if (newChat) {
-              createChat(
-                newChat.id,
-                newChat.title,
-                newChat.createdAt,
-                newChat.updatedAt,
-              );
-              setCurrentChatId(newChat.id);
-              router.push(`/chat/${newChat.id}`);
-            }
+          createAction={() => {
+            router.push("/chat", { scroll: false });
           }}
           deleteAction={async (chatId: string) => {
             deleteChat(chatId);
             dbMarkChatDeleted(chatId);
-            setCurrentChatId(undefined);
-            router.push("/chat");
+            if (chatId === currentChatId) {
+              router.push("/chat", { scroll: false });
+            }
           }}
           renameAction={async (chatId: string, title: string) => {
             dbUpdateChat(chatId, { title });

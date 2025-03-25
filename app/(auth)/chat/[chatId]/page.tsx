@@ -6,10 +6,10 @@ import {
   dbRetrieveChats,
   dbRetrieveMessages,
   dbUpdateChat,
-  LocalMessage,
 } from "@/utils/db/local";
 import { useParams } from "next/navigation";
 import { handleEditMessage } from "@/utils/chat";
+import { LocalMessage } from "@/types/db";
 
 export interface ChatItem {
   id: string;

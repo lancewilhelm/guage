@@ -2,36 +2,12 @@ import { logger } from "@/utils/logger";
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
 import { debounce } from "../debounce";
+import { LocalChat, LocalMessage } from "@/types/db";
 
 //------------------------//
 //         Local          //
 // Dexie (IndexedDb) Init //
 //------------------------//
-
-// Define local message type
-export interface LocalMessage {
-  id: string;
-  chatId: string;
-  parentId: string | null;
-  childrenIds: string[] | null;
-  content: string;
-  role: "user" | "assistant";
-  createdAt: Date;
-  updatedAt: Date;
-  synced: boolean;
-  deleted?: boolean;
-}
-
-export interface LocalChat {
-  id: string;
-  title: string;
-  createdAt: Date;
-  updatedAt: Date;
-  synced: boolean;
-  deleted?: boolean;
-  pinned: boolean;
-  activeBranch: string[];
-}
 
 // Define the local database
 class ChatDatabase extends Dexie {

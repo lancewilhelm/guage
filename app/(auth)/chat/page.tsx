@@ -1,25 +1,24 @@
 "use client";
 import { useEffect } from "react";
 import { useChatStore } from "@/store/chatStore";
-import { useRouter } from "next/navigation";
 
 export default function ChatPage() {
-  const { currentChatId } = useChatStore();
-  const router = useRouter();
+  const { currentChatId, setCurrentChatId } = useChatStore();
 
   useEffect(() => {
-    if (currentChatId) {
-      router.push(`/chat/${currentChatId}`);
-    }
-  }, [currentChatId, router]);
+    if (currentChatId) setCurrentChatId(undefined);
+  }, [currentChatId, setCurrentChatId]);
 
   return (
     <div className="w-full h-full flex flex-col grow text-center justify-center opacity-50">
-      <div className="text-3xl">No chat loaded</div>
-      <div className="italic">
+      <div className="text-3xl">New Chat</div>
+      <div className="font-thin text-lg">
         Send your first message in the input box below
       </div>
-      <div className="italic">or load a session in the panel on the left</div>
+      <div className="font-thin text-xl">or</div>
+      <div className="font-thin text-lg">
+        Load a session in the panel on the left
+      </div>
     </div>
   );
 }

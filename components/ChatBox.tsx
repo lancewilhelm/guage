@@ -1,6 +1,6 @@
 import ChatBubble from "@/components/ChatBubble";
 import { useChatStore } from "@/store/chatStore";
-import { LocalMessage } from "@/utils/db/local";
+import { LocalMessage } from "@/types/db";
 
 interface ComputedVersionInfo {
   total: number;
