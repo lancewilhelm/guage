@@ -39,7 +39,7 @@ const customComponents = {
 const MessageContent = memo(
   ({ content, role }: { content: string; role: string }) =>
     role === "user" ? (
-      <div>{content}</div>
+      <div className="">{content}</div>
     ) : (
       <Markdown
         remarkPlugins={[remarkGfm, remarkMath]}
@@ -231,7 +231,7 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="flex flex-col gap-2 rounded-lg p-3"
+            className="max-w-full flex flex-col gap-2 rounded-lg p-3"
             style={{ backgroundColor }}
           >
             <MessageContent content={editedContent} role={message.role} />
