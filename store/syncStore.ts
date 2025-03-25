@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import {
-  pullRemoteChanges,
-  pushLocalChanges,
+  cloudPull,
+  cloudPush,
   LocalChat,
   LocalMessage,
-} from "@/utils/db/localDb";
+} from "@/utils/db/local";
 import { logger } from "@/utils/logger";
 
 // Define the types for sync events and status.
@@ -68,8 +68,8 @@ export const useSyncStore = create<SyncState>((set) => {
     sync: async () => {
       try {
         set({ status: "syncing", lastOperation: "two-way" });
-        await pushLocalChanges();
-        const { updatedChats, updatedMessages } = await pullRemoteChanges();
+        await cloudPush();
+        const { updatedChats, updatedMessages } = await cloudPull();
         set({
           status: "success",
           lastSyncTime: new Date(),
@@ -94,7 +94,7 @@ export const useSyncStore = create<SyncState>((set) => {
     push: async () => {
       set({ status: "syncing", lastOperation: "push" });
       try {
-        await pushLocalChanges();
+        await cloudPush();
         set({ status: "success", lastSyncTime: new Date(), lastError: null });
         notify("syncComplete");
       } catch (error) {
@@ -108,7 +108,7 @@ export const useSyncStore = create<SyncState>((set) => {
     pull: async () => {
       set({ status: "syncing", lastOperation: "pull" });
       try {
-        const { updatedChats, updatedMessages } = await pullRemoteChanges();
+        const { updatedChats, updatedMessages } = await cloudPull();
         set({
           status: "success",
           lastSyncTime: new Date(),

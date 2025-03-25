@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSessionStore } from "@/store/sessionStore";
 import InputElement from "@/components/Settings/InputElement";
-import { nukeLocalDb, resetSyncStatus } from "@/utils/db/localDb";
+import { dbNuke, dbResetSyncStatus } from "@/utils/db/local";
 import { useChatStore } from "@/store/chatStore";
 import { logger } from "@/utils/logger";
 import RefreshIcon from "@/components/Icon/Refresh";
@@ -91,7 +91,7 @@ export default function ProfilePage() {
         <button
           onClick={() => {
             localStorage.removeItem("lastSync");
-            resetSyncStatus();
+            dbResetSyncStatus();
             sync();
           }}
           className="flex items-center gap-2 w-min text-nowrap bg-(--color-no) text-(--color-fg2) p-2 rounded cursor-pointer hover:opacity-80 active:opacity-60"
@@ -110,7 +110,7 @@ export default function ProfilePage() {
         <button
           onClick={() => {
             if (confirm("Are you sure you want to nuke your data?")) {
-              nukeLocalDb();
+              dbNuke();
               nukeCloudDb();
               resetChatStore();
               window.location.reload();

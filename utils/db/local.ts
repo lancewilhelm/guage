@@ -3,6 +3,11 @@ import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
 import { debounce } from "../debounce";
 
+//------------------------//
+//         Local          //
+// Dexie (IndexedDb) Init //
+//------------------------//
+
 // Define local message type
 export interface LocalMessage {
   id: string;
@@ -50,37 +55,11 @@ export const localDb = new ChatDatabase();
 // ----------------------------------------------//
 
 /**
- * Insert a chat or an array of chats into the local database.
- * @param chat The chat or array of chats to insert.
- * @returns Promise that resolves when the operation is complete.
- */
-export function createMessageObject(
-  id: string | null = null,
-  chatId: string,
-  role: "user" | "assistant",
-  content: string = "",
-  parentId: string | null = null,
-  childrenIds: Array<string> | null = null,
-): LocalMessage {
-  return {
-    id: id || uuidv4(),
-    chatId,
-    parentId,
-    childrenIds,
-    content,
-    role,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    synced: false,
-  };
-}
-
-/**
  * Insert a message or an array of messages into the local database.
  * @param message The message or array of messages to insert.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function createMessageLocalDb(
+export async function dbCreateMessage(
   message: LocalMessage | LocalMessage[],
 ): Promise<void> {
   try {
@@ -95,7 +74,7 @@ export async function createMessageLocalDb(
       `Failed to insert message(s): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  debouncedTwoWaySync();
+  cloudDebounedSync();
 }
 
 /**
@@ -103,7 +82,7 @@ export async function createMessageLocalDb(
  * @param chatId The ID of the chat to retrieve messages for.
  * @returns Promise that resolves with an array of messages.
  */
-export async function retrieveMessagesLocalDb(chatId: string) {
+export async function dbRetrieveMessages(chatId: string) {
   return await localDb.messagesTable
     .where("chatId")
     .equals(chatId)
@@ -120,7 +99,7 @@ export async function retrieveMessagesLocalDb(chatId: string) {
  * @param update The properties to update.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function updateMessageLocalDb(
+export async function dbUpdateMessage(
   messageId: string,
   update: Partial<LocalMessage>,
 ) {
@@ -129,7 +108,7 @@ export async function updateMessageLocalDb(
     updatedAt: new Date(),
     synced: false,
   });
-  debouncedTwoWaySync();
+  cloudDebounedSync();
 }
 
 /**
@@ -137,13 +116,13 @@ export async function updateMessageLocalDb(
  * @param messageId The ID of the message to mark as deleted.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function markMessageAsDeletedLocalDb(messageId: string) {
+export async function dbMarkMessageDeleted(messageId: string) {
   await localDb.messagesTable.update(messageId, {
     deleted: true,
     synced: false,
     updatedAt: new Date(),
   });
-  debouncedTwoWaySync();
+  cloudDebounedSync();
 }
 
 /**
@@ -151,7 +130,7 @@ export async function markMessageAsDeletedLocalDb(messageId: string) {
  * @param title The title of the chat.
  * @returns Promise that resolves with the created chat.
  */
-export async function createChatLocalDb(
+export async function dbCreateChat(
   title: string = "New Chat",
   date: Date = new Date(),
 ) {
@@ -165,7 +144,7 @@ export async function createChatLocalDb(
     pinned: false,
   };
   await localDb.chatsTable.put(newChat);
-  debouncedTwoWaySync();
+  cloudDebounedSync();
   return newChat;
 }
 
@@ -175,23 +154,20 @@ export async function createChatLocalDb(
  * @param update The properties to update.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function updateChatLocalDb(
-  chatId: string,
-  update: Partial<LocalChat>,
-) {
+export async function dbUpdateChat(chatId: string, update: Partial<LocalChat>) {
   await localDb.chatsTable.update(chatId, {
     ...update,
     updatedAt: new Date(),
     synced: false,
   });
-  debouncedTwoWaySync();
+  cloudDebounedSync();
 }
 
 /**
  * Retrieve chats from the local database.
  * @returns Promise that resolves with an array of chats.
  */
-export async function retrieveChatsLocalDb() {
+export async function dbRetrieveChats() {
   return await localDb.chatsTable
     .filter((chat) => !chat.deleted)
     .toArray()
@@ -205,7 +181,7 @@ export async function retrieveChatsLocalDb() {
  * @param chatId The ID of the chat to mark as deleted.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function markChatAsDeletedLocalDb(chatId: string) {
+export async function dbMarkChatDeleted(chatId: string) {
   await localDb.chatsTable.update(chatId, {
     deleted: true,
     synced: false,
@@ -216,14 +192,14 @@ export async function markChatAsDeletedLocalDb(chatId: string) {
     .where("chatId")
     .equals(chatId)
     .modify({ deleted: true, synced: false, updatedAt: new Date() });
-  debouncedTwoWaySync();
+  cloudDebounedSync();
 }
 
 /**
  * Delete all data from the local database.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function nukeLocalDb() {
+export async function dbNuke() {
   await localDb.messagesTable.clear();
   await localDb.chatsTable.clear();
 }
@@ -232,12 +208,13 @@ export async function nukeLocalDb() {
  * Reset the sync status for all chats and messages in the local database.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function resetSyncStatus() {
+export async function dbResetSyncStatus() {
   await localDb.messagesTable.toCollection().modify({ synced: false });
   await localDb.chatsTable.toCollection().modify({ synced: false });
 }
 
 //----------------//
+//  Local & Cloud //
 // Sync Functions //
 //----------------//
 
@@ -245,7 +222,7 @@ export async function resetSyncStatus() {
  * Push local unsynced chats, including deleted flags.
  * @returns Promise that resolves when the operation is complete.
  */
-async function pushLocalChats() {
+async function cloudPushChats() {
   const unsyncedChats = await localDb.chatsTable
     .filter((chat) => !chat.synced)
     .toArray();
@@ -275,7 +252,7 @@ async function pushLocalChats() {
  * Push local unsynced messages, including deleted flags.
  * @returns Promise that resolves when the operation is complete.
  */
-async function pushLocalMessages() {
+async function cloudPushMessages() {
   const unsyncedMessages = await localDb.messagesTable
     .filter((msg) => !msg.synced)
     .toArray();
@@ -305,16 +282,16 @@ async function pushLocalMessages() {
  * Push local changes to the server.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function pushLocalChanges() {
-  await pushLocalChats();
-  await pushLocalMessages();
+export async function cloudPush() {
+  await cloudPushChats();
+  await cloudPushMessages();
 }
 
 /**
  * Pull remote changes from the server.
  * @returns Promise that resolves with the updated messages and chats.
  */
-export async function pullRemoteChanges() {
+export async function cloudPull() {
   const lastSync =
     localStorage.getItem("lastSync") || new Date(0).toISOString();
   try {
@@ -374,13 +351,13 @@ export async function pullRemoteChanges() {
  * Perform a two-way sync with the server.
  * @returns Promise that resolves when the operation is complete.
  */
-export async function twoWaySync() {
-  await pushLocalChanges();
-  await pullRemoteChanges();
+export async function cloudSync() {
+  await cloudPush();
+  await cloudPull();
 }
 
 /**
  * Debounced version of two-way sync function.
  * @returns Promise that resolves when the operation is complete.
  */
-export const debouncedTwoWaySync = debounce(twoWaySync, 500);
+export const cloudDebounedSync = debounce(cloudSync, 500);

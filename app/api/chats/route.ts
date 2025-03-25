@@ -2,7 +2,7 @@ import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { InsertChat, chatsTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
-import { db } from "@/utils/db";
+import { cloudDb } from "@/utils/db/cloud";
 import { sql } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     });
 
     // Bulk upsert chats
-    const result = await db
+    const result = await cloudDb
       .insert(chatsTable)
       .values(unsyncedChats)
       .onConflictDoUpdate({

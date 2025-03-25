@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/utils/db";
+import { cloudDb } from "@/utils/db/cloud";
 import { usersTable } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 import { createSession } from "@/utils/auth";
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
   // Find user
   logger.debug({ email }, "POST /api/login: Finding user");
-  const user = await db
+  const user = await cloudDb
     .select()
     .from(usersTable)
     .where(eq(usersTable.email, email))

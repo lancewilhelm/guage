@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/utils/db";
+import { cloudDb } from "@/utils/db/cloud";
 import { usersTable } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   // Check if user exists
   logger.debug({ email }, "Checking if user exists");
-  const existingUser = await db
+  const existingUser = await cloudDb
     .select()
     .from(usersTable)
     .where(eq(usersTable.email, email))
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   // Hash password and create user
   logger.debug({ email }, "Creating user");
   const hashedPassword = await bcrypt.hash(password, 10);
-  await db.insert(usersTable).values({
+  await cloudDb.insert(usersTable).values({
     id: crypto.randomUUID(),
     email,
     name,

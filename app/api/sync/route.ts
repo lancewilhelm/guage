@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { messagesTable, chatsTable } from "@/utils/db/schema";
-import { db } from "@/utils/db";
+import { cloudDb } from "@/utils/db/cloud";
 import { sql } from "drizzle-orm";
 import { getSession } from "@/utils/auth";
 
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   try {
     const sinceDate = new Date(since).toISOString();
 
-    const messages = await db
+    const messages = await cloudDb
       .select()
       .from(messagesTable)
       .where(
@@ -37,7 +37,7 @@ export async function GET(req: Request) {
       );
 
     // Similarly, select chat sessions for this user
-    const chats = await db
+    const chats = await cloudDb
       .select()
       .from(chatsTable)
       .where(

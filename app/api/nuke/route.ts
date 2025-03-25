@@ -1,7 +1,7 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { messagesTable, chatsTable } from "@/utils/db/schema";
-import { db } from "@/utils/db";
+import { cloudDb } from "@/utils/db/cloud";
 import { eq } from "drizzle-orm";
 import { getSession } from "@/utils/auth";
 
@@ -17,10 +17,10 @@ export async function GET() {
   const userId = session.user.id;
 
   try {
-    await db.delete(messagesTable).where(eq(messagesTable.userId, userId));
+    await cloudDb.delete(messagesTable).where(eq(messagesTable.userId, userId));
 
     // Similarly, select chat sessions for this user
-    await db.delete(chatsTable).where(eq(chatsTable.userId, userId));
+    await cloudDb.delete(chatsTable).where(eq(chatsTable.userId, userId));
 
     return NextResponse.json({ success: true });
   } catch (error) {

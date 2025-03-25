@@ -6,7 +6,6 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { v4 as uuidv4 } from "uuid";
 import InputRow, { InputRowHandle } from "@/components/InputRow";
 import ChatList from "@/components/ChatList";
 import Header from "@/components/Header";
@@ -14,19 +13,16 @@ import AngleDownIcon from "@/components/Icon/AngleDown";
 import { useChatStore } from "@/store/chatStore";
 import { useSyncStore } from "@/store/syncStore";
 import {
-  retrieveChatsLocalDb,
-  createChatLocalDb,
-  createMessageLocalDb,
-  updateChatLocalDb,
-  updateMessageLocalDb,
+  dbRetrieveChats,
+  dbCreateChat,
+  dbUpdateChat,
   LocalMessage,
   LocalChat,
-  markChatAsDeletedLocalDb,
-} from "@/utils/db/localDb";
-import { generateChatTitle } from "@/utils/apiHelpers";
-import { parseSSEChunk } from "@/utils/apiHelpers";
-import { logger } from "@/utils/logger";
+  dbMarkChatDeleted,
+} from "@/utils/db/local";
+import { handleSubmitMessage, preloadChats } from "@/utils/chat";
 import { useRouter } from "next/navigation";
+import { logger } from "@/utils/logger";
 
 export interface ChatItem {
   id: string;
@@ -44,9 +40,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
     createChat,
     setCurrentChatId,
     addMessage,
-    updateMessage,
     setActiveBranch,
-    editBranch,
     updateChatMetadata,
     deleteChat,
   } = useChatStore();
@@ -65,19 +59,17 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
       .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
   }, [chats]);
 
-  const [isStreaming, setIsStreaming] = useState(false);
   const [showChatsPanel, setShowChatsPanel] = useState(true);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const shouldAutoScrollRef = useRef<boolean>(true);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const inputRef = useRef<InputRowHandle>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
 
-  // Fetch chats from IndexedDB.
+  // Fetch chats from db
   const fetchChats = useCallback(async () => {
-    const result = await retrieveChatsLocalDb();
+    const result = await dbRetrieveChats();
     if (result && result.length > 0) {
       result.forEach((chat) => {
         const { id, title, createdAt, updatedAt, activeBranch, pinned } = chat;
@@ -89,6 +81,9 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           setActiveBranch(id, activeBranch);
         }
       });
+
+      // Preload messages for select chats
+      preloadChats(result);
     }
   }, [createChat, setActiveBranch]);
 
@@ -117,12 +112,12 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
     if (
       currentChatId &&
       chatContainerRef.current &&
-      shouldAutoScrollRef.current &&
-      !isStreaming
+      shouldAutoScrollRef.current
     ) {
       // use setTimeout to ensure the scroll is done after the render
       setTimeout(() => {
         if (chatContainerRef.current) {
+          logger.debug("Scrolling to the bottom");
           chatContainerRef.current.scrollTo({
             top: chatContainerRef.current.scrollHeight,
             behavior: "instant",
@@ -130,7 +125,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
         }
       }, 0);
     }
-  }, [currentChatId, isStreaming, chats]);
+  }, [currentChatId, chats]);
 
   // Detect manual scrolling.
   useEffect(() => {
@@ -156,190 +151,6 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
       shouldAutoScrollRef.current = true;
     }
   }, []);
-
-  // Streaming response logic.
-  const streamResponse = useCallback(
-    async (
-      userMessage: LocalMessage,
-      assistantMessage: LocalMessage,
-      history?: LocalMessage[],
-    ) => {
-      if (!currentChatId) return;
-      setIsStreaming(true);
-      abortControllerRef.current = new AbortController();
-      let accumulatedResponse = "";
-      try {
-        const response = await fetch("/api/llm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            history: history ? history : [],
-            userMessage,
-            chatId: currentChatId,
-          }),
-          signal: abortControllerRef.current.signal,
-        });
-        if (!response.ok || !response.body) {
-          throw new Error("Failed to fetch chat response");
-        }
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunks = parseSSEChunk(decoder.decode(value));
-          for (const chunk of chunks) {
-            if (chunk.eventType === "messageChunk") {
-              accumulatedResponse += JSON.parse(chunk.data);
-              updateMessage(
-                currentChatId,
-                assistantMessage.id,
-                accumulatedResponse,
-              );
-              updateMessageLocalDb(assistantMessage.id, {
-                content: accumulatedResponse,
-              });
-              if (chatContainerRef.current && shouldAutoScrollRef.current) {
-                chatContainerRef.current.scrollTo({
-                  top: chatContainerRef.current.scrollHeight,
-                  behavior: "instant",
-                });
-              }
-            }
-          }
-        }
-      } catch (error) {
-        logger.error("Error during streaming:", error);
-      } finally {
-        updateChatMetadata(currentChatId, { isStreaming: false });
-        abortControllerRef.current = null;
-      }
-    },
-    [currentChatId, updateMessage, updateChatMetadata],
-  );
-
-  // Submit handler: create messages, persist them, stream response, then sync.
-  const handleSubmit = useCallback(async () => {
-    let chatIdToUse = currentChatId;
-    if (!chatIdToUse) {
-      const newChat = await createChatLocalDb();
-      if (newChat) {
-        createChat(
-          newChat.id,
-          newChat.title,
-          newChat.createdAt,
-          newChat.updatedAt,
-        );
-        setCurrentChatId(newChat.id);
-        chatIdToUse = newChat.id;
-        router.push(`/chat/${newChat.id}`);
-      }
-    }
-
-    if (!chatIdToUse) return;
-
-    updateChatMetadata(chatIdToUse, { isStreaming: true });
-
-    const userInput = inputRef.current?.getValue();
-    if (!userInput?.trim()) return;
-    inputRef.current?.clear();
-    shouldAutoScrollRef.current = true;
-
-    // Determine parent
-    let parentId: string | null = null;
-    const chat = useChatStore.getState().chats[chatIdToUse];
-    if (chat && chat.activeBranch.length > 0) {
-      const lastMessageId = chat.activeBranch[chat.activeBranch.length - 1];
-      const lastMessage = chat.messages[lastMessageId];
-      if (lastMessage && lastMessage.role === "assistant") {
-        parentId = lastMessage.id;
-      }
-    }
-
-    // Create new messages.
-    const userMessageId = uuidv4();
-    const assistantMessageId = uuidv4();
-    const now = new Date();
-    const userMessage: LocalMessage = {
-      id: userMessageId,
-      chatId: chatIdToUse,
-      content: userInput,
-      role: "user",
-      parentId,
-      childrenIds: [assistantMessageId],
-      createdAt: now,
-      updatedAt: now,
-      synced: false,
-    };
-    const assistantMessage: LocalMessage = {
-      id: assistantMessageId,
-      chatId: chatIdToUse,
-      content: "",
-      role: "assistant",
-      parentId: userMessageId,
-      childrenIds: [],
-      createdAt: now,
-      updatedAt: now,
-      synced: false,
-    };
-
-    // Persist messages to IndexedDB.
-    createMessageLocalDb([userMessage, assistantMessage]);
-
-    // Update parent's childrenIds if applicable.
-    if (parentId) {
-      const parent = chat?.messages[parentId];
-      if (parent) {
-        const updatedChildren = parent.childrenIds
-          ? [...parent.childrenIds, userMessage.id]
-          : [userMessage.id];
-        updateMessageLocalDb(parentId, { childrenIds: updatedChildren });
-        const updatedParent = { ...parent, childrenIds: updatedChildren };
-        addMessage(chatIdToUse, updatedParent);
-      }
-    }
-
-    // Update state.
-    addMessage(chatIdToUse, userMessage);
-    addMessage(chatIdToUse, assistantMessage);
-    editBranch(chatIdToUse, parentId, userMessageId);
-
-    // Start streaming response.
-    streamResponse(
-      userMessage,
-      assistantMessage,
-      chat.activeBranch
-        .map((id) => chat.messages[id])
-        .filter(Boolean) as LocalMessage[],
-    );
-
-    // Update chat title and timestamp.
-    const chats = useChatStore.getState().chats;
-    if (!chat.activeBranch.length) {
-      const title = await generateChatTitle(userMessage);
-      updateChatLocalDb(chatIdToUse, {
-        title,
-        updatedAt: now,
-        activeBranch: chats[chatIdToUse].activeBranch,
-      });
-      updateChatMetadata(chatIdToUse, { title, updatedAt: now });
-    } else {
-      updateChatLocalDb(chatIdToUse, {
-        updatedAt: now,
-        activeBranch: chats[chatIdToUse].activeBranch,
-      });
-      updateChatMetadata(chatIdToUse, { updatedAt: now });
-    }
-  }, [
-    currentChatId,
-    addMessage,
-    editBranch,
-    streamResponse,
-    updateChatMetadata,
-    createChat,
-    router,
-    setCurrentChatId,
-  ]);
 
   // Sync effect: runs on mount, focus, online, and every 30 seconds.
   useEffect(() => {
@@ -425,7 +236,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           isChatsButtonVisible={!showChatsPanel}
           toggleChatsPanel={() => setShowChatsPanel(!showChatsPanel)}
           createChat={async () => {
-            const newChat = await createChatLocalDb();
+            const newChat = await dbCreateChat();
             if (newChat) {
               setCurrentChatId(newChat.id);
               updateChatMetadata(newChat.id, {
@@ -443,13 +254,14 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           chats={chatList}
           currentChatId={currentChatId}
           setCurrentChatIdAction={(id: string) => {
+            if (currentChatId === id) return;
             setCurrentChatId(id);
-            router.push(`/chat/${id}`);
+            router.push(`/chat/${id}`, { scroll: false });
           }}
           isVisible={showChatsPanel}
           setIsVisibleAction={setShowChatsPanel}
           createAction={async () => {
-            const newChat = await createChatLocalDb();
+            const newChat = await dbCreateChat();
             if (newChat) {
               createChat(
                 newChat.id,
@@ -463,16 +275,16 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           }}
           deleteAction={async (chatId: string) => {
             deleteChat(chatId);
-            markChatAsDeletedLocalDb(chatId);
+            dbMarkChatDeleted(chatId);
             setCurrentChatId(undefined);
             router.push("/chat");
           }}
           renameAction={async (chatId: string, title: string) => {
-            updateChatLocalDb(chatId, { title });
+            dbUpdateChat(chatId, { title });
             updateChatMetadata(chatId, { title });
           }}
           pinAction={async (chatId: string, state: boolean) => {
-            updateChatLocalDb(chatId, { pinned: !state });
+            dbUpdateChat(chatId, { pinned: !state });
             updateChatMetadata(chatId, { pinned: !state });
           }}
         />
@@ -496,13 +308,22 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
         <div className="mx-auto w-full max-w-[1000px]">
           <InputRow
             ref={inputRef}
-            submitHandler={handleSubmit}
-            stopHandler={() => {
-              if (abortControllerRef.current) {
-                abortControllerRef.current.abort();
+            submitHandler={() => {
+              inputRef.current?.clear();
+              shouldAutoScrollRef.current = true;
+              if (inputRef.current?.getValue()) {
+                handleSubmitMessage(inputRef.current.getValue(), router);
               }
-              abortControllerRef.current = null;
-              setIsStreaming(false);
+            }}
+            stopHandler={() => {
+              const chatStore = useChatStore.getState();
+              if (
+                currentChatId &&
+                chatStore.chats[currentChatId]?.abortController !== undefined
+              ) {
+                chatStore.chats[currentChatId]?.abortController.abort();
+                chatStore.chats[currentChatId].abortController = undefined;
+              }
             }}
             isLoading={false}
             isStreaming={

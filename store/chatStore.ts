@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { LocalMessage } from "@/utils/db/localDb";
+import { LocalMessage } from "@/utils/db/local";
 import { persist } from "zustand/middleware";
 import { logger } from "@/utils/logger";
 
@@ -188,15 +188,20 @@ export const useChatStore = create<ChatStore>()(
           },
         })),
       setChatAbortController: (chatId, controller) =>
-        set((state) => ({
-          chats: {
-            ...state.chats,
-            [chatId]: {
-              ...state.chats[chatId],
-              abortController: controller,
+        set((state) => {
+          if (state.chats[chatId]?.abortController) {
+            state.chats[chatId].abortController.abort();
+          }
+          return {
+            chats: {
+              ...state.chats,
+              [chatId]: {
+                ...state.chats[chatId],
+                abortController: controller,
+              },
             },
-          },
-        })),
+          };
+        }),
       addMessage: (chatId, message) =>
         set((state) => {
           const chat = state.chats[chatId];
