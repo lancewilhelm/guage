@@ -11,8 +11,7 @@ import {
 } from "./db/local";
 import { v4 as uuidv4 } from "uuid";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { ChatState } from "@/types/chatStore";
-import { SSEChunk } from "@/types/utils";
+import { ChatState } from "@/store/chatStore";
 
 /**
  * Generate a title from the assistant's response
@@ -37,6 +36,11 @@ export async function generateChatTitle(userMessage: LocalMessage) {
     logger.error("Error generating title:", error);
     return null;
   }
+}
+
+export interface SSEChunk {
+  eventType: string;
+  data: string;
 }
 
 /**

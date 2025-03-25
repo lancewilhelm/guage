@@ -20,7 +20,7 @@ import {
 import { handleSubmitMessage, preloadChats } from "@/utils/chat";
 import { useRouter } from "next/navigation";
 import { logger } from "@/utils/logger";
-import { LocalMessage, LocalChat } from "@/types/db";
+import { LocalMessage, LocalChat } from "@/utils/db/local";
 
 export interface ChatItem {
   id: string;

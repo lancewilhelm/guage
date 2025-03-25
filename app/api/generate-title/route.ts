@@ -2,7 +2,7 @@ import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { LocalMessage } from "@/types/db";
+import { LocalMessage } from "@/utils/db/local";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,

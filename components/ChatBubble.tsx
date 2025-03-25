@@ -15,7 +15,7 @@ import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import Pre from "@/components/Pre";
 import { useSessionStore } from "@/store/sessionStore";
-import { LocalMessage } from "@/types/db";
+import { LocalMessage } from "@/utils/db/local";
 
 interface ComputedVersionInfo {
   total: number;

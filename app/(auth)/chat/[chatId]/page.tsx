@@ -9,7 +9,7 @@ import {
 } from "@/utils/db/local";
 import { useParams } from "next/navigation";
 import { handleEditMessage } from "@/utils/chat";
-import { LocalMessage } from "@/types/db";
+import { LocalMessage } from "@/utils/db/local";
 
 export interface ChatItem {
   id: string;

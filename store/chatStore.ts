@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { logger } from "@/utils/logger";
 // Types
-import { LocalMessage } from "@/types/db";
+import { LocalMessage } from "@/utils/db/local";
 
 export interface ChatState {
   messages: Record<string, LocalMessage>;
