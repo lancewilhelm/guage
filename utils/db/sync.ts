@@ -187,8 +187,6 @@ export async function cloudPull() {
         );
       }
 
-      console.log("Pulled settings from cloud:", updatedSettings);
-
       return { updatedMessages, updatedChats, updatedSettings };
     } else {
       logger.error("Pull sync failed with status:", response.status);

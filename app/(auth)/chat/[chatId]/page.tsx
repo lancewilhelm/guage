@@ -23,7 +23,7 @@ export default function Chat() {
   const params = useParams();
   const chatId = params.chatId as string;
 
-  const { currentChatId, setCurrentChatId, addMessage, changeBranch } =
+  const { currentChatId, setCurrentChatId, addMessage, changeBranch, chats } =
     useChatStore();
 
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,6 @@ export default function Chat() {
       if (!chatId) return;
 
       try {
-        const chats = useChatStore.getState().chats;
         if (!chats[chatId] || Object.keys(chats[chatId].messages).length)
           return;
 
@@ -55,7 +54,7 @@ export default function Chat() {
         setError("Failed to load messages");
       }
     },
-    [addMessage],
+    [addMessage, chats],
   );
 
   // Set current chat ID and load messages
@@ -70,18 +69,17 @@ export default function Chat() {
         // Check if this chat is already the active one
         if (
           currentChatId === chatId &&
-          Object.keys(useChatStore.getState().chats[chatId]?.messages || {})
-            .length > 0
+          chats[chatId]?.messages &&
+          Object.keys(chats[chatId].messages).length > 0
         ) {
           return;
         }
 
         // If chat doesn't exist in the store, try to fetch it
-        const chatExists = useChatStore.getState().chats[chatId];
-        if (!chatExists) {
+        if (!chats[chatId]) {
           // Fetch all chats to see if this one exists
-          const chats = await dbRetrieveChats();
-          const chatData = chats.find((chat) => chat.id === chatId);
+          const allChats = await dbRetrieveChats();
+          const chatData = allChats.find((chat) => chat.id === chatId);
 
           if (!chatData) {
             setError(`Chat with ID ${chatId} not found`);
@@ -113,7 +111,7 @@ export default function Chat() {
     };
 
     initChat();
-  }, [chatId, setCurrentChatId, loadMessages, currentChatId]);
+  }, [chatId, setCurrentChatId, loadMessages, currentChatId, chats]);
 
   if (error) {
     return (
@@ -132,7 +130,7 @@ export default function Chat() {
       }}
       onBranchChange={(messageId: string, versionIndex: number) => {
         if (!currentChatId) return;
-        changeBranch(currentChatId!, messageId, versionIndex);
+        changeBranch(currentChatId, messageId, versionIndex);
         dbUpdateChat(currentChatId, {
           activeBranch:
             useChatStore.getState().chats[currentChatId!].activeBranch,

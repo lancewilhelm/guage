@@ -431,8 +431,6 @@ export async function preloadChats(chats: LocalChat[]) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
-
-    console.log(`Preloaded messages for ${chatsToPreload.length} chats`);
   } catch (error) {
     console.error("Error preloading chat messages:", error);
   }
