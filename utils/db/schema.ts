@@ -67,11 +67,37 @@ export const messagesTable = pgTable("messages", {
   deleted: boolean("deleted"),
 });
 
+// USER SETTINGS TABLE
+export const userSettings = pgTable("user_settings", {
+  userId: uuid("user_id").primaryKey().unique(),
+  settings: jsonb("settings")
+    .notNull()
+    .default(sql`'{}'`),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+});
+
+// GLOBAL SETTINGS TABLE
+export const globalSettings = pgTable("global_settings", {
+  id: uuid("user_id").primaryKey(),
+  settings: jsonb("settings")
+    .notNull()
+    .default(sql`'{}'`),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .default(sql`now()`)
+    .notNull(),
+});
+
 // Define the types
 export type SelectUser = InferSelectModel<typeof usersTable>;
 export type SelectChat = InferSelectModel<typeof chatsTable>;
 export type SelectMessage = InferSelectModel<typeof messagesTable>;
+export type SelectUserSetting = InferSelectModel<typeof userSettings>;
+export type SelectGlobalSetting = InferSelectModel<typeof globalSettings>;
 
 export type InsertUser = InferInsertModel<typeof usersTable>;
 export type InsertChat = InferInsertModel<typeof chatsTable>;
 export type InsertMessage = InferInsertModel<typeof messagesTable>;
+export type InsertUserSetting = InferInsertModel<typeof userSettings>;
+export type InsertGlobalSetting = InferInsertModel<typeof globalSettings>;

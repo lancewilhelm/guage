@@ -10,7 +10,7 @@ import UpArrowIcon from "@/components/Icon/UpArrow";
 import FloppyDiskIcon from "@/components/Icon/FloppyDisk";
 import SkullCrossbonesIcon from "@/components/Icon/SkullCrossbones";
 import { useSyncStore } from "@/store/syncStore";
-import { useSettingsStore } from "@/store/settingsStore";
+import { useUserSettingsStore } from "@/store/userSettingsStore";
 
 async function nukeCloudDb() {
   const response = await fetch("/api/nuke");
@@ -27,16 +27,17 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { resetChatStore } = useChatStore();
-  const { user, updateSetting } = useSettingsStore();
+  const { settings: userSettings, updateSettings: updateUserSettings } =
+    useUserSettingsStore();
   const { sync, lastSyncTime } = useSyncStore();
 
   return (
     <div className="flex flex-col gap-2">
       <ToggleElement
-        title="Restore Last Chat"
-        description="Restore the last chat you were in when you open the app"
-        value={user.restoreLastChat}
-        onChange={(value) => updateSetting("user", "restoreLastChat", value)}
+        title="Dark Mode"
+        description="Turn on dark mode"
+        value={userSettings.darkMode}
+        onChange={(value) => updateUserSettings({ darkMode: value })}
       />
       <InputElement
         type="text"

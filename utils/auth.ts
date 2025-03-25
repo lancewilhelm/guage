@@ -16,7 +16,7 @@ export interface Session extends JwtPayload {
     id: string;
     email: string;
     name: string | null;
-    role: "user" | "admin";
+    role: "user" | "admin" | "owner";
   };
 }
 

@@ -29,9 +29,14 @@ function SettingsPageListItem({
   );
 }
 
+// Helper to check admin permissions
+const isAdmin = (): boolean => {
+  const session = useSessionStore.getState().session;
+  if (!session) return false;
+  return ["admin", "owner"].includes(session.user.role);
+};
+
 export default function Settings({ onClose }: { onClose: () => void }) {
-  const { session } = useSessionStore();
-  console.log("session:", session);
   const [currentPage, setCurrentPage] = useState("profile");
 
   return (
@@ -47,7 +52,7 @@ export default function Settings({ onClose }: { onClose: () => void }) {
         </div>
         <div className="flex flex-col gap-2 border-r-2 border-(--color-bg2) p-2 row-start-2">
           {Object.entries(settingsPages).map(([slug, { name, adminOnly }]) => {
-            if (!adminOnly || session?.user.role === "admin") {
+            if (!adminOnly || isAdmin()) {
               return (
                 <SettingsPageListItem
                   key={slug}

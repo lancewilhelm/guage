@@ -212,10 +212,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
       }
 
       // Check for settings updates
-      if (
-        state.updatedSettings &&
-        (state.updatedSettings.user || state.updatedSettings.global)
-      ) {
+      if (state.updatedSettings) {
         const { user, global } = state.updatedSettings;
         if (Object.keys(user).length > 0) {
           useUserSettingsStore.getState().updateFromSync(user);

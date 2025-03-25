@@ -1,11 +1,8 @@
 import { create } from "zustand";
-import {
-  cloudPull,
-  cloudPush,
-  LocalChat,
-  LocalMessage,
-} from "@/utils/db/local";
+import { LocalChat, LocalMessage } from "@/utils/db/local";
+import { cloudPull, cloudPush } from "@/utils/db/sync";
 import { logger } from "@/utils/logger";
+import { AllSettings } from "./settingsTypes";
 
 // Define the types for sync events and status.
 export type SyncStatus = "idle" | "syncing" | "success" | "error";
@@ -13,12 +10,14 @@ export type SyncOperation = "push" | "pull" | "two-way";
 export type SyncEventType =
   | "chatsUpdated"
   | "messagesUpdated"
+  | "settingsUpdated"
   | "syncComplete"
   | "syncError";
 
 export interface SyncEventPayloads {
   chatsUpdated: LocalChat[];
   messagesUpdated: LocalMessage[];
+  settingsUpdated: AllSettings;
   syncComplete: void;
   syncError: Error;
 }
@@ -36,6 +35,7 @@ interface SyncState {
   // Latest updates from a sync operation.
   updatedChats: LocalChat[];
   updatedMessages: LocalMessage[];
+  updatedSettings: AllSettings;
 
   // Sync actions.
   sync: () => Promise<void>;
@@ -61,26 +61,31 @@ export const useSyncStore = create<SyncState>((set) => {
     lastSyncTime: null,
     lastError: null,
     lastOperation: null,
-    updatedChats: [],
-    updatedMessages: [],
+    updatedChats: [] as LocalChat[],
+    updatedMessages: [] as LocalMessage[],
+    updatedSettings: {} as AllSettings,
 
     // Two-way sync: push local changes then pull remote ones.
     sync: async () => {
       try {
         set({ status: "syncing", lastOperation: "two-way" });
         await cloudPush();
-        const { updatedChats, updatedMessages } = await cloudPull();
+        const { updatedChats, updatedMessages, updatedSettings } =
+          await cloudPull();
         set({
           status: "success",
           lastSyncTime: new Date(),
           updatedChats,
           updatedMessages,
+          updatedSettings,
           lastError: null,
         });
         // Notify listeners.
         if (updatedChats.length > 0) notify("chatsUpdated", updatedChats);
         if (updatedMessages.length > 0)
           notify("messagesUpdated", updatedMessages);
+        if (Object.keys(updatedSettings).length > 0)
+          notify("settingsUpdated", updatedSettings);
         notify("syncComplete");
       } catch (error) {
         logger.error("Sync failed:", error);
@@ -108,17 +113,21 @@ export const useSyncStore = create<SyncState>((set) => {
     pull: async () => {
       set({ status: "syncing", lastOperation: "pull" });
       try {
-        const { updatedChats, updatedMessages } = await cloudPull();
+        const { updatedChats, updatedMessages, updatedSettings } =
+          await cloudPull();
         set({
           status: "success",
           lastSyncTime: new Date(),
           updatedChats,
           updatedMessages,
+          updatedSettings,
           lastError: null,
         });
         if (updatedChats.length > 0) notify("chatsUpdated", updatedChats);
         if (updatedMessages.length > 0)
           notify("messagesUpdated", updatedMessages);
+        if (Object.keys(updatedSettings).length > 0)
+          notify("settingsUpdated", updatedSettings);
         notify("syncComplete");
       } catch (error) {
         const typedError =

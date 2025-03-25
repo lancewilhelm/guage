@@ -1,7 +1,6 @@
-import { logger } from "@/utils/logger";
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
-import { debounce } from "../debounce";
+import { cloudDebouncedSync } from "./sync";
 
 //------------------------//
 //         Local          //
@@ -75,7 +74,7 @@ export async function dbCreateMessage(
       `Failed to insert message(s): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  cloudDebounedSync();
+  cloudDebouncedSync();
 }
 
 /**
@@ -109,7 +108,7 @@ export async function dbUpdateMessage(
     updatedAt: new Date(),
     synced: false,
   });
-  cloudDebounedSync();
+  cloudDebouncedSync();
 }
 
 /**
@@ -123,7 +122,7 @@ export async function dbMarkMessageDeleted(messageId: string) {
     synced: false,
     updatedAt: new Date(),
   });
-  cloudDebounedSync();
+  cloudDebouncedSync();
 }
 
 /**
@@ -145,7 +144,7 @@ export async function dbCreateChat(
     pinned: false,
   };
   await localDb.chatsTable.put(newChat);
-  cloudDebounedSync();
+  cloudDebouncedSync();
   return newChat;
 }
 
@@ -161,7 +160,7 @@ export async function dbUpdateChat(chatId: string, update: Partial<LocalChat>) {
     updatedAt: new Date(),
     synced: false,
   });
-  cloudDebounedSync();
+  cloudDebouncedSync();
 }
 
 /**
@@ -193,7 +192,7 @@ export async function dbMarkChatDeleted(chatId: string) {
     .where("chatId")
     .equals(chatId)
     .modify({ deleted: true, synced: false, updatedAt: new Date() });
-  cloudDebounedSync();
+  cloudDebouncedSync();
 }
 
 /**
@@ -213,152 +212,3 @@ export async function dbResetSyncStatus() {
   await localDb.messagesTable.toCollection().modify({ synced: false });
   await localDb.chatsTable.toCollection().modify({ synced: false });
 }
-
-//----------------//
-//  Local & Cloud //
-// Sync Functions //
-//----------------//
-
-/**
- * Push local unsynced chats, including deleted flags.
- * @returns Promise that resolves when the operation is complete.
- */
-async function cloudPushChats() {
-  const unsyncedChats = await localDb.chatsTable
-    .filter((chat) => !chat.synced)
-    .toArray();
-  if (unsyncedChats.length === 0) return;
-  try {
-    const response = await fetch("/api/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Each chat object includes the deleted flag if it has been marked as deleted.
-      body: JSON.stringify({ unsyncedChats }),
-    });
-    if (response.ok) {
-      const update = unsyncedChats.map((chat) => ({
-        key: chat.id,
-        changes: { synced: true },
-      }));
-      await localDb.chatsTable.bulkUpdate(update);
-    } else {
-      logger.error("Server error syncing chats:", unsyncedChats);
-    }
-  } catch (error) {
-    logger.error("Sync failed for chats:", unsyncedChats, error);
-  }
-}
-
-/**
- * Push local unsynced messages, including deleted flags.
- * @returns Promise that resolves when the operation is complete.
- */
-async function cloudPushMessages() {
-  const unsyncedMessages = await localDb.messagesTable
-    .filter((msg) => !msg.synced)
-    .toArray();
-  if (unsyncedMessages.length === 0) return;
-  try {
-    const response = await fetch("/api/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Unsynced messages include the deleted property if set.
-      body: JSON.stringify({ unsyncedMessages }),
-    });
-    if (response.ok) {
-      const update = unsyncedMessages.map((msg) => ({
-        key: msg.id,
-        changes: { synced: true },
-      }));
-      await localDb.messagesTable.bulkUpdate(update);
-    } else {
-      logger.error("Server error syncing messages:", unsyncedMessages);
-    }
-  } catch (error) {
-    logger.error("Sync failed for messages:", unsyncedMessages, error);
-  }
-}
-
-/**
- * Push local changes to the server.
- * @returns Promise that resolves when the operation is complete.
- */
-export async function cloudPush() {
-  await cloudPushChats();
-  await cloudPushMessages();
-}
-
-/**
- * Pull remote changes from the server.
- * @returns Promise that resolves with the updated messages and chats.
- */
-export async function cloudPull() {
-  const lastSync =
-    localStorage.getItem("lastSync") || new Date(0).toISOString();
-  try {
-    const response = await fetch(
-      `/api/sync?since=${encodeURIComponent(lastSync)}`,
-    );
-    if (response.ok) {
-      const { messages, chats } = await response.json();
-
-      const updatedMessages = [];
-      const updatedChats = [];
-
-      // Process remote messages
-      for (const remoteMsg of messages) {
-        const localMsg = await localDb.messagesTable.get(remoteMsg.id);
-        if (!localMsg || new Date(remoteMsg.updatedAt) > localMsg.updatedAt) {
-          const processedMessage = {
-            ...remoteMsg,
-            createdAt: new Date(remoteMsg.createdAt),
-            updatedAt: new Date(remoteMsg.updatedAt),
-          };
-          await localDb.messagesTable.put(processedMessage);
-          updatedMessages.push(processedMessage);
-        }
-      }
-
-      // Process remote chats
-      for (const remoteChat of chats) {
-        const localChat = await localDb.chatsTable.get(remoteChat.id);
-        if (
-          !localChat ||
-          new Date(remoteChat.updatedAt) > localChat.updatedAt
-        ) {
-          const processedChat = {
-            ...remoteChat,
-            createdAt: new Date(remoteChat.createdAt),
-            updatedAt: new Date(remoteChat.updatedAt),
-          };
-          await localDb.chatsTable.put(processedChat);
-          updatedChats.push(processedChat);
-        }
-      }
-
-      localStorage.setItem("lastSync", new Date().toISOString());
-      return { updatedMessages, updatedChats };
-    } else {
-      console.error("Pull sync failed with status:", response.status);
-      return { updatedMessages: [], updatedChats: [] };
-    }
-  } catch (error) {
-    console.error("Pull sync error:", error);
-    return { updatedMessages: [], updatedChats: [] };
-  }
-}
-
-/**
- * Perform a two-way sync with the server.
- * @returns Promise that resolves when the operation is complete.
- */
-export async function cloudSync() {
-  await cloudPush();
-  await cloudPull();
-}
-
-/**
- * Debounced version of two-way sync function.
- * @returns Promise that resolves when the operation is complete.
- */
-export const cloudDebounedSync = debounce(cloudSync, 500);
