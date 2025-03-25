@@ -141,7 +141,6 @@ export const useChatStore = create<ChatStore>()(
       ) =>
         set((state) => {
           if (state.chats[chatId]) {
-            logger.warn(`Chat ${chatId} already exists.`);
             return state;
           }
           const newChat: ChatState = {

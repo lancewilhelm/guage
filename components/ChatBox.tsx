@@ -75,45 +75,32 @@ export default function ChatBox({
         activeThread.length === 0 || !isChatLoaded ? "h-full" : ""
       }`}
     >
-      {activeThread.length === 0 ? (
-        <div className="w-full flex flex-col grow text-center justify-center items-center opacity-50">
-          <div className="text-3xl">
-            {isChatLoaded ? "No messages" : "No session loaded"}
-          </div>
-          <div className="italic">
-            {isChatLoaded
-              ? "Send your first message in the input box below"
-              : "Load a session in the panel on the left"}
-          </div>
-        </div>
-      ) : (
-        activeThread.map((message) => {
-          const versionInfo = computeVersionInfo(message, chat!.messages);
-          return (
-            <ChatBubble
-              key={message.id}
-              message={message}
-              onEdit={onMessageEdit}
-              versionInfo={versionInfo}
-              onBranchChange={(versionIndex) => {
-                onBranchChange(message.id, versionIndex);
-              }}
-              width={
-                message.role === "user" ? userBubbleWidth : assistantBubbleWidth
-              }
-              maxWidth={
-                message.role === "user"
-                  ? userBubbleMaxWidth
-                  : assistantBubbleMaxWidth
-              }
-              backgroundColor={
-                message.role === "user" ? userBubbleBg : assistantBubbleBg
-              }
-              showName={showNames}
-            />
-          );
-        })
-      )}
+      {activeThread.map((message) => {
+        const versionInfo = computeVersionInfo(message, chat!.messages);
+        return (
+          <ChatBubble
+            key={message.id}
+            message={message}
+            onEdit={onMessageEdit}
+            versionInfo={versionInfo}
+            onBranchChange={(versionIndex) => {
+              onBranchChange(message.id, versionIndex);
+            }}
+            width={
+              message.role === "user" ? userBubbleWidth : assistantBubbleWidth
+            }
+            maxWidth={
+              message.role === "user"
+                ? userBubbleMaxWidth
+                : assistantBubbleMaxWidth
+            }
+            backgroundColor={
+              message.role === "user" ? userBubbleBg : assistantBubbleBg
+            }
+            showName={showNames}
+          />
+        );
+      })}
     </div>
   );
 }
