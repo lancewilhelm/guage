@@ -231,7 +231,7 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="w-full flex flex-col gap-2 rounded-lg p-3"
+            className="flex flex-col gap-2 rounded-lg p-3"
             style={{ backgroundColor }}
           >
             <MessageContent content={editedContent} role={message.role} />
