@@ -9,6 +9,7 @@ export default function InputElement({
   onSave,
   autoSave = true,
   debounceTime = 500,
+  className,
 }: {
   type: string;
   title: string;
@@ -16,6 +17,7 @@ export default function InputElement({
   onSave: () => void;
   autoSave?: boolean;
   debounceTime?: number;
+  className?: string;
 }) {
   const [newValue, setNewValue] = useState(value);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,14 +46,14 @@ export default function InputElement({
   }, []);
 
   return (
-    <div>
+    <div className={`${className}`}>
       <div>{title}</div>
       <div className="flex items-center gap-2">
         <input
           type={type}
           value={newValue}
           onChange={handleChange}
-          className="w-[250px] border border-(--color-bg2) p-1 rounded"
+          className="w-[250px] border border-(--sub-color) p-1 rounded"
         />
         {!autoSave && newValue !== value && (
           <div className="flex gap-2">

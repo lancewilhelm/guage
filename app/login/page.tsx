@@ -2,13 +2,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { EB_Garamond } from "next/font/google";
 import { useSessionStore } from "@/store/sessionStore";
-
-const ebGaramond = EB_Garamond({
-  variable: "--font-eb-garamond-serif",
-  subsets: ["latin"],
-});
+import { poppins } from "@/utils/fonts";
 
 export default function Login() {
   const router = useRouter();
@@ -49,9 +44,9 @@ export default function Login() {
       >
         <Link href="/">
           <div
-            className={`text-7xl ${ebGaramond.className} mb-6 text-(--color-acc)`}
+            className={`text-7xl font-medium ${poppins.className} mb-6 text-(--main-color)`}
           >
-            Guage
+            guage
           </div>
         </Link>
         <form className="flex flex-col gap-2 items-center">
@@ -63,7 +58,7 @@ export default function Login() {
               value={form.email}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
-              className="border border-(--color-bg2) px-2 py-1 rounded text-[12pt] w-[250px]"
+              className="border border-(--sub-color) px-2 py-1 rounded text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -74,11 +69,11 @@ export default function Login() {
               value={form.password}
               onChange={handleChange}
               onKeyDown={handleKeyPress}
-              className="border border-(--color-bg2) px-2 py-1 rounded text-[12pt] w-[250px]"
+              className="border border-(--sub-color) px-2 py-1 rounded text-[12pt] w-[250px]"
             />
           </div>
           <button
-            className="bg-(--color-fg2) text-(--color-bg0) rounded px-2 py-1 cursor-pointer hover:opacity-80 active:opacity-60"
+            className="bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer hover:opacity-80 active:opacity-60"
             type="submit"
             onClick={handleLogin}
           >

@@ -22,7 +22,7 @@ export default function DropDownElement({
         onClick={() => setIsOpen(!isOpen)}
       >
         <div>{value}</div>
-        <AngleDownIcon fill="var(--color-fg2)" />
+        <AngleDownIcon fill="var(--main-color)" />
       </div>
       {isOpen && (
         <div className="flex flex-col gap-2">
@@ -31,7 +31,7 @@ export default function DropDownElement({
               return (
                 <div
                   key={option}
-                  className={`cursor-pointer hover:opacity-80 active:opacity-60 rounded p-1 ${value === option && "bg-(--color-bg2)"}`}
+                  className={`cursor-pointer hover:opacity-80 active:opacity-60 rounded p-1 ${value === option && "bg-(--sub-color)"}`}
                   onClick={() => {
                     onChange(option);
                     setIsOpen(false);

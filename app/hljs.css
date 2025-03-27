@@ -6,7 +6,7 @@
   Version: 2021.09.0
 */
 
-:root {
+:root:not(.dark-code) {
   --hljs-bg0: #fafafa; /* Default Background */
   --hljs-bg1: #eaeaeb; /* Lighter Background (Used for status bars, line number and folding marks) */
   --hljs-bg2: #d6d6d6; /* Selection Background */
@@ -25,30 +25,28 @@
   --hljs-wng: #c18401; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --hljs-bg0: #282c34; /* Default Background */
-    --hljs-bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
-    --hljs-bg2: #3e4451; /* Selection Background */
-    --hljs-bg3: #c8ccd4; /* Light Background (Not often used) */
-    --hljs-cmt: #545862; /* Comments, Invisibles, Line Highlighting */
-    --hljs-fg0: #565c64; /* Dark Foreground (Used for status bars) */
-    --hljs-fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
-    --hljs-fg2: #b6bdca; /* Light Foreground (Not often used) */
-    --hljs-red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
-    --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
-    --hljs-yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
-    --hljs-grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
-    --hljs-blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
-    --hljs-idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
-    --hljs-vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
-    --hljs-wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
-  }
+:root.dark-code {
+  --hljs-bg0: #282c34; /* Default Background */
+  --hljs-bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
+  --hljs-bg2: #3e4451; /* Selection Background */
+  --hljs-bg3: #c8ccd4; /* Light Background (Not often used) */
+  --hljs-cmt: #545862; /* Comments, Invisibles, Line Highlighting */
+  --hljs-fg0: #565c64; /* Dark Foreground (Used for status bars) */
+  --hljs-fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
+  --hljs-fg2: #b6bdca; /* Light Foreground (Not often used) */
+  --hljs-red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+  --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+  --hljs-yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
+  --hljs-grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
+  --hljs-blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
+  --hljs-idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
+  --hljs-vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
+  --hljs-wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
 }
 
 pre {
   position: relative;
-  background: var(--color-bg1);
+  background: var(--hljs-bg0);
   overflow-x: auto;
   padding: 10px;
   display: flex;
@@ -60,13 +58,9 @@ pre::after {
   width: 10px; /* Creates padding effect at the right */
 }
 
-pre ::-webkit-scrollbar-track {
-  background: var(--color-bg1);
-}
-
 .hljs {
   color: var(--hljs-fg1);
-  background: var(--color-bg1);
+  background: var(--hljs-bg0);
 }
 
 .hljs::selection,
@@ -79,6 +73,7 @@ pre ::-webkit-scrollbar-track {
 .hljs-formula,
 .hljs-params,
 .hljs-property {
+  color: inherit;
 }
 
 /* Comments, Invisibles, Line Highlighting */

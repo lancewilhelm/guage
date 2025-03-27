@@ -25,7 +25,7 @@ const SubmitButton = memo(
     onStop: () => void;
   }) => {
     const isDisabled = isLoading || (!hasInput && !isStreaming);
-    const buttonClasses = `input-button flex flex-shrink-0 items-center justify-center border rounded-full p-2 w-10 h-10 bg-(--color-fg0) text-(--color-bg0) ${isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}`;
+    const buttonClasses = `input-button flex flex-shrink-0 items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) ${isDisabled ? "cursor-default opacity-60" : "cursor-pointer hover:opacity-80 active:opacity-60"}`;
 
     const handleClick = () => {
       if (isStreaming) {
@@ -43,9 +43,9 @@ const SubmitButton = memo(
         aria-label={isStreaming ? "Stop" : "Send"}
       >
         {isStreaming ? (
-          <SquareRoundedIcon fill="var(--color-bg0)" />
+          <SquareRoundedIcon fill="var(--bg-color)" />
         ) : (
-          <UpArrowIcon fill="var(--color-bg0)" />
+          <UpArrowIcon fill="var(--bg-color)" />
         )}
       </button>
     );
@@ -152,11 +152,11 @@ const InputRow = forwardRef<
   return (
     <div
       ref={inputRowRef}
-      className="input-row col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 bg-(--color-bg1) border-2 border-(--color-bg2) rounded-xl mb-4"
+      className="input-row col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 border-2 border-(--sub-color) rounded-xl mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
     >
       <textarea
         ref={textareaRef}
-        className={`input-box rounded grow p-1 resize-none focus:outline-none ${disabled ? "bg-(--color-bg2)" : ""}`}
+        className={`input-box rounded grow p-1 resize-none focus:outline-none`}
         placeholder="Send a message..."
         disabled={disabled || isLoading}
         value={inputValue}

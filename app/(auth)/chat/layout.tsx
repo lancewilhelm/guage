@@ -242,7 +242,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
   ]);
 
   return (
-    <div className="grid h-full grid-rows-[40px_1fr_min-content] grid-cols-[auto_1fr]">
+    <div className="grid h-full grid-rows-[40px_1fr] grid-cols-[auto_1fr]">
       <div className="col-start-2">
         <Header
           isChatsButtonVisible={!showChatsPanel}
@@ -252,7 +252,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      <div className="col-start-1 row-start-1 row-span-3">
+      <div className="col-start-1 row-start-1 row-span-2">
         <ChatList
           chats={chatList}
           currentChatId={currentChatId}
@@ -283,48 +283,50 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      <div className="col-start-2 row-start-2 row-span-2 h-full w-full flex flex-col overflow-hidden">
+      <div className="col-start-2 row-start-2 h-full w-full flex flex-col overflow-hidden relative">
         <div
           ref={chatContainerRef}
-          className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container"
+          className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container pb-[calc(var(--input-row-height)+20px)]"
         >
           <div className="mx-auto w-full max-w-[1000px] px-5">{children}</div>
         </div>
         {showScrollToBottom && (
           <button
             onClick={handleScrollToBottom}
-            className="absolute bottom-[calc(35px+var(--input-row-height))] right-8 flex items-center justify-center bg-(--color-bg2) hover:bg-(--color-bg1) text-white rounded-full p-2 shadow-lg z-10 cursor-pointer w-10 h-10"
+            className="absolute bottom-[calc(var(--input-row-height)+50px)] right-6 flex items-center justify-center bg-(--sub-color) hover:opacity-80 text-white rounded-full p-2 shadow-lg z-20 cursor-pointer w-10 h-10"
             aria-label="Scroll to bottom"
           >
-            <AngleDownIcon fill="var(--color-fg0)" className="scale-125" />
+            <AngleDownIcon fill="var(--bg-color)" />
           </button>
         )}
-        <div className="mx-auto w-full max-w-[1000px]">
-          <InputRow
-            ref={inputRef}
-            submitHandler={() => {
-              inputRef.current?.clear();
-              shouldAutoScrollRef.current = true;
-              if (inputRef.current?.getValue()) {
-                handleSubmitMessage(inputRef.current.getValue(), router);
+        <div className="absolute bottom-0 left-0 right-0  pt-4 pb-4 z-10">
+          <div className="mx-auto w-full max-w-[1000px]">
+            <InputRow
+              ref={inputRef}
+              submitHandler={() => {
+                inputRef.current?.clear();
+                shouldAutoScrollRef.current = true;
+                if (inputRef.current?.getValue()) {
+                  handleSubmitMessage(inputRef.current.getValue(), router);
+                }
+              }}
+              stopHandler={() => {
+                const chatStore = useChatStore.getState();
+                if (
+                  currentChatId &&
+                  chatStore.chats[currentChatId]?.abortController !== undefined
+                ) {
+                  chatStore.chats[currentChatId]?.abortController.abort();
+                  chatStore.chats[currentChatId].abortController = undefined;
+                }
+              }}
+              isLoading={false}
+              isStreaming={
+                currentChatId !== undefined &&
+                useChatStore.getState().chats[currentChatId]?.isStreaming
               }
-            }}
-            stopHandler={() => {
-              const chatStore = useChatStore.getState();
-              if (
-                currentChatId &&
-                chatStore.chats[currentChatId]?.abortController !== undefined
-              ) {
-                chatStore.chats[currentChatId]?.abortController.abort();
-                chatStore.chats[currentChatId].abortController = undefined;
-              }
-            }}
-            isLoading={false}
-            isStreaming={
-              currentChatId !== undefined &&
-              useChatStore.getState().chats[currentChatId]?.isStreaming
-            }
-          />
+            />
+          </div>
         </div>
       </div>
     </div>

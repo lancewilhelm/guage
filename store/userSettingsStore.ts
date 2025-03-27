@@ -6,7 +6,11 @@ import { useSyncStore } from "./syncStore";
 export const useUserSettingsStore = create<UserSettingsState>()(
   persist(
     (set, get) => ({
-      settings: { darkMode: false },
+      settings: {
+        darkCode:
+          typeof window !== "undefined" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches,
+      },
       updatedAt: new Date(),
       updateSettings: (newSettings: Partial<UserSettings>) => {
         const updatedTimestamp = new Date();

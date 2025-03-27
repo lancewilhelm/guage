@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { geistSans } from "@/utils/fonts";
+import { cookies } from "next/headers";
+import { geist } from "@/utils/fonts";
 import "./globals.css";
 import "./hljs.css";
 
@@ -12,10 +13,26 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const theme = (await cookies()).get("theme")?.value;
+  let themeHref;
+  if (theme) {
+    themeHref = `/css/themes/${theme}.css`;
+  }
+
   return (
     <html lang="en">
-      <body className={`${geistSans.className}`}>{children}</body>
+      <head>
+        {theme && (
+          <link
+            id="currentTheme"
+            rel="stylesheet"
+            type="text/css"
+            href={themeHref}
+          />
+        )}
+      </head>
+      <body className={`${geist.className}`}>{children}</body>
     </html>
   );
 }

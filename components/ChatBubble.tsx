@@ -81,17 +81,17 @@ const VersionNavigation = memo(
     return (
       <div className="flex items-center gap-1">
         <AngleLeftIcon
-          fill="var(--color-acc)"
+          fill="var(--main-color)"
           className={`cursor-pointer ${
             versionInfo.currentIndex === 0 ? "opacity-50" : ""
           }`}
           onClick={handlePrevVersion}
         />
-        <div className="text-[var(--color-acc)]">
+        <div className="text-[var(--main-color)]">
           {versionInfo.currentIndex + 1} of {versionInfo.total}
         </div>
         <AngleRightIcon
-          fill="var(--color-acc)"
+          fill="var(--main-color)"
           className={`cursor-pointer ${
             versionInfo.currentIndex === versionInfo.total - 1
               ? "opacity-50"
@@ -241,7 +241,7 @@ function ChatBubble({
             className="flex flex-col gap-2 rounded-lg p-3"
             style={{ backgroundColor }}
           >
-            <BouncingDotsIcon fill="var(--color-fg0)" />
+            <BouncingDotsIcon fill="var(--text-color)" />
           </div>
         )}
         {!isEditing && (
@@ -259,13 +259,13 @@ function ChatBubble({
             {isCopied ? (
               <ThumbsUpIcon
                 fill={
-                  isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
+                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
                 }
               />
             ) : (
               <CopyIcon
                 fill={
-                  isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
+                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
                 }
                 className="cursor-pointer"
                 onMouseDown={(e) => {
@@ -277,7 +277,7 @@ function ChatBubble({
             )}
             <PencilIcon
               fill={
-                isButtonRowVisible ? "var(--color-acc)" : "var(--color-bg0)"
+                isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
               }
               className="cursor-pointer"
               onClick={handleEditClick}

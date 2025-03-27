@@ -5,32 +5,28 @@
   --content-max-width: 1500px;
   --transition: all 300ms ease;
   --border-radius: 8px;
-  --color-bg0: #dddddd; /* Main background color */
-  --color-bg1: #cccccc; /* Secondary background color, used for cards */
-  --color-bg2: #bbbbbb; /* Tertiary background color, used for borders */
-  --color-fg0: #1b1b1b; /* Main foreground color */
-  --color-fg1: #222222; /* Secondary foreground color */
-  --color-fg2: #303030; /* Tertiary foreground color */
-  --color-acc: #1b1b1b; /* Accent color */
+  --bg-color: #dddddd; /* Main background color */
+  --sub-color: #555555; /* Secondary background color, used for cards */
+  --sub-alt-color: #252525; /* Tertiary background color, used for borders */
+  --text-color: #1b1b1b; /* Main foreground color */
+  --main-color: #1b1b1b; /* Accent color */
   --color-yes: #008800;
   --color-no: #880000;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg0: #1b1b1b; /* Main background color */
-    --color-bg1: #222222; /* Secondary background color, used for cards */
-    --color-bg2: #303030; /* Tertiary background color, used for borders */
-    --color-fg0: #dddddd; /* Main foreground color */
-    --color-fg1: #cccccc; /* Secondary foreground color */
-    --color-fg2: #bbbbbb; /* Tertiary foreground color */
-    --color-acc: #dddddd; /* Accent color */
+    --bg-color: #1b1b1b; /* Main background color */
+    --sub-color: #555555; /* Secondary background color, used for cards */
+    --sub-alt-color: #252525; /* Tertiary background color, used for borders */
+    --text-color: #dddddd; /* Main foreground color */
+    --main-color: #dddddd; /* Accent color */
   }
 }
 
 body {
-  background: var(--color-bg0);
-  color: var(--color-fg0);
+  background: var(--bg-color);
+  color: var(--text-color);
 }
 
 h1 {
@@ -132,13 +128,13 @@ textarea:focus {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg2);
+  background: var(--main-color);
   border-radius: 10px;
-  border: 5px solid var(--color-bg0);
+  border: 5px solid var(--bg-color);
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg0);
+  background: var(--bg-color);
 }
 
 .input-row textarea::-webkit-scrollbar-track {

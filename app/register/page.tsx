@@ -1,14 +1,8 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { EB_Garamond } from "next/font/google";
-
-const ebGaramond = EB_Garamond({
-  variable: "--font-eb-garamond-serif",
-  subsets: ["latin"],
-});
+import { poppins } from "@/utils/fonts";
 
 export default function Register() {
   const router = useRouter();
@@ -55,7 +49,7 @@ export default function Register() {
       <div className="flex flex-col items-center justify-center row-start-[content-start] col-start-[content-start]">
         <Link href="/">
           <div
-            className={`text-7xl ${ebGaramond.className} mb-6 text-(--color-acc)`}
+            className={`text-7xl font-medium ${poppins.className} mb-6 text-(--main-color)`}
           >
             Guage
           </div>
@@ -68,7 +62,7 @@ export default function Register() {
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="border border-(--color-bg2) rounded px-2 py-1 text-[12pt] w-[250px]"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -78,7 +72,7 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
-              className="border border-(--color-bg2) rounded px-2 py-1 text-[12pt] w-[250px]"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
           <div>
@@ -88,13 +82,13 @@ export default function Register() {
               name="confirmPassword"
               value={form.confirmPassword}
               onChange={handleChange}
-              className="border border-(--color-bg2) rounded px-2 py-1 text-[12pt] w-[250px]"
+              className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
           {error && <div className="text-red-500 text-[12pt]">{error}</div>}
           <button
             onClick={handleRegister}
-            className="bg-(--color-acc) text-(--color-bg0) rounded px-2 py-1"
+            className="bg-(--main-color) text-(--bg-color) rounded px-2 py-1"
           >
             register
           </button>

@@ -14,7 +14,7 @@ export interface GlobalSettingsState {
 }
 
 export interface UserSettings {
-  darkMode: boolean;
+  darkCode: boolean;
 }
 
 export interface UserSettingsState {

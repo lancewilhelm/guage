@@ -44,8 +44,8 @@ export default function ChatBox({
   userBubbleMaxWidth = "75%",
   assistantBubbleWidth = "100%",
   assistantBubbleMaxWidth,
-  userBubbleBg = "var(--color-bg2)",
-  assistantBubbleBg = "var(--color-bg0)",
+  userBubbleBg = "var(--sub-alt-color)",
+  assistantBubbleBg = "var(--bg-color)",
   showNames = false,
 }: {
   isChatLoaded?: boolean;

@@ -46,7 +46,7 @@ export default function ChatListItem({
 
   return (
     <div
-      className={`flex gap-1.5 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
+      className={`flex gap-1.5 justify-between items-center rounded-lg p-1.5 cursor-pointer ${currentChatSessionId === chat.id && "bg-(--bg-color)"}`}
       onMouseEnter={() => setIsMenuButtonVisible(true)}
       onMouseLeave={() => setIsMenuButtonVisible(false)}
       onMouseDown={() => setCurrentChatSessionId(chat.id)}
@@ -77,7 +77,7 @@ export default function ChatListItem({
               {newTitle}
             </div>
             {chat.isStreaming && (
-              <DotsSpinnerIcon fill="var(--color-fg0)" className="scale-120" />
+              <DotsSpinnerIcon fill="var(--text-color)" className="scale-120" />
             )}
           </div>
         )}
@@ -111,10 +111,10 @@ export default function ChatListItem({
         <DropDownMenu>
           <DropDownMenuButton>
             {isMenuButtonVisible ? (
-              <DotsIcon fill="var(--color-acc)" className="scale-125" />
+              <DotsIcon fill="var(--main-color)" className="scale-125" />
             ) : (
               <DotsIcon
-                fill={`${currentChatSessionId === chat.id && "bg-(--color-bg2)"}`}
+                fill={`${currentChatSessionId === chat.id && "bg-(--sub-color)"}`}
               />
             )}
           </DropDownMenuButton>
@@ -125,9 +125,9 @@ export default function ChatListItem({
             >
               <div className="grid grid-cols-[20px_auto] items-center ">
                 {chat.pinned ? (
-                  <ThumbtackSlashIcon fill="var(--color-acc)" />
+                  <ThumbtackSlashIcon fill="var(--main-color)" />
                 ) : (
-                  <ThumbtackIcon fill="var(--color-acc)" />
+                  <ThumbtackIcon fill="var(--main-color)" />
                 )}
                 {chat.pinned ? "Unpin" : "Pin"}
               </div>
@@ -143,7 +143,7 @@ export default function ChatListItem({
               }}
             >
               <div className="grid grid-cols-[20px_auto] items-center ">
-                <PencilIcon fill="var(--color-acc)" />
+                <PencilIcon fill="var(--main-color)" />
                 Rename
               </div>
             </DropDownMenuItem>

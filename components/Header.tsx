@@ -23,7 +23,7 @@ export default function Header({
         {isChatsButtonVisible && (
           <div className="flex gap-4">
             <TableListIcon
-              fill="var(--color-acc)"
+              fill="var(--main-color)"
               className="cursor-pointer"
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -32,7 +32,7 @@ export default function Header({
               }}
             />
             <PlusIcon
-              fill="var(--color-acc)"
+              fill="var(--main-color)"
               className="cursor-pointer"
               onClick={createChat}
             />

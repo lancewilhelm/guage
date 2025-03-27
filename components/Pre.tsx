@@ -1,8 +1,9 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import { PropsWithChildren } from "react";
+import { useUserSettingsStore } from "@/store/userSettingsStore";
 
 interface PreProps extends PropsWithChildren {
   node?: { children: { properties: { className: string[] } }[] } | undefined;
@@ -16,6 +17,27 @@ export default function Pre({ children, ...props }: PreProps) {
     "language-",
     "",
   );
+  const { settings } = useUserSettingsStore();
+
+  useEffect(() => {
+    const preElement = preRef.current;
+    if (preElement) {
+      // Apply theme-specific classes
+      if (settings.darkCode) {
+        preElement.classList.remove("light-code");
+        preElement.classList.add("dark-code");
+        // Remove any theme-specific classes
+        document.documentElement.classList.add("dark-code");
+        document.documentElement.classList.remove("light-code");
+      } else {
+        preElement.classList.remove("dark-code");
+        preElement.classList.add("light-code");
+        // Add the light-code class to root
+        document.documentElement.classList.add("light-code");
+        document.documentElement.classList.remove("dark-code");
+      }
+    }
+  }, [settings.darkCode]); // Add dependency to prevent unnecessary rerenders
 
   function copyCode() {
     if (!preRef.current) return;
@@ -27,29 +49,29 @@ export default function Pre({ children, ...props }: PreProps) {
   }
 
   return (
-    <div className="flex flex-col my-[10px] sm:m-[10px] shadow">
+    <div className="flex flex-col my-[10px] sm:m-[10px] code">
       <div className="flex flex-col">
         <div className="grid grid-cols-[min-content_max-content_minmax(0,auto)_min-content] text-sm font-mono">
           {language && (
             <div
-              className={`bg-(--color-bg1) text-(--color-fg0) border-b border-(--color-bg2) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
+              className={`bg-(--bg-alt-color) text-(--text-color) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
             >
               {language}
             </div>
           )}
           <div
-            className="flex justify-center w-[30px] items-center bg-(--color-bg1) border-b border-(--color-bg2) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
+            className="flex justify-center w-[30px] items-center bg-(--bg-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
             onClick={copyCode}
           >
             {copied ? (
-              <ThumbsUpIcon fill="var(--color-fg0)" />
+              <ThumbsUpIcon fill="var(--text-color)" />
             ) : (
-              <CopyIcon fill="var(--color-fg0)" />
+              <CopyIcon fill="var(--text-color)" />
             )}
           </div>
         </div>
       </div>
-      <pre ref={preRef} style={props.style} className="rounded-b">
+      <pre ref={preRef} style={props.style} className="rounded-b shadow">
         {children}
       </pre>
     </div>

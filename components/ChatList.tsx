@@ -8,13 +8,15 @@ import { ChatItem } from "@/app/(auth)/chat/layout";
 
 function ChatListGroupTitle({ title }: { title: string }) {
   return (
-    <div className="flex w-full items-center justify-center text-center text-sm font-thin text-(--color-fg2) mb-1">
-      <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
+    <div className="flex w-full items-center justify-center text-center text-sm font-thin text-(--text-color) mb-1">
+      <span className="w-full h-[1px] bg-(--main-color) opacity-50 mx-2" />
       {title === "Pinned" && (
-        <ThumbtackIcon fill="var(--color-acc)" className="scale-300 mr-2" />
+        <ThumbtackIcon fill="var(--main-color)" className="scale-300 mr-2" />
       )}
-      <div className="flex justify-center text-nowrap">{title}</div>
-      <span className="w-full h-[1px] bg-(--color-bg2) mx-2" />
+      <div className="flex justify-center text-nowrap text-(--sub-color)">
+        {title}
+      </div>
+      <span className="w-full h-[1px] bg-(--main-color) opacity-50 mx-2" />
     </div>
   );
 }
@@ -113,7 +115,9 @@ export default function ChatsPanel({
   }, [chats]);
 
   return (
-    <div className={`h-full bg-(--color-bg1) ${isVisible ? "flex" : "hidden"}`}>
+    <div
+      className={`h-full bg-(--sub-alt-color) ${isVisible ? "flex" : "hidden"}`}
+    >
       <div
         className="flex justify-center p-2 overflow-hidden"
         style={{ width: sessionPanelWidth }}
@@ -121,18 +125,18 @@ export default function ChatsPanel({
         <div className="flex flex-col w-full items-center gap-2">
           <div className="flex w-full items-center px-2">
             <TableListIcon
-              fill="var(--color-acc)"
+              fill="var(--main-color)"
               className="cursor-pointer"
               onMouseDown={() => setIsVisibleAction(false)}
             />
             <div className="grow text-center">Chats</div>
             <PlusIcon
-              fill="var(--color-acc)"
+              fill="var(--main-color)"
               className="cursor-pointer"
               onClick={createAction}
             />
           </div>
-          <div className="w-full h-[1px] bg-(--color-bg2)" />
+          <div className="w-full h-[1px] bg-(--main-color) opacity-50" />
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
             {Object.keys(sortedChats).map((key) => {
@@ -167,8 +171,8 @@ export default function ChatsPanel({
         }}
       >
         {/* Some trickery to create a 1px border with a wide hover range*/}
-        <div className="w-[3px] bg-(--color-bg1)" />
-        <div className="w-[3px] bg-(--color-bg0)" />
+        <div className="w-[3px] bg-(--sub-alt-color)" />
+        <div className="w-[3px] bg-(--bg-color)" />
       </div>
     </div>
   );
