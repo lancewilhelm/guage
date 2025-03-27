@@ -286,7 +286,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
       <div className="col-start-2 row-start-2 h-full w-full flex flex-col overflow-hidden relative">
         <div
           ref={chatContainerRef}
-          className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container pb-[calc(var(--input-row-height)+20px)]"
+          className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container "
         >
           <div className="mx-auto w-full max-w-[1000px] px-5">{children}</div>
         </div>
@@ -299,7 +299,7 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
             <AngleDownIcon fill="var(--bg-color)" />
           </button>
         )}
-        <div className="absolute bottom-0 left-0 right-0  pt-4 pb-4 z-10">
+        <div className="absolute bottom-0 left-0 right-0 pt-4 pb-4 z-10">
           <div className="mx-auto w-full max-w-[1000px]">
             <InputRow
               ref={inputRef}
