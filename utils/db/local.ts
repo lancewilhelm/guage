@@ -177,6 +177,15 @@ export async function dbRetrieveChats() {
 }
 
 /**
+ * Retrieve a chat from the local database by ID.
+ * @param chatId The ID of the chat to retrieve.
+ * @returns Promise that resolves with the chat.
+ */
+export async function dbRetrieveChat(chatId: string) {
+  return await localDb.chatsTable.get(chatId);
+}
+
+/**
  * Mark a chat as deleted in the local database.
  * @param chatId The ID of the chat to mark as deleted.
  * @returns Promise that resolves when the operation is complete.
