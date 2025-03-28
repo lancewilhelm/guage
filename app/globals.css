@@ -7,7 +7,7 @@
   --border-radius: 8px;
   --bg-color: #dddddd; /* Main background color */
   --sub-color: #555555; /* Secondary background color, used for cards */
-  --sub-alt-color: #252525; /* Tertiary background color, used for borders */
+  --sub-alt-color: #cccccc; /* Tertiary background color, used for borders */
   --text-color: #1b1b1b; /* Main foreground color */
   --main-color: #1b1b1b; /* Accent color */
   --color-yes: #008800;

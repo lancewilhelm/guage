@@ -1146,5 +1146,19 @@
     "mainColor": "#5a65ea",
     "subColor": "#565861",
     "textColor": "#dcdee3"
+  },
+  {
+    "name": "guage_dark",
+    "bgColor": "#1b1b1b",
+    "mainColor": "#dddddd",
+    "subColor": "#555555",
+    "textColor": "#dddddd"
+  },
+  {
+    "name": "guage_light",
+    "bgColor": "#dddddd",
+    "mainColor": "#1b1b1b",
+    "subColor": "#555555",
+    "textColor": "#1b1b1b"
   }
 ]
