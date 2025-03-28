@@ -1,8 +1,22 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useSessionStore } from "./sessionStore";
-import { GlobalSettings, GlobalSettingsState } from "./settingsTypes";
 import { useSyncStore } from "./syncStore";
+
+export interface GlobalSettings {
+  defaultModel: string;
+}
+
+export interface GlobalSettingsState {
+  settings: GlobalSettings;
+  isSynced: boolean;
+  updatedAt: Date;
+  updateSettings: (newSettings: Partial<GlobalSettings>) => void;
+  updateFromSync: (syncedData: {
+    settings: GlobalSettings;
+    updatedAt: Date;
+  }) => void;
+}
 
 // Helper to check admin permissions
 const isAdmin = (): boolean => {

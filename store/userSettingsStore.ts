@@ -1,16 +1,33 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { UserSettings, UserSettingsState } from "./settingsTypes";
 import { useSyncStore } from "./syncStore";
+
+export interface UserSettings {
+  darkCode: boolean;
+  favoriteThemes: string[];
+}
+
+export interface UserSettingsState {
+  settings: UserSettings;
+  updatedAt: Date;
+  updateSettings: (newSettings: Partial<UserSettings>) => void;
+  updateFromSync: (syncedData: {
+    settings: UserSettings;
+    updatedAt: Date;
+  }) => void;
+}
+
+const defaultSettings: UserSettings = {
+  darkCode:
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches,
+  favoriteThemes: [],
+};
 
 export const useUserSettingsStore = create<UserSettingsState>()(
   persist(
     (set, get) => ({
-      settings: {
-        darkCode:
-          typeof window !== "undefined" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches,
-      },
+      settings: defaultSettings,
       updatedAt: new Date(),
       updateSettings: (newSettings: Partial<UserSettings>) => {
         const updatedTimestamp = new Date();

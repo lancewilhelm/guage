@@ -3,6 +3,8 @@ import themesList from "@/public/themes.json";
 import { useTheme } from "@/hooks/useTheme";
 import ColorSamplesIcon from "@/components/Icon/ColorSamples";
 import AToZIcon from "@/components/Icon/AToZ";
+import StarEmptyIcon from "@/components/Icon/StarEmpty";
+import StarFilledIcon from "@/components/Icon/StarFilled";
 import ToggleElement from "@/components/Settings/ToggleElement";
 import { useUserSettingsStore } from "@/store/userSettingsStore";
 
@@ -39,14 +41,19 @@ function ThemeCard({
   theme,
   onThemeSelect,
   isActiveTheme,
+  isFavorite,
 }: {
   theme: Theme;
   onThemeSelect: (theme: string) => void;
   isActiveTheme: boolean;
+  isFavorite: boolean;
 }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { settings: userSettings, updateSettings: updateUserSettings } =
+    useUserSettingsStore();
   return (
     <div
-      className={`grid grid-cols-[1fr_auto] justify-center cursor-pointer px-2 rounded-full border-2`}
+      className={`grid grid-cols-[1fr_auto_auto] justify-center items-center cursor-pointer px-2 rounded-full border-2`}
       style={
         {
           background: theme.bgColor,
@@ -55,9 +62,11 @@ function ThemeCard({
         } as React.CSSProperties
       }
       onMouseOver={(e) => {
+        setIsHovered(true);
         e.currentTarget.style.borderColor = theme.mainColor;
       }}
       onMouseOut={(e) => {
+        setIsHovered(false);
         e.currentTarget.style.borderColor = isActiveTheme
           ? theme.mainColor
           : theme.bgColor;
@@ -67,6 +76,33 @@ function ThemeCard({
       <div className="flex text-sm items-center font-bold font-mono">
         <div className={`px-2 py-1 rounded-full`}>{theme.name}</div>
       </div>
+      {isFavorite ? (
+        <StarFilledIcon
+          fill={theme.textColor}
+          className={`mr-1 ${isHovered || isFavorite ? "block" : "hidden"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            updateUserSettings({
+              favoriteThemes: userSettings.favoriteThemes.filter(
+                (t) => t !== theme.name,
+              ),
+            });
+          }}
+        />
+      ) : (
+        <StarEmptyIcon
+          fill={theme.textColor}
+          className={`mr-1 ${isHovered ? "block" : "hidden"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            updateUserSettings({
+              favoriteThemes: [...userSettings.favoriteThemes, theme.name],
+            });
+          }}
+        />
+      )}
       <div
         className={`grid grid-cols-3 gap-1 items-center justify-center p-[5px]`}
       >
@@ -123,11 +159,40 @@ export default function ThemePage() {
           </div>
         </div>
       </div>
+      <div>
+        <div className="mb-2">Favorites</div>
+        <div className="grid grid-cols-2 gap-2">
+          {(sortByColor
+            ? themes
+                .filter((theme) =>
+                  userSettings.favoriteThemes?.includes(theme.name),
+                )
+                .sort(
+                  (a, b) =>
+                    hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
+                )
+            : themes.sort((a, b) => a.name.localeCompare(b.name))
+          ).map((theme) => (
+            <ThemeCard
+              key={theme.name}
+              theme={theme}
+              onThemeSelect={(theme) => setCurrentTheme(theme)}
+              isActiveTheme={theme.name === currentTheme}
+              isFavorite={true}
+            />
+          ))}
+        </div>
+      </div>
+      <hr className="border-(--sub-color)" />
       <div className="grid grid-cols-2 gap-2">
         {(sortByColor
-          ? themes.sort(
-              (a, b) => hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
-            )
+          ? themes
+              .filter(
+                (theme) => !userSettings.favoriteThemes?.includes(theme.name),
+              )
+              .sort(
+                (a, b) => hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
+              )
           : themes.sort((a, b) => a.name.localeCompare(b.name))
         ).map((theme) => (
           <ThemeCard
@@ -135,6 +200,7 @@ export default function ThemePage() {
             theme={theme}
             onThemeSelect={(theme) => setCurrentTheme(theme)}
             isActiveTheme={theme.name === currentTheme}
+            isFavorite={false}
           />
         ))}
       </div>

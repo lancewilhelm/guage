@@ -1,4 +1,3 @@
-import "dotenv/config";
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { InsertMessage, messagesTable } from "@/utils/db/schema";
@@ -18,8 +17,6 @@ export async function POST(req: Request) {
     const { unsyncedMessages }: { unsyncedMessages: InsertMessage[] } =
       await req.json();
     logger.debug("POST /api/messages: Syncing messages", unsyncedMessages);
-
-    const isPostgres = !!process.env.DATABASE_URL;
 
     unsyncedMessages.forEach((msg) => {
       msg.userId = session.user.id;
