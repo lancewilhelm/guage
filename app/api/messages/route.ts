@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { InsertMessage, messagesTable } from "@/utils/db/schema";
@@ -18,10 +19,12 @@ export async function POST(req: Request) {
       await req.json();
     logger.debug("POST /api/messages: Syncing messages", unsyncedMessages);
 
+    const isPostgres = !!process.env.DATABASE_URL;
+
     unsyncedMessages.forEach((msg) => {
       msg.userId = session.user.id;
-      msg.createdAt = new Date(msg.createdAt);
-      msg.updatedAt = new Date(msg.updatedAt);
+      msg.createdAt = new Date(msg.createdAt ? msg.createdAt : new Date());
+      msg.updatedAt = new Date(msg.updatedAt ? msg.updatedAt : new Date());
     });
 
     // Bulk upsert messages

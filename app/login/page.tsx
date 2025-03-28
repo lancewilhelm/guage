@@ -74,7 +74,7 @@ export default function Login() {
           </div>
           <button
             className="bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer hover:opacity-80 active:opacity-60"
-            type="submit"
+            type="button"
             onClick={handleLogin}
           >
             login

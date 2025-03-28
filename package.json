@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "prebuild": "node prebuild.js",
+    "dev": "pnpm prebuild && next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -13,7 +14,9 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.1",
     "@next/eslint-plugin-next": "^15.2.4",
+    "@types/better-sqlite3": "^7.6.12",
     "@types/uuid": "^10.0.0",
     "bcryptjs": "^3.0.2",
     "dexie": "^4.0.11",

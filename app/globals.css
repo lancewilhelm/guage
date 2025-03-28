@@ -21,6 +21,7 @@
     --sub-alt-color: #252525; /* Tertiary background color, used for borders */
     --text-color: #dddddd; /* Main foreground color */
     --main-color: #dddddd; /* Accent color */
+    --error-color: #880000; /* Error color */
   }
 }
 

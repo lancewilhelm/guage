@@ -1,1 +1,0 @@
-ALTER TABLE "messages" DROP COLUMN "thread_path";

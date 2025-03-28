@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     id: user[0].id,
     email: user[0].email,
     name: user[0].name,
-    role: user[0].role,
+    role: user[0].role as "admin" | "user",
   });
 
   logger.info("POST /api/login: Login successful");

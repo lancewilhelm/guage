@@ -1,8 +1,8 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
-import { InsertChat, chatsTable } from "@/utils/db/schema";
+import { chatsTable, InsertChat } from "@/utils/db/schema.sqlite";
 import { getSession } from "@/utils/auth";
-import { cloudDb } from "@/utils/db/cloud";
+import { cloudDb } from "@/utils/db/cloud.sqlite";
 import { sql } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -19,8 +19,8 @@ export async function POST(req: Request) {
 
     unsyncedChats.forEach((chat) => {
       chat.userId = session.user.id;
-      chat.createdAt = new Date(chat.createdAt);
-      chat.updatedAt = new Date(chat.updatedAt);
+      chat.createdAt = chat.createdAt;
+      chat.updatedAt = chat.updatedAt;
     });
 
     // Bulk upsert chats
