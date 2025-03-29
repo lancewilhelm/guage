@@ -171,7 +171,11 @@ export default function ThemePage() {
                   (a, b) =>
                     hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
                 )
-            : themes.sort((a, b) => a.name.localeCompare(b.name))
+            : themes
+                .filter((theme) =>
+                  userSettings.favoriteThemes?.includes(theme.name),
+                )
+                .sort((a, b) => a.name.localeCompare(b.name))
           ).map((theme) => (
             <ThemeCard
               key={theme.name}
@@ -193,7 +197,11 @@ export default function ThemePage() {
               .sort(
                 (a, b) => hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
               )
-          : themes.sort((a, b) => a.name.localeCompare(b.name))
+          : themes
+              .filter(
+                (theme) => !userSettings.favoriteThemes?.includes(theme.name),
+              )
+              .sort((a, b) => a.name.localeCompare(b.name))
         ).map((theme) => (
           <ThemeCard
             key={theme.name}
