@@ -54,13 +54,13 @@ export default function Pre({ children, ...props }: PreProps) {
         <div className="grid grid-cols-[min-content_max-content_minmax(0,auto)_min-content] text-sm font-mono">
           {language && (
             <div
-              className={`bg-(--bg-alt-color) text-(--text-color) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
+              className={`bg-(--sub-alt-color) text-(--text-color) p-[5px] rounded-tl-(--border-radius) col-start-1 italic rounded-tr-(--border-radius)`}
             >
               {language}
             </div>
           )}
           <div
-            className="flex justify-center w-[30px] items-center bg-(--bg-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
+            className="flex justify-center w-[30px] items-center bg-(--sub-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
             onClick={copyCode}
           >
             {copied ? (

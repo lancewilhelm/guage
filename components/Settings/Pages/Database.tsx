@@ -21,11 +21,11 @@ export default function DatabasePage() {
       <div className="flex flex-col gap-2 justify-center items-center">
         <div className="flex gap-4">
           <div className="flex flex-col gap-1 items-center">
-            <div className="text-5xl">{stats?.chatCount}</div>
+            <div className="text-5xl">{stats?.chatCount ?? 0}</div>
             <div className="text-lg">Chats</div>
           </div>
           <div className="flex flex-col gap-1 items-center">
-            <div className="text-5xl">{stats?.messageCount}</div>
+            <div className="text-5xl">{stats?.messageCount ?? 0}</div>
             <div className="text-lg">Messages</div>
           </div>
         </div>
