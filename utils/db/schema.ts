@@ -1,9 +1,4 @@
-import {
-  sqliteTable,
-  text,
-  integer,
-  AnySQLiteColumn,
-} from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -52,12 +47,7 @@ export const messagesTable = sqliteTable("messages", {
   userId: text("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  parentId: text("parent_id").references(
-    (): AnySQLiteColumn => messagesTable.id,
-    {
-      onDelete: "cascade",
-    },
-  ),
+  parentId: text("parent_id"),
   childrenIds: text("children_ids", { mode: "json" }), // JSON array
   content: text("content").notNull(),
   role: text("role").notNull(),

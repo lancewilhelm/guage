@@ -1,9 +1,10 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
-import { chatsTable, InsertChat } from "@/utils/db/schema.sqlite";
+import { chatsTable, InsertChat } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
-import { cloudDb } from "@/utils/db/cloud.sqlite";
+import { cloudDb } from "@/utils/db/cloud";
 import { sql } from "drizzle-orm";
+import { coerceDate } from "@/utils/date";
 
 export async function POST(req: Request) {
   logger.debug("POST /api/chats");
@@ -15,12 +16,12 @@ export async function POST(req: Request) {
     }
 
     const { unsyncedChats }: { unsyncedChats: InsertChat[] } = await req.json();
-    logger.debug("POST /api/messages: Syncing messages", unsyncedChats);
+    logger.debug(unsyncedChats, "POST /api/chats: Syncing chats");
 
     unsyncedChats.forEach((chat) => {
       chat.userId = session.user.id;
-      chat.createdAt = chat.createdAt;
-      chat.updatedAt = chat.updatedAt;
+      chat.createdAt = coerceDate(chat.createdAt);
+      chat.updatedAt = coerceDate(chat.updatedAt);
     });
 
     // Bulk upsert chats
@@ -39,10 +40,10 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    logger.debug("POST /api/chats: Synced chats", result);
+    logger.debug(result, "POST /api/chats: Synced chats");
     return NextResponse.json({ success: true, result });
   } catch (error) {
-    logger.error("Error bulk syncing chats:", error);
+    logger.error(error, "Error bulk syncing chats:");
     return NextResponse.json({ success: false, error: "Unknown error" });
   }
 }

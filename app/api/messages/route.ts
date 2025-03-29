@@ -4,6 +4,7 @@ import { InsertMessage, messagesTable } from "@/utils/db/schema";
 import { getSession } from "@/utils/auth";
 import { cloudDb } from "@/utils/db/cloud";
 import { sql } from "drizzle-orm";
+import { coerceDate } from "@/utils/date";
 
 export async function POST(req: Request) {
   logger.info("POST /api/messages");
@@ -20,8 +21,8 @@ export async function POST(req: Request) {
 
     unsyncedMessages.forEach((msg) => {
       msg.userId = session.user.id;
-      msg.createdAt = new Date(msg.createdAt ? msg.createdAt : new Date());
-      msg.updatedAt = new Date(msg.updatedAt ? msg.updatedAt : new Date());
+      msg.createdAt = coerceDate(msg.createdAt);
+      msg.updatedAt = coerceDate(msg.updatedAt);
     });
 
     // Bulk upsert messages

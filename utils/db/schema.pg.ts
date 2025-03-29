@@ -6,7 +6,6 @@ import {
   boolean,
   uuid,
   jsonb,
-  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { sql } from "drizzle-orm";
@@ -24,9 +23,7 @@ export const usersTable = pgTable("users", {
   role: text("role", { enum: ["user", "admin"] })
     .default("user")
     .notNull(),
-  createdAt: timestamp("created_at", { mode: "date" })
-    .default(sql`now()`)
-    .notNull(),
+  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
 });
 
 export const chatsTable = pgTable("chats", {
@@ -58,9 +55,7 @@ export const messagesTable = pgTable("messages", {
   userId: uuid("user_id")
     .notNull()
     .references(() => usersTable.id, { onDelete: "cascade" }),
-  parentId: uuid("parent_id").references((): AnyPgColumn => messagesTable.id, {
-    onDelete: "cascade",
-  }), // Self-referencing for branching
+  parentId: uuid("parent_id"),
   childrenIds: uuid("children_ids").array(),
   content: text("content").notNull(),
   role: text("role").notNull(), // "user" or "assistant"
@@ -71,7 +66,7 @@ export const messagesTable = pgTable("messages", {
 
 // USER SETTINGS TABLE
 export const userSettings = pgTable("user_settings", {
-  userId: uuid("user_id").primaryKey().unique(),
+  userId: uuid("user_id").primaryKey(),
   settings: jsonb("settings")
     .notNull()
     .default(sql`'{}'`),
