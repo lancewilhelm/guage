@@ -290,17 +290,19 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
         >
           <div className="mx-auto w-full max-w-[1000px] px-5">{children}</div>
         </div>
-        {showScrollToBottom && (
-          <button
-            onClick={handleScrollToBottom}
-            className="absolute bottom-[calc(var(--input-row-height)+50px)] right-6 flex items-center justify-center bg-(--sub-color) hover:opacity-80 text-white rounded-full p-2 shadow-lg z-20 cursor-pointer w-10 h-10"
-            aria-label="Scroll to bottom"
-          >
-            <AngleDownIcon fill="var(--bg-color)" />
-          </button>
-        )}
         <div className="absolute bottom-0 left-0 right-0 pt-4 pb-4 z-10">
           <div className="mx-auto w-full max-w-[1000px]">
+            {showScrollToBottom && (
+              <div className="flex py-4 px-6 justify-end">
+                <button
+                  onClick={handleScrollToBottom}
+                  className="flex items-center justify-center bg-(--sub-color) hover:opacity-80 text-white rounded-full p-2 shadow-lg z-20 cursor-pointer w-10 h-10"
+                  aria-label="Scroll to bottom"
+                >
+                  <AngleDownIcon fill="var(--bg-color)" />
+                </button>
+              </div>
+            )}
             <InputRow
               ref={inputRef}
               submitHandler={() => {
