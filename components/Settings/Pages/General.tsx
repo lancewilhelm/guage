@@ -1,4 +1,6 @@
+"use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSessionStore } from "@/store/sessionStore";
 import InputElement from "@/components/Settings/InputElement";
 import { dbNuke, dbResetSyncStatus } from "@/utils/db/local";
@@ -26,6 +28,7 @@ export default function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { resetChatStore } = useChatStore();
   const { sync, lastSyncTime } = useSyncStore();
+  const router = useRouter();
 
   return (
     <div className="flex flex-col gap-2">
@@ -126,7 +129,8 @@ export default function ProfilePage() {
               dbNuke();
               nukeCloudDb();
               resetChatStore();
-              window.location.reload();
+              router.push("/chat");
+              // window.location.reload();
             }
           }}
           className="flex items-center gap-2 w-min bg-(--error-color) text-(--bg-color) p-2 rounded cursor-pointer hover:opacity-80 active:opacity-60"

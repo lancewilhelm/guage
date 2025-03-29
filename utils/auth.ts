@@ -47,7 +47,8 @@ export async function getSession(): Promise<Session | null> {
   const token = (await cookies()).get("guage_token")?.value;
   if (!token) return null;
   try {
-    return jwt.verify(token, SECRET) as Session;
+    const session = jwt.verify(token, SECRET) as Session;
+    return session;
   } catch (error) {
     logger.error("Error verifying session token:", error);
     return null;

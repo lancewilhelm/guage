@@ -103,7 +103,9 @@ export default function Chat() {
         setCurrentChatId(chatId);
 
         // Update the page title
-        document.title = `${chats[chatId].title} | Guage`;
+        document.title = chats[chatId]?.title
+          ? `${chats[chatId].title} | Guage`
+          : "Chat | Guage";
 
         // Load messages for this chat
         await loadMessages(chatId);

@@ -133,7 +133,6 @@ function ChatBubble({
   const { session } = useSessionStore();
 
   const handleCopy = useCallback(() => {
-    logger.debug("Copying message to clipboard");
     if (!contentRef.current) return;
     navigator.clipboard.writeText(contentRef.current.innerText);
     setIsCopied(true);

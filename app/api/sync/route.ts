@@ -96,15 +96,7 @@ export async function GET(req: Request) {
       global,
     };
 
-    logger.debug(
-      {
-        sinceDate,
-        messages,
-        chats,
-        settings,
-      },
-      "GET /api/sync: Returning messages, chats, and settings",
-    );
+    logger.debug("GET /api/sync: Returning messages, chats, and settings");
 
     console.log("Updated settings from cloud:", settings);
     return NextResponse.json({ messages, chats, settings });

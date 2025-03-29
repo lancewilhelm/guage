@@ -34,8 +34,6 @@ export async function POST(req: Request) {
     });
   }
 
-  logger.debug({ history, userMessage }, "POST /api/llm: Request body");
-
   try {
     logger.debug(
       { userId, chatId: chatId, userMessage },
@@ -46,11 +44,6 @@ export async function POST(req: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          // Start the OpenAI completion
-          logger.debug(
-            { history, userMessage },
-            "POST /api/llm: Starting OpenAI completion",
-          );
           const messages = history.concat([userMessage]);
           const params: OpenAI.Chat.ChatCompletionCreateParams = {
             messages: messages.map((m) => ({
@@ -65,7 +58,6 @@ export async function POST(req: Request) {
           // Now handle the completion chunks from LLM service
           for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
             const text = chunk.choices[0]?.delta?.content || "";
-            logger.debug({ text }, "POST /api/llm: Streaming response");
             controller.enqueue(
               encoder.encode(
                 `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,

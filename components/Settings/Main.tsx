@@ -4,12 +4,18 @@ import XMarkIcon from "@/components/Icon/XMark";
 import GeneralPage from "@/components/Settings/Pages/General";
 import ModelsPage from "@/components/Settings/Pages/Models";
 import ThemePage from "@/components/Settings/Pages/Theme";
+import DatabasePage from "@/components/Settings/Pages/Database";
 import { useSessionStore } from "@/store/sessionStore";
 
 const settingsPages = {
   profile: { name: "General", component: <GeneralPage />, adminOnly: false },
   theme: { name: "Theme", component: <ThemePage />, adminOnly: false },
   models: { name: "Models", component: <ModelsPage />, adminOnly: true },
+  database: {
+    name: "Database",
+    component: <DatabasePage />,
+    adminOnly: true,
+  },
 };
 
 function SettingsPageListItem({
