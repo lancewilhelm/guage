@@ -43,7 +43,7 @@ export default function Settings({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal onClose={onClose}>
-      <div className="grid grid-cols-[100px_auto] grid-rows-[min-content_auto] bg-(--bg-color) border-2 border-(--sub-color) w-[800px] max-w-[80vw] h-[800px] rounded-(--border-radius)">
+      <div className="grid grid-cols-[100px_auto] grid-rows-[min-content_auto] bg-(--bg-color) border-2 border-(--sub-color) w-[800px] max-w-[80vw] h-[800px] rounded-(--border-radius) overflow-hidden">
         <div className="flex justify-between items-center col-span-2 p-2 border-b-2 border-(--sub-color)">
           <div className="text-(--main-color)">Settings</div>
           <XMarkIcon
