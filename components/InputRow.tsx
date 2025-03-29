@@ -115,6 +115,15 @@ const InputRow = forwardRef<
     const newHeight = Math.min(maxHeight, textarea.scrollHeight);
 
     textarea.style.height = `${newHeight}px`;
+
+    // Set a document variable for the input row height
+    if (inputRowRef.current) {
+      const inputRowHeight = inputRowRef.current.offsetHeight;
+      document.documentElement.style.setProperty(
+        "--input-row-height",
+        `${inputRowHeight}px`,
+      );
+    }
   }, []);
 
   // Set up an event listener to update the right edge of the input box when the window is resized
