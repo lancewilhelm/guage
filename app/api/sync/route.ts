@@ -10,13 +10,14 @@ import { cloudDb } from "@/utils/db/cloud";
 import { gt, and, eq } from "drizzle-orm";
 import { getSession } from "@/utils/auth";
 import { SelectGlobalSetting, SelectUserSetting } from "@/utils/db/schema";
+import { coerceDate } from "@/utils/date";
 
 export async function GET(req: Request) {
   logger.debug("GET /api/sync");
 
   // Extract the 'since' parameter from the URL
   const { searchParams } = new URL(req.url ?? "");
-  const since = searchParams.get("since");
+  const since = Number(searchParams.get("since"));
   if (!since) {
     logger.warn("GET /api/sync: Missing 'since' parameter");
     return NextResponse.json(
@@ -34,15 +35,13 @@ export async function GET(req: Request) {
   const userId = session.user.id;
 
   try {
-    const sinceDate = new Date(since);
-
     // Pull updated messages for the user
     const messages = await cloudDb
       .select()
       .from(messagesTable)
       .where(
         and(
-          gt(messagesTable.updatedAt, sinceDate),
+          gt(messagesTable.updatedAt, coerceDate(since)),
           eq(messagesTable.userId, userId),
         ),
       );
@@ -52,7 +51,10 @@ export async function GET(req: Request) {
       .select()
       .from(chatsTable)
       .where(
-        and(gt(chatsTable.updatedAt, sinceDate), eq(chatsTable.userId, userId)),
+        and(
+          gt(chatsTable.updatedAt, coerceDate(since)),
+          eq(chatsTable.userId, userId),
+        ),
       );
 
     // Pull updated user settings
@@ -62,7 +64,7 @@ export async function GET(req: Request) {
       .where(
         and(
           eq(userSettings.userId, userId),
-          gt(userSettings.updatedAt, sinceDate),
+          gt(userSettings.updatedAt, coerceDate(since)),
         ),
       )) as SelectUserSetting[];
 
@@ -74,7 +76,7 @@ export async function GET(req: Request) {
       .where(
         and(
           eq(globalSettings.id, GLOBAL_SETTINGS_ID),
-          gt(globalSettings.updatedAt, sinceDate),
+          gt(globalSettings.updatedAt, coerceDate(since)),
         ),
       )) as SelectGlobalSetting[];
 

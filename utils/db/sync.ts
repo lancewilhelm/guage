@@ -94,8 +94,6 @@ async function cloudPushSettings(): Promise<void> {
 
     if (!user && !admin) return;
 
-    console.log("Pushing settings to cloud:", payload);
-
     const response = await fetch("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -129,8 +127,7 @@ export async function cloudPush() {
 export async function cloudPull() {
   // Use the last sync time from the sync store (or now if none exists).
   const lastSync =
-    useSyncStore.getState().lastSyncTime?.toISOString() ||
-    new Date().toISOString();
+    useSyncStore.getState().lastSyncTime?.getTime() || new Date().getTime();
   try {
     const response = await fetch(
       `/api/sync?since=${encodeURIComponent(lastSync)}`,

@@ -1,4 +1,3 @@
-import { logger } from "@/utils/logger";
 import { useState, useRef, useEffect, useCallback, memo } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";

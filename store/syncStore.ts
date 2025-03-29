@@ -115,6 +115,11 @@ export const useSyncStore = create<SyncState>((set) => {
       try {
         const { updatedChats, updatedMessages, updatedSettings } =
           await cloudPull();
+        logger.debug("Pull sync complete:", {
+          updatedChats,
+          updatedMessages,
+          updatedSettings,
+        });
         set({
           status: "success",
           lastSyncTime: new Date(),
