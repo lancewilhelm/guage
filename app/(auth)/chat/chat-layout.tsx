@@ -283,16 +283,23 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
           }}
         />
       </div>
-      <div className="col-start-2 row-start-2 h-full w-full flex flex-col overflow-hidden relative">
+      <div className="col-start-2 row-start-2 h-full w-full flex flex-col gap-4 overflow-hidden relative">
         <div
           ref={chatContainerRef}
-          className="flex flex-grow overflow-y-auto overflow-x-hidden chat-container "
+          className={`flex flex-grow overflow-y-auto overflow-x-hidden chat-container`}
         >
           <div className="mx-auto w-full max-w-[1000px] px-5">{children}</div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 pt-4 pb-4 z-10">
+        {/* Input Row */}
+        <div
+          className={`${
+            currentChatId
+              ? "absolute bottom-0 left-0 right-0 pt-4 pb-4"
+              : "absolute top-1/2 left-0 right-0 -translate-y-1/2"
+          } z-10`}
+        >
           <div className="mx-auto w-full max-w-[1000px]">
-            {showScrollToBottom && (
+            {showScrollToBottom && currentChatId && (
               <div className="flex py-3 px-6 justify-end">
                 <button
                   onClick={handleScrollToBottom}
@@ -301,6 +308,16 @@ export default function ChatPage({ children }: { children: React.ReactNode }) {
                 >
                   <AngleDownIcon fill="var(--bg-color)" />
                 </button>
+              </div>
+            )}
+            {!currentChatId && (
+              <div className="absolute bottom-full left-0 right-0 mb-4 px-6 text-center">
+                <h2 className="text-lg font-medium text-(--sub-color) mb-2">
+                  Start a new conversation
+                </h2>
+                <p className="text-sm text-(--sub-color)">
+                  Type your message below to begin chatting
+                </p>
               </div>
             )}
             <InputRow

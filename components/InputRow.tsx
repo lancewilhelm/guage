@@ -236,6 +236,7 @@ const InputRow = forwardRef<
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
+        textareaRef.current!.style.height = "auto";
         submitHandler();
       }
     },
@@ -245,7 +246,7 @@ const InputRow = forwardRef<
   return (
     <div
       ref={inputRowRef}
-      className="input-row flex gap-2 p-2 mx-4 border-2 border-(--sub-color) rounded-xl mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
+      className="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
     >
       <div className="flex flex-col gap-2 grow items-start">
         <textarea
@@ -266,7 +267,10 @@ const InputRow = forwardRef<
           isStreaming={isStreaming}
           isLoading={isLoading}
           hasInput={hasInput}
-          onSubmit={submitHandler}
+          onSubmit={() => {
+            textareaRef.current!.style.height = "auto";
+            submitHandler();
+          }}
           onStop={stopHandler}
         />
       </div>

@@ -14,7 +14,7 @@ export default function ToggleElement({
       <div className="row-start-1 col-start-1">{title}</div>
       <div className="row-start-2 col-start-1 italic">{description}</div>
       <div
-        className={`flex col-start-2 row-span-2 w-[60px] border-2 border-(--sub-color) rounded-full cursor-pointer  ${value ? "justify-end bg-(--main-color)" : "justify-start"}`}
+        className={`flex col-start-2 row-span-2 w-[60px] border border-(--sub-color) rounded-full cursor-pointer  ${value ? "justify-end bg-(--main-color)" : "justify-start"}`}
         onClick={() => onChange(!value)}
       >
         <div

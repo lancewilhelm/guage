@@ -71,7 +71,11 @@ export default function Pre({ children, ...props }: PreProps) {
           </div>
         </div>
       </div>
-      <pre ref={preRef} style={props.style} className="rounded-b shadow">
+      <pre
+        ref={preRef}
+        style={props.style}
+        className={`rounded-b shadow ${language ? "" : "rounded-tl"}`}
+      >
         {children}
       </pre>
     </div>

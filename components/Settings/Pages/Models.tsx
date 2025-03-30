@@ -24,7 +24,7 @@ function ModelCard({ name, provider }: { name: string; provider: string }) {
       }}
     >
       <div
-        className={`w-5 h-5 rounded-full border-2 border-(--main-color) shrink-0 cursor-pointer ${globalSettings.availableModels?.map((model) => model.name).includes(name) ? "bg-(--main-color)" : "bg-(--bg-color)"}`}
+        className={`w-5 h-5 rounded-full border border-(--main-color) shrink-0 cursor-pointer ${globalSettings.availableModels?.map((model) => model.name).includes(name) ? "bg-(--main-color)" : "bg-(--bg-color)"}`}
       />
       <div className="text-nowrap overflow-hidden overflow-ellipsis">
         {name}

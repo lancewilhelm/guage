@@ -47,6 +47,7 @@
 pre {
   position: relative;
   background: var(--hljs-bg0);
+  color: var(--hljs-fg1);
   overflow-x: auto;
   padding: 10px;
   display: flex;

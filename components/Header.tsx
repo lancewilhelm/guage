@@ -1,5 +1,5 @@
 "use client";
-import ModeMenu from "@/components/ModeMenu";
+// import ModeMenu from "@/components/ModeMenu";
 import GlobalMenu from "@/components/GlobalMenu";
 import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
@@ -38,7 +38,7 @@ export default function Header({
             />
           </div>
         )}
-        <ModeMenu />
+        {/* <ModeMenu /> */}
       </div>
       <GlobalMenu />
     </div>

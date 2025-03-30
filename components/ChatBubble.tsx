@@ -41,32 +41,47 @@ const customComponents = {
 
 const MessageContent = memo(
   ({ content, role }: { content: string; role: string }) => {
-    if (!content) return null;
-    if (content.length === 0) return null;
+    if (!content?.trim()) return null;
 
     if (role === "assistant") {
-      const completeThinkRegex = /<think>([\s\S]*?)<\/think>/g;
-      const incompleteThinkRegex = /<think>([\s\S]*)$/;
+      // Match <think>...</think> or <think>... (incomplete), but only at the start of the message
+      const thinkStartRegex = /^(<think>[\s\S]*?<\/think>)+/;
+      const incompleteThinkStartRegex = /^<think>[\s\S]*$/;
 
-      const completeMatches = [...content.matchAll(completeThinkRegex)].map(
-        (m) => m[1].trim(),
-      );
-
-      const incompleteMatch = content.match(incompleteThinkRegex);
+      const hasCompleteThink = thinkStartRegex.test(content);
       const hasIncompleteThink =
-        !content.includes("</think>") && content.includes("<think>");
-      const incompleteText = incompleteMatch?.[1]?.trim() ?? "";
+        incompleteThinkStartRegex.test(content) &&
+        !content.includes("</think>");
 
+      // Extract matched thoughts from the beginning only
+      const completeMatches = hasCompleteThink
+        ? [...content.matchAll(/<think>([\s\S]*?)<\/think>/g)]
+            .map((m) => m[1].trim())
+            .filter((text) => text.length > 0)
+        : [];
+
+      const incompleteMatch = hasIncompleteThink
+        ? content.match(incompleteThinkStartRegex)
+        : null;
+
+      const incompleteText =
+        incompleteMatch?.[0]?.replace(/^<think>/, "").trim() ?? "";
+
+      const hasValidThoughts =
+        completeMatches.length > 0 ||
+        (hasIncompleteThink && incompleteText.length > 0);
+
+      // Remove all <think> tags from beginning only
       const contentWithoutThink = content
-        .replace(completeThinkRegex, "")
-        .replace(incompleteThinkRegex, "")
+        .replace(thinkStartRegex, "")
+        .replace(incompleteThinkStartRegex, "")
         .trim();
 
       return (
         <div className="markdown-body flex flex-col gap-2">
-          {(completeMatches.length > 0 || hasIncompleteThink) && (
-            <div className="rounded-xl bg-(--sub-alt-color) p-3">
-              <details open={hasIncompleteThink}>
+          {hasValidThoughts && (
+            <div className="rounded-lg bg-(--sub-alt-color) p-3">
+              <details>
                 <summary className="cursor-pointer text-(--main-color) flex items-center gap-2 group">
                   <BrainIcon fill="var(--main-color)" />
                   {hasIncompleteThink ? "Thinking..." : "Thoughts"}
@@ -97,7 +112,6 @@ const MessageContent = memo(
               </details>
             </div>
           )}
-
           {contentWithoutThink && (
             <Markdown
               remarkPlugins={[remarkGfm, remarkMath]}

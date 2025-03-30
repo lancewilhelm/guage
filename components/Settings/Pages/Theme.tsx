@@ -53,7 +53,7 @@ function ThemeCard({
     useUserSettingsStore();
   return (
     <div
-      className={`grid grid-cols-[1fr_auto_auto] justify-center items-center cursor-pointer px-2 rounded-full border-2`}
+      className={`grid grid-cols-[1fr_auto_auto] justify-center items-center cursor-pointer px-2 rounded-full border`}
       style={
         {
           background: theme.bgColor,
