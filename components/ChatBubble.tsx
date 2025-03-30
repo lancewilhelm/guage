@@ -14,6 +14,7 @@ import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
 import OpenAIIcon from "@/components/Icon/OpenAI";
 import OllamaIcon from "@/components/Icon/Ollama";
+import BrainIcon from "@/components/Icon/Brain";
 import Pre from "@/components/Pre";
 import { useSessionStore } from "@/store/sessionStore";
 import { LocalMessage } from "@/utils/db/local";
@@ -39,19 +40,81 @@ const customComponents = {
 };
 
 const MessageContent = memo(
-  ({ content, role }: { content: string; role: string }) =>
-    role === "user" ? (
-      <div className="">{content}</div>
-    ) : (
-      <Markdown
-        remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeHightlight]}
-        components={customComponents}
-      >
-        {content}
-      </Markdown>
-    ),
+  ({ content, role }: { content: string; role: string }) => {
+    if (!content) return null;
+    if (content.length === 0) return null;
+
+    if (role === "assistant") {
+      const completeThinkRegex = /<think>([\s\S]*?)<\/think>/g;
+      const incompleteThinkRegex = /<think>([\s\S]*)$/;
+
+      const completeMatches = [...content.matchAll(completeThinkRegex)].map(
+        (m) => m[1].trim(),
+      );
+
+      const incompleteMatch = content.match(incompleteThinkRegex);
+      const hasIncompleteThink =
+        !content.includes("</think>") && content.includes("<think>");
+      const incompleteText = incompleteMatch?.[1]?.trim() ?? "";
+
+      const contentWithoutThink = content
+        .replace(completeThinkRegex, "")
+        .replace(incompleteThinkRegex, "")
+        .trim();
+
+      return (
+        <div className="markdown-body flex flex-col gap-2">
+          {(completeMatches.length > 0 || hasIncompleteThink) && (
+            <div className="rounded-xl bg-(--sub-alt-color) p-3">
+              <details open={hasIncompleteThink}>
+                <summary className="cursor-pointer text-(--main-color) flex items-center gap-2 group">
+                  <BrainIcon fill="var(--main-color)" />
+                  {hasIncompleteThink ? "Thinking..." : "Thoughts"}
+                  {hasIncompleteThink && (
+                    <BouncingDotsIcon fill="var(--main-color)" />
+                  )}
+                  <AngleRightIcon
+                    className="transition-transform group-open:rotate-90"
+                    fill="var(--main-color)"
+                  />
+                </summary>
+                <div className="mt-2">
+                  {hasIncompleteThink ? (
+                    <div className="prose prose-sm text-muted-foreground font-mono whitespace-pre-wrap italic">
+                      {incompleteText}
+                    </div>
+                  ) : (
+                    completeMatches.map((text, index) => (
+                      <div
+                        key={index}
+                        className="prose prose-sm text-muted-foreground font-mono whitespace-pre-wrap italic"
+                      >
+                        {text}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </details>
+            </div>
+          )}
+
+          {contentWithoutThink && (
+            <Markdown
+              remarkPlugins={[remarkGfm, remarkMath]}
+              rehypePlugins={[rehypeKatex, rehypeHightlight]}
+              components={customComponents}
+            >
+              {contentWithoutThink}
+            </Markdown>
+          )}
+        </div>
+      );
+    }
+
+    return <div className="">{content}</div>;
+  },
 );
+
 MessageContent.displayName = "MessageContent";
 
 const VersionNavigation = memo(
@@ -244,7 +307,7 @@ function ChatBubble({
         ) : message.content ? (
           <div
             ref={contentRef}
-            className="max-w-full flex flex-col gap-2 rounded-lg p-3"
+            className={`flex flex-col gap-2 rounded-lg p-3 ${message.role === "user" ? "max-w-full" : "w-full"}`}
             style={{ backgroundColor }}
           >
             <MessageContent content={editedContent} role={message.role} />
