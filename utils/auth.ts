@@ -24,7 +24,7 @@ export interface Session extends JwtPayload {
     id: string;
     email: string;
     name: string | null;
-    role: "user" | "admin" | "owner";
+    role: "user" | "admin";
   };
 }
 
@@ -90,6 +90,7 @@ export async function getSession(): Promise<Session | null> {
  * Destroy the current session
  */
 export async function destroySession() {
+  // Remove the session cookie
   (await cookies()).set("guage_token", "", {
     expires: new Date(0),
     path: "/",

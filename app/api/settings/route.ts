@@ -23,9 +23,9 @@ export async function GET() {
       .select()
       .from(userSettings)
       .where(eq(userSettings.userId, userId));
-    // Fetch global settings only if the user is admin/owner
+    // Fetch global settings only if the user is admin
     let adminSettings = {};
-    if (session.user.role === "admin" || session.user.role === "owner") {
+    if (session.user.role === "admin") {
       const globalRes = await cloudDb
         .select()
         .from(globalSettings)
@@ -54,8 +54,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const userId = session.user.id;
-  const isAdmin =
-    session.user.role === "admin" || session.user.role === "owner";
+  const isAdmin = session.user.role === "admin";
 
   try {
     const body = await req.json();
@@ -82,7 +81,7 @@ export async function POST(req: Request) {
         });
     }
 
-    // Update global settings if provided and if the user is admin/owner
+    // Update global settings if provided and if the user is admin
     if (adminUpdate && isAdmin) {
       await cloudDb
         .insert(globalSettings)

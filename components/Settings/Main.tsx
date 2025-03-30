@@ -41,7 +41,7 @@ function SettingsPageListItem({
 const isAdmin = (): boolean => {
   const session = useSessionStore.getState().session;
   if (!session) return false;
-  return ["admin", "owner"].includes(session.user.role);
+  return session.user.role === "admin";
 };
 
 export default function Settings({ onClose }: { onClose: () => void }) {

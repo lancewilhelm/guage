@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { cloudDb } from "@/utils/db/cloud";
 import { usersTable } from "@/utils/db/schema";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
+import { createSession } from "@/utils/auth";
 
 export async function POST(req: Request) {
   logger.info("POST /api/register");
@@ -24,19 +25,37 @@ export async function POST(req: Request) {
     );
   }
 
+  // Determine if this is the first user
+  const users = await cloudDb.select({ count: count() }).from(usersTable);
+  const isFirstUser = users[0].count === 0;
+
   // Hash password and create user
   logger.debug({ email }, "Creating user");
   const hashedPassword = await bcrypt.hash(password, 10);
-  await cloudDb.insert(usersTable).values({
-    id: crypto.randomUUID(),
-    email,
-    name,
-    passwordHash: hashedPassword,
-  });
+  const user = await cloudDb
+    .insert(usersTable)
+    .values({
+      id: crypto.randomUUID(),
+      email,
+      name,
+      passwordHash: hashedPassword,
+      role: isFirstUser ? "admin" : "user",
+    })
+    .returning();
 
   logger.info({ email }, "User registered successfully");
+
+  // Create session
+  logger.debug({ email: user[0].email }, "POST /api/login: Creating session");
+  const session = await createSession({
+    id: user[0].id,
+    email: user[0].email,
+    name: user[0].name,
+    role: user[0].role as "admin" | "user",
+  });
+
   return NextResponse.json(
-    { message: "User registered successfully" },
+    { message: "User registered successfully", session },
     { status: 201 },
   );
 }

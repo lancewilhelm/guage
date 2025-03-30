@@ -26,7 +26,7 @@ export async function GET() {
 
   // Ensure the user is authenticated
   const session = await getSession();
-  if (!session || !["admin", "owner"].includes(session.user.role)) {
+  if (!session || session.user.role !== "admin") {
     logger.warn("GET /api/models: Unauthorized access attempt");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

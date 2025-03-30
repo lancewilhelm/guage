@@ -9,6 +9,7 @@ export interface Model {
 }
 
 export interface GlobalSettings {
+  allowRegistration: boolean;
   availableModels: Model[];
 }
 
@@ -27,11 +28,12 @@ export interface GlobalSettingsState {
 const isAdmin = (): boolean => {
   const session = useSessionStore.getState().session;
   if (!session) return false;
-  return ["admin", "owner"].includes(session.user.role);
+  return session.user.role === "admin";
 };
 
 // Default settings
 const defaultSettings: GlobalSettings = {
+  allowRegistration: false,
   availableModels: [
     {
       name: "gpt-4o-mini",
@@ -49,7 +51,7 @@ export const useGlobalSettingsStore = create<GlobalSettingsState>()(
       updateSettings: (newSettings: Partial<GlobalSettings>) => {
         if (!isAdmin()) {
           console.error(
-            "Permission denied: only admin or owner can update global settings.",
+            "Permission denied: only admin can update global settings.",
           );
           return;
         }

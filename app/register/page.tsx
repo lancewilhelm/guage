@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { poppins } from "@/utils/fonts";
+import { useSessionStore } from "@/store/sessionStore";
 
 export default function Register() {
   const router = useRouter();
@@ -11,10 +12,18 @@ export default function Register() {
     password: "",
     confirmPassword: "",
   });
+  const { setSession } = useSessionStore();
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleRegister();
+    }
   };
 
   const handleRegister = async () => {
@@ -36,12 +45,14 @@ export default function Register() {
 
     if (!res.ok) {
       const data = await res.json();
-      setError(data.message || "Something went wrong");
+      setError(data.message);
       return;
     }
 
     // Redirect to login or home page after successful registration
-    router.push("/login");
+    const data = await res.json();
+    setSession(data.session);
+    router.push("/chat");
   };
 
   return (
@@ -51,7 +62,7 @@ export default function Register() {
           <div
             className={`text-7xl font-medium ${poppins.className} mb-6 text-(--main-color)`}
           >
-            Guage
+            guage
           </div>
         </Link>
         <div className="flex flex-col gap-2 items-center">
@@ -62,6 +73,7 @@ export default function Register() {
               name="email"
               value={form.email}
               onChange={handleChange}
+              onKeyDown={handleKeyPress}
               className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
@@ -72,6 +84,7 @@ export default function Register() {
               name="password"
               value={form.password}
               onChange={handleChange}
+              onKeyDown={handleKeyPress}
               className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
@@ -82,6 +95,7 @@ export default function Register() {
               name="confirmPassword"
               value={form.confirmPassword}
               onChange={handleChange}
+              onKeyDown={handleKeyPress}
               className="border border-(--sub-color) rounded px-2 py-1 text-[12pt] w-[250px]"
             />
           </div>
