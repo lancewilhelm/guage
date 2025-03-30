@@ -4,7 +4,7 @@ import TableListIcon from "@/components/Icon/TableList";
 import PlusIcon from "@/components/Icon/Plus";
 import ChatListItem from "@/components/ChatListItem";
 import ThumbtackIcon from "@/components/Icon/Thumbtack";
-import { ChatItem } from "@/app/(auth)/chat/layout";
+import { ChatItem } from "@/app/(auth)/chat/chat-layout";
 
 function ChatListGroupTitle({ title }: { title: string }) {
   return (
@@ -136,7 +136,6 @@ export default function ChatsPanel({
               onClick={createAction}
             />
           </div>
-          <div className="w-full h-[1px] bg-(--main-color) opacity-50" />
           {/* Sessions List */}
           <div className="flex flex-col w-full gap-2">
             {Object.keys(sortedChats).map((key) => {
