@@ -1,10 +1,12 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { useSyncStore } from "./syncStore";
+import { Model } from "./globalSettingsStore";
 
 export interface UserSettings {
   darkCode: boolean;
   favoriteThemes: string[];
+  selectedModel: Model;
 }
 
 export interface UserSettingsState {
@@ -22,6 +24,10 @@ const defaultSettings: UserSettings = {
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-color-scheme: dark)").matches,
   favoriteThemes: [],
+  selectedModel: {
+    name: "gpt-4o-mini",
+    provider: "openai",
+  },
 };
 
 export const useUserSettingsStore = create<UserSettingsState>()(

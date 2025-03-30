@@ -62,6 +62,7 @@ export const messagesTable = pgTable("messages", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull(),
   deleted: boolean("deleted"),
+  model: jsonb("model"),
 });
 
 // USER SETTINGS TABLE

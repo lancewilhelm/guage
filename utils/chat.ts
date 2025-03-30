@@ -12,6 +12,8 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { ChatState } from "@/store/chatStore";
+import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAsssitantMessage";
+import { useUserSettingsStore } from "@/store/userSettingsStore";
 
 /**
  * Generate a title from the assistant's response
@@ -58,71 +60,6 @@ export function parseSSEChunk(chunk: string): SSEChunk[] {
     parsedEvents.push({ eventType, data });
   }
   return parsedEvents;
-}
-
-/**
- * Stream the response from the llm endpoint
- * Also updated the local database and chatStore with the response
- * @param userMessage The user's message
- * @param assistantMessage The assistant's message
- * @param history The chat history
- * @returns The response from the llm endpoint
- */
-export async function streamResponseFromLLM(
-  userMessage: LocalMessage,
-  assistantMessage: LocalMessage,
-  history?: LocalMessage[],
-) {
-  const chatStore = useChatStore.getState();
-  const { currentChatId, updateMessage, updateChatMetadata } = chatStore;
-  if (!currentChatId) return;
-  const abortController = new AbortController();
-  chatStore.setChatAbortController(currentChatId, abortController);
-  let accumulatedResponse = "";
-  try {
-    const response = await fetch("/api/llm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        history: history ? history : [],
-        userMessage,
-        chatId: currentChatId,
-      }),
-      signal: abortController.signal,
-    });
-    if (!response.ok || !response.body) {
-      throw new Error("Failed to fetch chat response");
-    }
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      const chunks = parseSSEChunk(decoder.decode(value));
-      for (const chunk of chunks) {
-        if (chunk.eventType === "messageChunk") {
-          accumulatedResponse += JSON.parse(chunk.data);
-          updateMessage(
-            currentChatId,
-            assistantMessage.id,
-            accumulatedResponse,
-          );
-          dbUpdateMessage(assistantMessage.id, {
-            content: accumulatedResponse,
-          });
-        }
-      }
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      logger.debug("Chat streaming aborted");
-    } else {
-      logger.error("Error during streaming:", error);
-    }
-  } finally {
-    updateChatMetadata(currentChatId, { isStreaming: false });
-    chatStore.setChatAbortController(currentChatId);
-  }
 }
 
 /**
@@ -236,6 +173,7 @@ function createMessagePair(
 ): { userMessage: LocalMessage; assistantMessage: LocalMessage } {
   const userMessageId = uuidv4();
   const assistantMessageId = uuidv4();
+  const model = useUserSettingsStore.getState().settings.selectedModel;
   const now = new Date();
 
   const userMessage: LocalMessage = {
@@ -260,6 +198,7 @@ function createMessagePair(
     createdAt: now,
     updatedAt: now,
     synced: false,
+    model,
   };
 
   // Persist messages to IndexedDB
@@ -357,7 +296,12 @@ async function updateChatAndGetResponse(
       .map((id: string) => chat.messages[id])
       .filter(Boolean) as LocalMessage[]);
 
-  await streamResponseFromLLM(userMessage, assistantMessage, messageHistory);
+  await streamAndUpdateAssistantMessage({
+    chatId,
+    userMessage,
+    assistantMessage,
+    history: messageHistory,
+  });
 
   // Update chat title and timestamp
   const isFirstMessage =

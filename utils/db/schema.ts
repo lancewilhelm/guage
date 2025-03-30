@@ -58,6 +58,7 @@ export const messagesTable = sqliteTable("messages", {
     .notNull()
     .$defaultFn(() => new Date()),
   deleted: integer("deleted", { mode: "boolean" }),
+  model: text("model", { mode: "json" }),
 });
 
 // USER SETTINGS TABLE

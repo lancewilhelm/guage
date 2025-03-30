@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
 import { cloudDebouncedSync } from "./sync";
+import { Model } from "@/store/globalSettingsStore";
 
 //------------------------//
 //         Local          //
@@ -37,6 +38,7 @@ export interface LocalMessage {
   createdAt: Date;
   updatedAt: Date;
   synced: boolean;
+  model?: Model;
   deleted?: boolean;
 }
 

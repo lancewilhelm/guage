@@ -1,81 +1,52 @@
 import { logger } from "@/utils/logger";
-import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
-import { LocalMessage } from "@/utils/db/local";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { streamOpenAI } from "@/utils/llm/server/streamOpenAi";
+import { streamOllama } from "@/utils/llm/server/streamOllama";
 
 export async function POST(req: Request) {
   logger.info("POST /api/llm");
-  // Check for authorized user
+
   const session = await getSession();
   if (!session) {
-    logger.warn("POST /api/llm: Unauthorized access attempt");
+    logger.error("Unauthorized access attempt");
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const userId = session.user.id;
+  const { history, userMessage, model } = await req.json();
 
-  // Parse the request body
-  const {
-    history,
-    userMessage,
-    chatId,
-  }: {
-    history: LocalMessage[];
-    userMessage: LocalMessage;
-    chatId: string;
-  } = await req.json();
+  if (!model) {
+    logger.error("Invalid request: No provider specified");
+    return new Response("Provider is required", { status: 400 });
+  }
+
   if (!history || !Array.isArray(history) || !userMessage) {
+    logger.error("Invalid request: messages are required");
     return new Response("Invalid request: messages are required", {
       status: 400,
     });
   }
 
   try {
-    logger.debug(
-      { userId, chatId: chatId, userMessage },
-      "POST /api/llm: Processing user message",
-    );
+    let stream: ReadableStream;
 
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const messages = history.concat([userMessage]);
-          const params: OpenAI.Chat.ChatCompletionCreateParams = {
-            messages: messages.map((m) => ({
-              role: m.role as "user" | "assistant" | "system",
-              content: m.content,
-            })),
-            model: "gpt-4o-mini",
-            stream: true,
-          };
-          const completion = await openai.chat.completions.create(params);
-
-          // Now handle the completion chunks from LLM service
-          for await (const chunk of completion as unknown as AsyncIterable<OpenAI.Chat.ChatCompletionChunk>) {
-            const text = chunk.choices[0]?.delta?.content || "";
-            controller.enqueue(
-              encoder.encode(
-                `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,
-              ),
-            );
-          }
-        } catch (error) {
-          logger.error(error, "Error streaming response:");
-          controller.enqueue(
-            encoder.encode(
-              "event: error\n data: Failed to stream response.\n\n",
-            ),
-          );
-        } finally {
-          controller.close();
-        }
-      },
-    });
+    switch (model.provider) {
+      case "openai":
+        stream = await streamOpenAI({
+          history,
+          userMessage,
+          model: model.name,
+        });
+        break;
+      case "ollama":
+        stream = await streamOllama({
+          history,
+          userMessage,
+          model: model.name,
+        });
+        break;
+      default:
+        return new Response("Unknown provider", { status: 400 });
+    }
 
     return new Response(stream, {
       headers: {
@@ -85,8 +56,8 @@ export async function POST(req: Request) {
         "Transfer-Encoding": "chunked",
       },
     });
-  } catch (error) {
-    logger.error(error, "Error processing user message:");
+  } catch (err) {
+    logger.error(err, "Error streaming response");
     return new Response("Internal server error", { status: 500 });
   }
 }

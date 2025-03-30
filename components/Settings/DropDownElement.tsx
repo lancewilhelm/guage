@@ -26,22 +26,26 @@ export default function DropDownElement({
       </div>
       {isOpen && (
         <div className="flex flex-col gap-2">
-          {options.map((option) => {
-            if (option !== value) {
-              return (
-                <div
-                  key={option}
-                  className={`cursor-pointer hover:opacity-80 active:opacity-60 rounded p-1 ${value === option && "bg-(--sub-color)"}`}
-                  onClick={() => {
-                    onChange(option);
-                    setIsOpen(false);
-                  }}
-                >
-                  {option}
-                </div>
-              );
-            }
-          })}
+          {options.length > 0 ? (
+            options.map((option) => {
+              if (option !== value) {
+                return (
+                  <div
+                    key={option}
+                    className={`cursor-pointer hover:opacity-80 active:opacity-60 rounded p-1 ${value === option && "bg-(--sub-color)"}`}
+                    onClick={() => {
+                      onChange(option);
+                      setIsOpen(false);
+                    }}
+                  >
+                    {option}
+                  </div>
+                );
+              }
+            })
+          ) : (
+            <div className="italic">No options available</div>
+          )}
         </div>
       )}
     </div>

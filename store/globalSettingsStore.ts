@@ -3,8 +3,13 @@ import { persist } from "zustand/middleware";
 import { useSessionStore } from "./sessionStore";
 import { useSyncStore } from "./syncStore";
 
+export interface Model {
+  name: string;
+  provider: string;
+}
+
 export interface GlobalSettings {
-  defaultModel: string;
+  availableModels: Model[];
 }
 
 export interface GlobalSettingsState {
@@ -25,10 +30,20 @@ const isAdmin = (): boolean => {
   return ["admin", "owner"].includes(session.user.role);
 };
 
+// Default settings
+const defaultSettings: GlobalSettings = {
+  availableModels: [
+    {
+      name: "gpt-4o-mini",
+      provider: "openai",
+    },
+  ],
+};
+
 export const useGlobalSettingsStore = create<GlobalSettingsState>()(
   persist(
     (set, get) => ({
-      settings: { defaultModel: "gpt-4o-mini" },
+      settings: defaultSettings,
       isSynced: true,
       updatedAt: new Date(),
       updateSettings: (newSettings: Partial<GlobalSettings>) => {

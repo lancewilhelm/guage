@@ -71,7 +71,7 @@ export default function ChatBox({
 
   return (
     <div
-      className={`flex flex-col gap-2 w-full pb-[calc(var(--input-row-height)+50px)] ${
+      className={`flex flex-col gap-2 w-full pb-[calc(var(--input-row-height)+75px)] ${
         activeThread.length === 0 || !isChatLoaded ? "h-full" : ""
       }`}
     >

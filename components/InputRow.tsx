@@ -9,6 +9,10 @@ import {
 } from "react";
 import UpArrowIcon from "@/components/Icon/UpArrow";
 import SquareRoundedIcon from "@/components/Icon/SquareRounded";
+import OpenAIIcon from "@/components/Icon/OpenAI";
+import OllamaIcon from "@/components/Icon/Ollama";
+import { Model, useGlobalSettingsStore } from "@/store/globalSettingsStore";
+import { useUserSettingsStore } from "@/store/userSettingsStore";
 
 const SubmitButton = memo(
   ({
@@ -59,6 +63,87 @@ export interface InputRowHandle {
   getValue: () => string;
   focus: () => void;
   clear: () => void;
+}
+
+function ModelSelect({ model }: { model?: Model }) {
+  const [isListOpen, setIsListOpen] = useState(false);
+  const availableModels = useGlobalSettingsStore(
+    (state) => state.settings.availableModels,
+  );
+  const { updateSettings } = useUserSettingsStore();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsListOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (!model) return null;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div
+        className="flex items-center justify-between gap-1 cursor-pointer hover:bg-(--sub-color)/10 p-1 rounded"
+        onClick={() => setIsListOpen(!isListOpen)}
+      >
+        {model.provider === "openai" && <OpenAIIcon fill="var(--main-color)" />}
+        {model.provider === "ollama" && <OllamaIcon fill="var(--main-color)" />}
+        <div className="text-sm text-(--main-color) font-mono">
+          {model.name}
+        </div>
+        <svg
+          className={`w-3 h-3 transition-transform ${isListOpen ? "" : "rotate-180"}`}
+          viewBox="0 0 10 6"
+        >
+          <path
+            d="M1 1l4 4 4-4"
+            stroke="var(--main-color)"
+            fill="none"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+
+      {isListOpen && (
+        <div className="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg py-1 w-60 max-h-60 z-10">
+          <div className="overflow-y-auto">
+            {availableModels
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((availableModel) => (
+                <div
+                  key={`${availableModel.provider}-${availableModel.name}`}
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-(--sub-color)/10 ${model.provider === availableModel.provider && model.name === availableModel.name ? "bg-(--sub-color)/20" : ""}`}
+                  onClick={() => {
+                    updateSettings({ selectedModel: availableModel });
+                    setIsListOpen(false);
+                  }}
+                >
+                  {availableModel.provider === "openai" && (
+                    <OpenAIIcon fill="var(--main-color)" />
+                  )}
+                  {availableModel.provider === "ollama" && (
+                    <OllamaIcon fill="var(--main-color)" />
+                  )}
+                  <span className="text-sm font-mono">
+                    {availableModel.name}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 const InputRow = forwardRef<
@@ -160,24 +245,31 @@ const InputRow = forwardRef<
   return (
     <div
       ref={inputRowRef}
-      className="input-row col-start-2 row-start-3 flex items-center gap-2 p-2 mx-4 border-2 border-(--sub-color) rounded-xl mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
+      className="input-row flex gap-2 p-2 mx-4 border-2 border-(--sub-color) rounded-xl mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
     >
-      <textarea
-        ref={textareaRef}
-        className={`input-box rounded grow p-1 resize-none focus:outline-none`}
-        placeholder="Send a message..."
-        disabled={disabled || isLoading}
-        value={inputValue}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-      />
-      <SubmitButton
-        isStreaming={isStreaming}
-        isLoading={isLoading}
-        hasInput={hasInput}
-        onSubmit={submitHandler}
-        onStop={stopHandler}
-      />
+      <div className="flex flex-col gap-2 grow items-start">
+        <textarea
+          ref={textareaRef}
+          className={`input-box w-full p-1 resize-none focus:outline-none`}
+          placeholder="Send a message..."
+          disabled={disabled || isLoading}
+          value={inputValue}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+        />
+        <ModelSelect
+          model={useUserSettingsStore((state) => state.settings.selectedModel)}
+        />
+      </div>
+      <div className="flex items-center">
+        <SubmitButton
+          isStreaming={isStreaming}
+          isLoading={isLoading}
+          hasInput={hasInput}
+          onSubmit={submitHandler}
+          onStop={stopHandler}
+        />
+      </div>
     </div>
   );
 });

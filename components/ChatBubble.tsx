@@ -12,9 +12,12 @@ import CheckIcon from "@/components/Icon/Check";
 import XMarkIcon from "@/components/Icon/XMark";
 import CopyIcon from "@/components/Icon/Copy";
 import ThumbsUpIcon from "@/components/Icon/ThumbsUp";
+import OpenAIIcon from "@/components/Icon/OpenAI";
+import OllamaIcon from "@/components/Icon/Ollama";
 import Pre from "@/components/Pre";
 import { useSessionStore } from "@/store/sessionStore";
 import { LocalMessage } from "@/utils/db/local";
+import { Model } from "@/store/globalSettingsStore";
 
 interface ComputedVersionInfo {
   total: number;
@@ -103,6 +106,18 @@ const VersionNavigation = memo(
   },
 );
 VersionNavigation.displayName = "VersionNavigation";
+
+function ModelIndicator({ model }: { model: Model }) {
+  return (
+    <div className="flex items-center gap-1 text-xs text-(--main-color) font-mono">
+      {model.provider === "openai" && <OpenAIIcon fill="var(--main-color)" />}
+      {model.provider === "ollama" && (
+        <OllamaIcon fill="var(--main-color)" className="scale-110" />
+      )}
+      <div className="text-sm text-(--main-color) font-mono">{model.name}</div>
+    </div>
+  );
+}
 
 function ChatBubble({
   message,
@@ -242,46 +257,49 @@ function ChatBubble({
             <BouncingDotsIcon fill="var(--text-color)" />
           </div>
         )}
-        {!isEditing && (
-          <div
-            className={`flex gap-2 items-center ${
-              message.role === "user"
-                ? "flex-row-reverse mr-3"
-                : "flex-row ml-3"
-            }`}
-          >
-            <VersionNavigation
-              versionInfo={versionInfo}
-              onBranchChange={onBranchChange}
-            />
-            {isCopied ? (
-              <ThumbsUpIcon
-                fill={
-                  isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
-                }
+        <div className="chat-bubble-bottom flex px-3">
+          {message.model && <ModelIndicator model={message.model} />}
+          {!isEditing && (
+            <div
+              className={`flex gap-2 items-center ${
+                message.role === "user"
+                  ? "flex-row-reverse mr-3"
+                  : "flex-row ml-3"
+              }`}
+            >
+              <VersionNavigation
+                versionInfo={versionInfo}
+                onBranchChange={onBranchChange}
               />
-            ) : (
-              <CopyIcon
+              {isCopied ? (
+                <ThumbsUpIcon
+                  fill={
+                    isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                  }
+                />
+              ) : (
+                <CopyIcon
+                  fill={
+                    isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
+                  }
+                  className="cursor-pointer"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCopy();
+                  }}
+                />
+              )}
+              <PencilIcon
                 fill={
                   isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
                 }
                 className="cursor-pointer"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleCopy();
-                }}
+                onClick={handleEditClick}
               />
-            )}
-            <PencilIcon
-              fill={
-                isButtonRowVisible ? "var(--main-color)" : "var(--bg-color)"
-              }
-              className="cursor-pointer"
-              onClick={handleEditClick}
-            />
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
