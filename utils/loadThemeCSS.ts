@@ -10,6 +10,7 @@ export default function loadThemeCSS(themeName: string) {
     existingThemeLink.href = "/css/themes/" + themeName + ".css";
   } else {
     const linkElement = document.createElement("link");
+    linkElement.id = "currentTheme";
     linkElement.type = "text/css";
     linkElement.rel = "stylesheet";
     linkElement.href = "/css/themes/" + themeName + ".css";
@@ -17,4 +18,15 @@ export default function loadThemeCSS(themeName: string) {
   }
 
   // updateFavicon(themeName);
+}
+
+/**
+ * Remove the theme CSS file
+ */
+export function removeThemeCSS() {
+  const existingThemeLink: HTMLLinkElement | null =
+    document.querySelector("#currentTheme");
+  if (existingThemeLink) {
+    existingThemeLink.parentNode?.removeChild(existingThemeLink);
+  }
 }

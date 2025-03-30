@@ -53,7 +53,7 @@ function ThemeCard({
     useUserSettingsStore();
   return (
     <div
-      className={`grid grid-cols-[1fr_auto_auto] justify-center items-center cursor-pointer px-2 rounded-full border`}
+      className={`flex justify-between items-center cursor-pointer px-2 rounded-full border`}
       style={
         {
           background: theme.bgColor,
@@ -73,38 +73,44 @@ function ThemeCard({
       }}
       onClick={() => onThemeSelect(theme.name)}
     >
-      <div className="flex text-sm items-center font-bold font-mono">
-        <div className={`px-2 py-1 rounded-full`}>{theme.name}</div>
+      <div className="flex grow items-center justify-between overflow-hidden">
+        <div className="flex text-sm items-center font-bold font-mono overflow-hidden">
+          <div
+            className={`px-2 py-1 rounded-full overflow-hidden overflow-ellipsis`}
+          >
+            {theme.name}
+          </div>
+        </div>
+        {isFavorite ? (
+          <StarFilledIcon
+            fill={theme.textColor}
+            className={`shrink-0 mr-1 ${isHovered || isFavorite ? "block" : "hidden"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              updateUserSettings({
+                favoriteThemes: userSettings.favoriteThemes.filter(
+                  (t) => t !== theme.name,
+                ),
+              });
+            }}
+          />
+        ) : (
+          <StarEmptyIcon
+            fill={theme.textColor}
+            className={`shrink-0 mr-1 ${isHovered ? "block" : "hidden"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              updateUserSettings({
+                favoriteThemes: [...userSettings.favoriteThemes, theme.name],
+              });
+            }}
+          />
+        )}
       </div>
-      {isFavorite ? (
-        <StarFilledIcon
-          fill={theme.textColor}
-          className={`mr-1 ${isHovered || isFavorite ? "block" : "hidden"}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            updateUserSettings({
-              favoriteThemes: userSettings.favoriteThemes.filter(
-                (t) => t !== theme.name,
-              ),
-            });
-          }}
-        />
-      ) : (
-        <StarEmptyIcon
-          fill={theme.textColor}
-          className={`mr-1 ${isHovered ? "block" : "hidden"}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            updateUserSettings({
-              favoriteThemes: [...userSettings.favoriteThemes, theme.name],
-            });
-          }}
-        />
-      )}
       <div
-        className={`grid grid-cols-3 gap-1 items-center justify-center p-[5px]`}
+        className={`shrink-0 grid grid-cols-3 gap-1 items-center justify-center p-[5px]`}
       >
         <div
           className="w-4 h-4 rounded-full"
@@ -180,7 +186,10 @@ export default function ThemePage() {
             <ThemeCard
               key={theme.name}
               theme={theme}
-              onThemeSelect={(theme) => setCurrentTheme(theme)}
+              onThemeSelect={(theme) => {
+                updateUserSettings({ selectedTheme: theme });
+                setCurrentTheme(theme);
+              }}
               isActiveTheme={theme.name === currentTheme}
               isFavorite={true}
             />
@@ -206,7 +215,10 @@ export default function ThemePage() {
           <ThemeCard
             key={theme.name}
             theme={theme}
-            onThemeSelect={(theme) => setCurrentTheme(theme)}
+            onThemeSelect={(theme) => {
+              updateUserSettings({ selectedTheme: theme });
+              setCurrentTheme(theme);
+            }}
             isActiveTheme={theme.name === currentTheme}
             isFavorite={false}
           />

@@ -6,6 +6,7 @@ import { Model } from "./globalSettingsStore";
 export interface UserSettings {
   darkCode: boolean;
   favoriteThemes: string[];
+  selectedTheme?: string;
   selectedModel: Model;
 }
 
