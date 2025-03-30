@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   const session = await getSession();
   if (!session) {
-    logger.error("Unauthorized access attempt");
+    logger.error("Unauthorized access attempt to /api/llm");
     return new Response("Unauthorized", { status: 401 });
   }
 

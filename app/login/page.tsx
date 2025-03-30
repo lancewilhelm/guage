@@ -31,7 +31,7 @@ export default function Login() {
     if (res.ok) {
       const data = await res.json();
       setSession(data.session);
-      router.push("/dashboard");
+      router.push("/chat");
     } else {
       alert("Invalid credentials");
     }

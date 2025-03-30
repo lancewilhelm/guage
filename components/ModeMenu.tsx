@@ -6,10 +6,7 @@ import DropDownMenu, {
   DropDownMenuList,
 } from "@/components/DropDownMenu";
 
-const routes = [
-  { path: "/dashboard", label: "Dashboard" },
-  { path: "/chat", label: "Chat" },
-];
+const routes = [{ path: "/chat", label: "Chat" }];
 
 export default function ModeMenu() {
   const router = useRouter();

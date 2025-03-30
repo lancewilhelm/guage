@@ -2,6 +2,14 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { JwtPayload } from "jsonwebtoken";
 import { logger } from "./logger";
+import { cloudDb } from "./db/cloud";
+import { usersTable } from "./db/schema";
+import { eq } from "drizzle-orm";
+
+function throwError(message: string): never {
+  logger.error(message);
+  throw new Error(message);
+}
 
 /**
  * The session object
@@ -20,7 +28,7 @@ export interface Session extends JwtPayload {
   };
 }
 
-const SECRET = process.env.AUTH_SECRET!; // Define in .env.local
+const SECRET = process.env.AUTH_SECRET ?? throwError("AUTH_SECRET not defined"); // Define in .env.local
 
 /**
  * Create a new session and set the session cookie
@@ -33,8 +41,17 @@ export async function createSession(user: {
   name: string | null;
   role: "user" | "admin";
 }) {
-  const token = jwt.sign({ user }, SECRET, { expiresIn: "1y" });
-  (await cookies()).set("guage_token", token, { httpOnly: true, path: "/" });
+  const token = jwt.sign({ user }, SECRET, {
+    expiresIn: "1y",
+    algorithm: "HS256",
+  });
+  (await cookies()).set("guage_token", token, {
+    httpOnly: true,
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 60 * 60 * 24 * 365, // 1 year
+  });
   return jwt.decode(token) as Session;
 }
 
@@ -47,7 +64,21 @@ export async function getSession(): Promise<Session | null> {
   const token = (await cookies()).get("guage_token")?.value;
   if (!token) return null;
   try {
-    const session = jwt.verify(token, SECRET) as Session;
+    const session = jwt.verify(token, SECRET, {
+      algorithms: ["HS256"],
+    }) as Session;
+
+    // Check if the user exists in the database
+    const user = await cloudDb
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, session.user.email))
+      .execute();
+    if (!user || !user[0]) {
+      logger.warn("POST /api/login: User not found");
+      return null;
+    }
+
     return session;
   } catch (error) {
     logger.error("Error verifying session token:", error);
@@ -59,5 +90,11 @@ export async function getSession(): Promise<Session | null> {
  * Destroy the current session
  */
 export async function destroySession() {
-  (await cookies()).set("guage_token", "", { expires: new Date(0) });
+  (await cookies()).set("guage_token", "", {
+    expires: new Date(0),
+    path: "/",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
 }
