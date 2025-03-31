@@ -6,9 +6,13 @@ import { cloudDb } from "./db/cloud";
 import { usersTable } from "./db/schema";
 import { eq } from "drizzle-orm";
 
-function throwError(message: string): never {
-  logger.error(message);
-  throw new Error(message);
+function getAuthSecret(): string {
+  const secret = process.env.AUTH_SECRET;
+  if (!secret) {
+    logger.error("AUTH_SECRET not defined");
+    throw new Error("AUTH_SECRET not defined");
+  }
+  return secret;
 }
 
 /**
@@ -28,8 +32,6 @@ export interface Session extends JwtPayload {
   };
 }
 
-const SECRET = process.env.AUTH_SECRET ?? throwError("AUTH_SECRET not defined"); // Define in .env.local
-
 /**
  * Create a new session and set the session cookie
  * @param user - The user object to create the session with
@@ -41,7 +43,7 @@ export async function createSession(user: {
   name: string | null;
   role: "user" | "admin";
 }) {
-  const token = jwt.sign({ user }, SECRET, {
+  const token = jwt.sign({ user }, getAuthSecret(), {
     expiresIn: "1y",
     algorithm: "HS256",
   });
@@ -64,7 +66,7 @@ export async function getSession(): Promise<Session | null> {
   const token = (await cookies()).get("guage_token")?.value;
   if (!token) return null;
   try {
-    const session = jwt.verify(token, SECRET, {
+    const session = jwt.verify(token, getAuthSecret(), {
       algorithms: ["HS256"],
     }) as Session;
 
