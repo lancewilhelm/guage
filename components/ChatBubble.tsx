@@ -125,7 +125,7 @@ const MessageContent = memo(
       );
     }
 
-    return <div className="">{content}</div>;
+    return <div className="whitespace-pre-wrap">{content}</div>;
   },
 );
 
