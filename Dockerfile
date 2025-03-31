@@ -39,8 +39,17 @@ RUN \
 FROM base AS runner
 WORKDIR /app
 
+# Set environment defaults — override at runtime
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 
+# Default secrets (can be overridden via docker run -e ...)
+ENV OPENAI_API_KEY=""
+ENV AUTH_SECRET=""
+ENV DATABASE_URL=""
+
+# Create user
 RUN addgroup --system --gid 1001 nodejs && \
   adduser --system --uid 1001 --home /home/nextjs nextjs
 
