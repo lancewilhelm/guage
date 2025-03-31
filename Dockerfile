@@ -23,6 +23,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN mkdir -p ./data
+RUN corepack enable pnpm && NODE_ENV=production pnpm exec drizzle-kit push --config=drizzle.config.ts
+
 RUN \
   if [ -f yarn.lock ]; then yarn build; \
   elif [ -f package-lock.json ]; then npm run build; \
