@@ -1,15 +1,13 @@
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
-import { OpenAI } from "openai";
 import { getSession } from "@/utils/auth";
 import { LocalMessage } from "@/utils/db/local";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { getOpenAIClient } from "@/utils/llm/server/streamOpenAi";
+import { OpenAI } from "openai";
 
 export async function POST(req: Request) {
   logger.info(req, "POST /api/chat/generate-title");
+  const openai = getOpenAIClient()
   // Check for authorized user
   const session = await getSession();
   if (!session) {

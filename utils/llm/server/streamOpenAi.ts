@@ -2,7 +2,13 @@ import { logger } from "@/utils/logger";
 import { OpenAI } from "openai";
 import { LocalMessage } from "@/utils/db/local";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+export function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  return new OpenAI({ apiKey });
+}
 
 export async function streamOpenAI({
   history,
@@ -13,6 +19,7 @@ export async function streamOpenAI({
   userMessage: LocalMessage;
   model: string;
 }): Promise<ReadableStream> {
+  const openai = getOpenAIClient();
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({

@@ -1,4 +1,3 @@
-import OpenAI from "openai";
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { getSession } from "@/utils/auth";
@@ -6,6 +5,7 @@ import { cloudDb } from "@/utils/db/cloud";
 import { globalSettings } from "@/utils/db/schema";
 import { eq } from "drizzle-orm";
 import { GlobalSettings } from "@/store/globalSettingsStore";
+import { getOpenAIClient } from "@/utils/llm/server/streamOpenAi";
 
 interface OllamaModel {
   name: string;
@@ -23,7 +23,6 @@ interface OllamaModel {
   };
 }
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export async function GET() {
   logger.debug("GET /api/models");
@@ -35,6 +34,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   // const userId = session.user.id;
+
+  const openai = getOpenAIClient();
 
   try {
     // Fetch OpenAI models
