@@ -12,7 +12,7 @@ import DropDownMenu, {
   DropDownMenuItem,
   DropDownMenuList,
 } from "@/components/DropDownMenu";
-import { ChatItem } from "@/app/(auth)/chat/layout";
+import { ChatItem } from "@/app/(auth)/chat/chat-layout";
 
 export default function ChatListItem({
   chat,
