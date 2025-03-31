@@ -14,4 +14,16 @@ A clean and simple front-end for large-language models.
 
 ## Usage
 
+### Docker (recommended)
+
 Run with docker
+
+### Manual
+
+```bash
+# .env
+AUTH_SECRET=
+OPENAI_API_KEY=
+
+
+```

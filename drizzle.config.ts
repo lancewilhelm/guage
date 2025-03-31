@@ -1,4 +1,8 @@
-import "dotenv/config";
+try {
+  require("dotenv").config();
+} catch {
+  // no .env  
+}
 import { defineConfig } from "drizzle-kit";
 
 const isPostgres = process.env.DATABASE_URL;
@@ -11,9 +15,9 @@ export default defineConfig({
   dialect: isPostgres ? "postgresql" : "sqlite",
   dbCredentials: isPostgres
     ? {
-        url: process.env.DATABASE_URL!,
-      }
+      url: process.env.DATABASE_URL!,
+    }
     : {
-        url: "data/guage.db",
-      },
+      url: process.env.NODE_ENV === 'production' ? "data/guage.db" : "data/guage.dev.db",
+    },
 });
