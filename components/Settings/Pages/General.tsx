@@ -33,14 +33,12 @@ export default function ProfilePage() {
   return (
     <div className="flex flex-col gap-2">
       <InputElement
-        type="text"
         title="Name"
         value={session?.user.name === null ? "" : session?.user.name}
         onSave={() => console.log("Save")}
         autoSave={false}
       />
       <InputElement
-        type="email"
         title="Email"
         value={session?.user.email}
         onSave={() => console.log("Save")}

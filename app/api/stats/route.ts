@@ -27,10 +27,8 @@ export async function GET() {
       chatCount: chatCount[0].count,
       messageCount: messageCount[0].count,
     });
-
-    return NextResponse.json({ success: true });
   } catch (error) {
-    logger.error("Error in nuke:", error);
-    return NextResponse.json({ error: "Failed to nuke" }, { status: 500 });
+    logger.error(error, "Error in stats:");
+    return NextResponse.json({ error: "Failed to get stats" }, { status: 500 });
   }
 }

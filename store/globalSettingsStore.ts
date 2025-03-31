@@ -10,6 +10,7 @@ export interface Model {
 
 export interface GlobalSettings {
   allowRegistration: boolean;
+  ollamaUrl: string;
   availableModels: Model[];
 }
 
@@ -34,6 +35,7 @@ const isAdmin = (): boolean => {
 // Default settings
 const defaultSettings: GlobalSettings = {
   allowRegistration: false,
+  ollamaUrl: "http://localhost:11434",
   availableModels: [
     {
       name: "gpt-4o-mini",

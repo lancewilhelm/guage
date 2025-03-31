@@ -3,7 +3,6 @@ import CheckIcon from "@/components/Icon/Check";
 import XMarkIcon from "@/components/Icon/XMark";
 
 export default function InputElement({
-  type,
   title,
   value,
   onSave,
@@ -11,10 +10,9 @@ export default function InputElement({
   debounceTime = 500,
   className,
 }: {
-  type: string;
   title: string;
-  value: string | number | undefined;
-  onSave: () => void;
+  value: string | undefined;
+  onSave: (input: typeof value) => void;
   autoSave?: boolean;
   debounceTime?: number;
   className?: string;
@@ -32,7 +30,8 @@ export default function InputElement({
 
       // Set a new timeout
       debounceTimerRef.current = setTimeout(() => {
-        onSave();
+        if (!value) return;
+        onSave(value);
       }, debounceTime);
     }
   }
@@ -50,7 +49,7 @@ export default function InputElement({
       <div>{title}</div>
       <div className="flex items-center gap-2">
         <input
-          type={type}
+          type="text"
           value={newValue}
           onChange={handleChange}
           className="w-[250px] border border-(--sub-color) p-1 rounded"
@@ -60,7 +59,8 @@ export default function InputElement({
             <CheckIcon
               fill="var(--color-yes)"
               onClick={() => {
-                onSave();
+                if (!value) return;
+                onSave(value);
                 setNewValue(value);
               }}
               className="cursor-pointer"

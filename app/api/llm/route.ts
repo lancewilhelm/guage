@@ -2,6 +2,10 @@ import { logger } from "@/utils/logger";
 import { getSession } from "@/utils/auth";
 import { streamOpenAI } from "@/utils/llm/server/streamOpenAi";
 import { streamOllama } from "@/utils/llm/server/streamOllama";
+import { cloudDb } from "@/utils/db/cloud";
+import { globalSettings } from "@/utils/db/schema";
+import { eq } from "drizzle-orm";
+import { GlobalSettings } from "@/store/globalSettingsStore";
 
 export async function POST(req: Request) {
   logger.info("POST /api/llm");

@@ -2,6 +2,10 @@ import OpenAI from "openai";
 import { logger } from "@/utils/logger";
 import { NextResponse } from "next/server";
 import { getSession } from "@/utils/auth";
+import { cloudDb } from "@/utils/db/cloud";
+import { globalSettings } from "@/utils/db/schema";
+import { eq } from "drizzle-orm";
+import { GlobalSettings } from "@/store/globalSettingsStore";
 
 interface OllamaModel {
   name: string;
@@ -36,10 +40,21 @@ export async function GET() {
     // Fetch OpenAI models
     const openaiModels = (await openai.models.list()).data;
     console.log("openaiModels:", openaiModels);
+
+    // Fetch Ollama models
+    const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";
+    const settings = await cloudDb
+      .select()
+      .from(globalSettings)
+      .where(eq(globalSettings.id, GLOBAL_SETTINGS_ID))
+      .execute();
+    if (!settings || !settings[0]) {
+      logger.error("GET /api/models: Global settings not found");
+    }
+    const parsedSettings = settings[0].settings as GlobalSettings;
     const ollamaModels = await (
-      await fetch("http://localhost:11434/api/tags")
+      await fetch(`${parsedSettings.ollamaUrl}/api/tags`)
     ).json();
-    console.log("ollamaModels:", ollamaModels);
 
     return NextResponse.json({
       openaiModels: openaiModels.map((model) => model.id),

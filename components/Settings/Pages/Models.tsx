@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useGlobalSettingsStore } from "@/store/globalSettingsStore";
 import OpenAIIcon from "@/components/Icon/OpenAI";
 import OllamaIcon from "@/components/Icon/Ollama";
+import { logger } from "@/utils/logger";
 
 function ModelCard({ name, provider }: { name: string; provider: string }) {
   const { settings: globalSettings, updateSettings: updateGlobalSettings } =
@@ -36,6 +37,37 @@ function ModelCard({ name, provider }: { name: string; provider: string }) {
 export default function ModelsPage() {
   const [openAiModels, setOpenAiModels] = useState<string[]>([]);
   const [ollamaModels, setOllamaModels] = useState<string[]>([]);
+  const { settings: globalSettings, updateSettings: updateGlobalSettings } =
+    useGlobalSettingsStore();
+  const [ollamaUrl, setOllamaUrl] = useState<string>(
+    globalSettings.ollamaUrl ?? "",
+  );
+
+  async function handleOllamaUrlUpdate(newUrl: string) {
+    try {
+      // Using a proxy API endpoint to bypass CORS
+      const response = await fetch("/api/ollama/version", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: newUrl }),
+      });
+
+      if (!response.ok) {
+        logger.error("Invalid URL");
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.version) {
+        updateGlobalSettings({ ollamaUrl: newUrl });
+      }
+    } catch (error) {
+      logger.error("Error fetching Ollama URL:", error);
+    }
+  }
 
   useEffect(() => {
     async function fetchModels() {
@@ -47,17 +79,30 @@ export default function ModelsPage() {
         const data = await response.json();
         setOpenAiModels(data.openaiModels);
         setOllamaModels(data.ollamaModels);
+
+        // Check the available models against the fetched models
+        // and update the global settings if necessary
+        const allModels = [...data.openaiModels, ...data.ollamaModels];
+        const availableModels = globalSettings.availableModels || [];
+        const newAvailableModels = availableModels.filter((model) =>
+          allModels.includes(model.name),
+        );
+        if (newAvailableModels.length !== availableModels.length) {
+          updateGlobalSettings({
+            availableModels: newAvailableModels,
+          });
+        }
       } catch (error) {
         console.error("Error fetching models:", error);
       }
     }
 
     fetchModels();
-  }, []);
+  }, [globalSettings.availableModels, updateGlobalSettings]);
 
   return (
     <div className="flex flex-col gap-2">
-      <div>Select what models to make available to users to choose from.</div>
+      <div>Select what models to make available to users</div>
       <hr className="border-(--sub-color)" />
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
@@ -77,6 +122,29 @@ export default function ModelsPage() {
         <div className="flex items-center gap-2">
           <OllamaIcon fill="var(--main-color)" className="scale-125" />
           <div>Ollama</div>
+        </div>
+        <div>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm text-[var(--sub-text-color)]">
+              Ollama URL
+            </label>
+            <input
+              type="text"
+              className="px-2 py-1 border border-[var(--sub-color)] rounded bg-transparent w-full"
+              value={ollamaUrl}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setOllamaUrl(e.target.value);
+              }}
+            />
+            <button
+              onClick={() => {
+                handleOllamaUrlUpdate(ollamaUrl);
+              }}
+              className="flex items-center gap-2 w-min bg-(--main-color) text-(--bg-color) p-2 rounded cursor-pointer hover:opacity-80 active:opacity-60"
+            >
+              Check
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto">
           {ollamaModels

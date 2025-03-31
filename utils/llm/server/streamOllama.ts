@@ -1,5 +1,9 @@
 import { logger } from "@/utils/logger";
 import { LocalMessage } from "@/utils/db/local";
+import { cloudDb } from "@/utils/db/cloud";
+import { globalSettings } from "@/utils/db/schema";
+import { eq } from "drizzle-orm";
+import { GlobalSettings } from "@/store/globalSettingsStore";
 
 interface OllamaResponse {
   model: string;
@@ -35,11 +39,23 @@ export async function streamOllama({
           content: msg.content,
         }));
 
-        const response = await fetch("http://localhost:11434/api/chat", {
+        // Fetch the base URL from the global settings
+        const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";
+        const settings = await cloudDb
+          .select()
+          .from(globalSettings)
+          .where(eq(globalSettings.id, GLOBAL_SETTINGS_ID))
+          .execute();
+        if (!settings || !settings[0]) {
+          logger.error("GET /api/models: Global settings not found");
+        }
+        const parsedSettings = settings[0].settings as GlobalSettings;
+
+        const response = await fetch(`${parsedSettings.ollamaUrl}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            model: model, // customize per your needs
+            model: model,
             messages: formattedMessages,
             stream: true,
           }),
@@ -57,26 +73,37 @@ export async function streamOllama({
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = JSON.parse(decoder.decode(value)) as OllamaResponse;
-          logger.debug(chunk, "Ollama chunk:");
+          const decodedText = decoder.decode(value);
+          logger.debug(decodedText, "Ollama value:");
 
-          if (chunk.done) return;
+          // Split the text by newlines and parse each line as a separate JSON object
+          const jsonObjects = decodedText
+            .trim()
+            .split(/\n+/)
+            .filter((text) => text.trim());
 
-          try {
-            const content = chunk?.message?.content;
-            if (content) {
-              controller.enqueue(
-                encoder.encode(
-                  `event: messageChunk\ndata: ${JSON.stringify(content)}\n\n`,
-                ),
-              );
+          for (const jsonText of jsonObjects) {
+            try {
+              const chunk = JSON.parse(jsonText) as OllamaResponse;
+              logger.debug(chunk, "Ollama chunk:");
+
+              if (chunk.done) return;
+
+              const content = chunk?.message?.content;
+              if (content) {
+                controller.enqueue(
+                  encoder.encode(
+                    `event: messageChunk\ndata: ${JSON.stringify(content)}\n\n`,
+                  ),
+                );
+              }
+            } catch (err) {
+              console.warn("Failed to parse Ollama chunk", err, jsonText);
             }
-          } catch (err) {
-            console.warn("Failed to parse Ollama chunk", err);
           }
         }
       } catch (error) {
-        console.error(error, "Error streaming from Ollama:");
+        logger.error(error, "Error streaming from Ollama:");
         controller.enqueue(
           encoder.encode("event: error\ndata: Error streaming Ollama\n\n"),
         );
