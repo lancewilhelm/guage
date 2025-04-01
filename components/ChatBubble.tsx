@@ -276,7 +276,7 @@ function ChatBubble({
 
   return (
     <div
-      className={`flex cursor-default w-full ${
+      className={`chat-bubble flex cursor-default w-full ${
         message.role === "user" ? "flex-row-reverse" : "flex-row"
       }`}
       onMouseEnter={() => setIsButtonRowVisible(true)}
@@ -303,7 +303,7 @@ function ChatBubble({
                 e.target.style.height = `${e.target.scrollHeight}px`;
               }}
               onKeyDown={handleTextareaKeyDown}
-              className="w-full p-1 focus:outline-none"
+              className="w-full p-1 focus:outline-none max-h-[600px] resize-none"
             />
             <div className="flex gap-3 justify-end">
               <CheckIcon
