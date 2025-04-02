@@ -15,8 +15,8 @@
   --sub-alt-color: #cccccc; /* Tertiary background color, used for borders */
   --text-color: #1b1b1b; /* Main foreground color */
   --main-color: #1b1b1b; /* Accent color */
-  --color-yes: #008800;
-  --color-no: #880000;
+  --yes-color: #008800;
+  --no-color: #880000;
 }
 
 @media (prefers-color-scheme: dark) {

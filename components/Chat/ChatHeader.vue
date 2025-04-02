@@ -1,10 +1,6 @@
 <script setup lang="ts">
-defineProps<{
-  isChatListOpen: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "openChatList"): void;
-}>();
+const isChatListOpen = defineModel<boolean>("isChatListOpen");
+const chatStore = useChatStore();
 
 async function handleSignOut() {
   await authClient.signOut({
@@ -27,13 +23,18 @@ async function handleSignOut() {
         v-if="!isChatListOpen"
         name="lucide:panel-left-open"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="emit('openChatList')"
+        @click="isChatListOpen = true"
       />
       <Icon
         v-if="!isChatListOpen"
         name="lucide:plus"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="() => console.log('create new chat')"
+        @click="
+          () => {
+            chatStore.setCurrentChatId(undefined);
+            navigateTo('/chat');
+          }
+        "
       />
     </div>
     <div class="flex gap-4 items-center">

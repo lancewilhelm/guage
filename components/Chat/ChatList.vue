@@ -1,10 +1,10 @@
 <script setup lang="ts">
-const props = defineProps<{
-  isOpen: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "close"): void;
-}>();
+import { dbRetrieveChats } from "~/utils/db/local";
+
+const isOpen = defineModel<boolean>("isOpen");
+
+const chats = (await dbRetrieveChats()).filter((chat) => !chat.deleted);
+const chatStore = useChatStore();
 
 const chatListRef = ref<HTMLElement | null>(null);
 const resizerRef = ref<HTMLElement | null>(null);
@@ -17,7 +17,8 @@ useDraggable(resizerRef, {
   preventDefault: true,
   onMove: (position) => {
     if (position.x < minWidth / 2) {
-      emit("close");
+      targetWidth.value = minWidth;
+      isOpen.value = false;
     } else {
       targetWidth.value = Math.max(minWidth, Math.min(position.x, maxWidth));
     }
@@ -30,36 +31,51 @@ useDraggable(resizerRef, {
     ref="chatListRef"
     class="h-full bg-(--sub-alt-color)"
     :style="{
-      width: targetWidth + 'px',
-      display: props.isOpen ? 'flex' : 'none',
+      display: isOpen ? 'flex' : 'none',
     }"
   >
-    <div class="flex flex-col grow w-full">
+    <div
+      class="flex flex-col grow w-full"
+      :style="{ width: targetWidth + 'px' }"
+    >
       <div class="flex w-full h-[40px] items-center px-4">
         <Icon
           name="lucide:panel-left-close"
           class="text-(--main-color) cursor-pointer scale-125"
-          @click="emit('close')"
+          @click="isOpen = false"
         />
         <div class="grow text-center">Chats</div>
         <Icon
           name="lucide:plus"
           class="text-(--main-color) cursor-pointer scale-125"
-          @click="() => console.log('create new chat')"
+          @click="
+            () => {
+              chatStore.setCurrentChatId(undefined);
+              navigateTo('/chat');
+            }
+          "
         />
       </div>
-      <div class="flex flex-col justify-center p-2 overflow-hidden">
+      <div class="flex flex-col justify-center p-2">
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
-            <!-- Sessions List -->
+            <div v-for="chat in chats" :key="chat.id" class="flex w-full">
+              <ChatListItem
+                :chat="chat"
+                @click="
+                  async () => {
+                    navigateTo('/chat/' + chat.id);
+                  }
+                "
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div ref="resizerRef" class="flex cursor-ew-resize">
-      <!-- Some trickery to create a 1px border with a wide hover range -->
-      <div class="w-[3px] bg-(--sub-alt-color)" />
-      <div class="w-[3px] bg-(--bg-color)" />
-    </div>
+    <div
+      ref="resizerRef"
+      class="flex w-[3px] shrink-0 cursor-ew-resize bg-(--bg-color) hover:bg-(--main-color)!"
+    />
   </div>
 </template>

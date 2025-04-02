@@ -189,6 +189,7 @@ export async function dbRetrieveChat(chatId: string) {
  * @returns Promise that resolves when the operation is complete.
  */
 export async function dbMarkChatDeleted(chatId: string) {
+  logger.debug("Marking chat as deleted", chatId);
   await localDb.chatsTable.update(chatId, {
     deleted: true,
     synced: false,

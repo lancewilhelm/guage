@@ -21,7 +21,7 @@ import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAssistantM
  */
 export async function generateChatTitle(userMessage: LocalMessage) {
   try {
-    const response = await fetch("/api/generate-title", {
+    const response = await $fetch<string>("/api/generate-title", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -29,10 +29,9 @@ export async function generateChatTitle(userMessage: LocalMessage) {
       }),
     });
 
-    if (!response.ok) throw new Error("Failed to generate title");
-
-    const title = await response.json();
-    return title;
+    // if (!response.ok) throw new Error("Failed to generate title");
+    logger.debug("response", response);
+    return response;
   } catch (error) {
     logger.error("Error generating title:", error);
     return null;
@@ -72,36 +71,30 @@ export async function handleSubmitMessage(userInput: string) {
   logger.debug("handleSubmitMessage", userInput);
 
   // Get the necessary references
-  const {
-    chats,
-    currentChatId,
-    createChat,
-    setCurrentChatId,
-    updateChatMetadata,
-  } = useChatStore();
+  const chatStore = useChatStore();
 
-  logger.debug("currentChatId", currentChatId);
+  logger.debug("currentChatId", chatStore.currentChatId);
   // If there's no chat ID, create a new chat
-  let chatIdToUse = currentChatId;
+  let chatIdToUse = chatStore.currentChatId;
   if (!chatIdToUse) {
     const newChat = await dbCreateChat();
     if (newChat) {
-      createChat(
+      chatStore.createChat(
         newChat.id,
         newChat.title,
         newChat.createdAt,
         newChat.updatedAt,
       );
-      setCurrentChatId(newChat.id);
+      chatStore.setCurrentChatId(newChat.id);
       chatIdToUse = newChat.id;
     }
   }
 
   if (!chatIdToUse) return;
 
-  updateChatMetadata(chatIdToUse, { isStreaming: true });
+  chatStore.updateChatMetadata(chatIdToUse, { isStreaming: true });
 
-  const chat = chats[chatIdToUse];
+  const chat = chatStore.chats[chatIdToUse];
   if (!chat) return;
 
   // Find parent message if it exists
@@ -130,12 +123,12 @@ export async function handleSubmitMessage(userInput: string) {
  * @param editedMessage The edited message
  */
 export async function handleEditMessage(editedMessage: LocalMessage) {
-  const { chats, currentChatId, updateChatMetadata } = useChatStore();
-  if (!currentChatId) return;
+  const chatStore = useChatStore();
+  if (!chatStore.currentChatId) return;
 
-  updateChatMetadata(currentChatId, { isStreaming: true });
+  chatStore.updateChatMetadata(chatStore.currentChatId, { isStreaming: true });
 
-  const chat = chats[currentChatId];
+  const chat = chatStore.chats[chatStore.currentChatId];
   if (!chat) return;
 
   const parentId = editedMessage.parentId;
@@ -143,14 +136,14 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
 
   // Create and persist message pair
   const { userMessage, assistantMessage } = createMessagePair(
-    currentChatId,
+    chatStore.currentChatId,
     editedMessage.content,
     parentId,
   );
 
   // Update UI and storage
   await updateChatAndGetResponse(
-    currentChatId,
+    chatStore.currentChatId,
     userMessage,
     assistantMessage,
     parentId,
@@ -263,7 +256,7 @@ async function updateChatAndGetResponse(
   chat: ChatState,
   history?: LocalMessage[],
 ) {
-  const { chats, addMessage, editBranch, updateChatMetadata } = useChatStore();
+  const chatStore = useChatStore();
   const now = new Date();
 
   // Update parent's childrenIds if applicable
@@ -274,19 +267,19 @@ async function updateChatAndGetResponse(
         ? [...parent.childrenIds, userMessage.id]
         : [userMessage.id];
       dbUpdateMessage(parentId, { childrenIds: updatedChildren });
-      addMessage(chatId, { ...parent, childrenIds: updatedChildren });
+      chatStore.addMessage(chatId, { ...parent, childrenIds: updatedChildren });
     }
   }
 
   // Update state
-  addMessage(chatId, userMessage);
-  addMessage(chatId, assistantMessage);
+  chatStore.addMessage(chatId, userMessage);
+  chatStore.addMessage(chatId, assistantMessage);
 
   // Update the branch
-  editBranch(chatId, parentId, userMessage.id);
+  chatStore.editBranch(chatId, parentId, userMessage.id);
 
   // Make sure we update the local DB with the new active branch immediately
-  const updatedBranch = chats[chatId].activeBranch;
+  const updatedBranch = chatStore.chats[chatId].activeBranch;
   dbUpdateChat(chatId, {
     activeBranch: [...updatedBranch],
     updatedAt: now,
@@ -315,18 +308,19 @@ async function updateChatAndGetResponse(
 
   if (isFirstMessage) {
     const title = await generateChatTitle(userMessage);
+    if (!title) return;
     dbUpdateChat(chatId, {
       title,
       updatedAt: now,
-      activeBranch: [...chats[chatId].activeBranch],
+      activeBranch: [...chatStore.chats[chatId].activeBranch],
     });
-    updateChatMetadata(chatId, { title, updatedAt: now });
+    chatStore.updateChatMetadata(chatId, { title, updatedAt: now });
   } else {
     dbUpdateChat(chatId, {
       updatedAt: now,
-      activeBranch: [...chats[chatId].activeBranch],
+      activeBranch: [...chatStore.chats[chatId].activeBranch],
     });
-    updateChatMetadata(chatId, { updatedAt: now });
+    chatStore.updateChatMetadata(chatId, { updatedAt: now });
   }
 }
 
@@ -340,7 +334,7 @@ export async function preloadChats(chats: LocalChat[]) {
   if (!chats || chats.length === 0) return;
 
   try {
-    const { chats: storeChats, addMessage } = useChatStore();
+    const chatStore = useChatStore();
 
     // First, separate pinned chats
     const pinnedChats = chats.filter((chat) => chat.pinned);
@@ -361,8 +355,8 @@ export async function preloadChats(chats: LocalChat[]) {
     // Preload each chat's messages
     for (const chat of chatsToPreload) {
       // Skip if messages are already loaded
-      const chatStore = storeChats[chat.id];
-      if (chatStore && Object.keys(chatStore.messages).length > 0) {
+      const chatFromStore = chatStore.chats[chat.id];
+      if (chatFromStore && Object.keys(chatFromStore.messages).length > 0) {
         continue;
       }
 
@@ -371,7 +365,7 @@ export async function preloadChats(chats: LocalChat[]) {
       if (messages && messages.length > 0) {
         // Add messages to the store
         messages.forEach((msg: LocalMessage) => {
-          addMessage(chat.id, msg);
+          chatStore.addMessage(chat.id, msg);
         });
 
         // Give a small delay between chat loads to avoid blocking the main thread
