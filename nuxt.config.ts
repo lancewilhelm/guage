@@ -5,7 +5,20 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
-  modules: ["@nuxt/eslint", "@nuxt/fonts", "@nuxt/icon"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/fonts",
+    "@nuxt/icon",
+    "@vueuse/nuxt",
+    "@pinia/nuxt",
+  ],
+  app: {
+    head: {
+      htmlAttrs: {
+        lang: "en",
+      },
+    },
+  },
   runtimeConfig: {
     openaiApiKey: "",
     public: {

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+useHead({
+  title: "Register",
+});
+
 const email = ref("");
 const password = ref("");
 const verifyPassword = ref("");

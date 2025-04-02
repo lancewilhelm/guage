@@ -1,5 +1,5 @@
 <script setup lang="ts">
-definePageMeta({
+useHead({
   title: "Login",
 });
 const email = ref("");
