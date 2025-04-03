@@ -278,6 +278,8 @@ async function updateChatAndGetResponse(
   // Update the branch
   chatStore.editBranch(chatId, parentId, userMessage.id);
 
+  chatStore.updateChatMetadata(chatId, { updatedAt: now });
+
   // Make sure we update the local DB with the new active branch immediately
   const updatedBranch = chatStore.chats[chatId].activeBranch;
   dbUpdateChat(chatId, {

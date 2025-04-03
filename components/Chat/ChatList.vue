@@ -8,28 +8,31 @@ const sortedChats = computed(() => {
   lastWeek.setDate(lastWeek.getDate() - 7);
   const lastMonth = new Date(today);
   lastMonth.setDate(lastMonth.getDate() - 30);
+  const sortedChats = Object.values(chatStore.chats).sort(
+    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+  );
   return {
-    Pinned: Object.values(chatStore.chats).filter((chat) => chat.pinned),
-    Today: Object.values(chatStore.chats).filter(
+    Pinned: sortedChats.filter((chat) => chat.pinned),
+    Today: sortedChats.filter(
       (chat) => !chat.pinned && chat.updatedAt >= today,
     ),
-    Yesterday: Object.values(chatStore.chats).filter(
+    Yesterday: sortedChats.filter(
       (chat) =>
         !chat.pinned && chat.updatedAt >= yesterday && chat.updatedAt < today,
     ),
-    "Last 7 Days": Object.values(chatStore.chats).filter(
+    "Last 7 Days": sortedChats.filter(
       (chat) =>
         !chat.pinned &&
         chat.updatedAt >= lastWeek &&
         chat.updatedAt < yesterday,
     ),
-    "Last 30 Days": Object.values(chatStore.chats).filter(
+    "Last 30 Days": sortedChats.filter(
       (chat) =>
         !chat.pinned &&
         chat.updatedAt >= lastMonth &&
         chat.updatedAt < lastWeek,
     ),
-    Older: Object.values(chatStore.chats).filter(
+    Older: sortedChats.filter(
       (chat) => !chat.pinned && chat.updatedAt < lastMonth,
     ),
   };
