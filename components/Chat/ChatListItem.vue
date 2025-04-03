@@ -7,6 +7,7 @@ const props = defineProps<{
 const newTitle = ref(props.chat.title);
 
 const isRenaming = ref(false);
+const isHovered = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 
 const chatStore = useChatStore();
@@ -26,6 +27,8 @@ const chatStore = useChatStore();
         });
       }
     "
+    @mouseover="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <div class="flex cursor-pointer hover:opacity-80 overflow-hidden">
       <input
@@ -94,7 +97,10 @@ const chatStore = useChatStore();
       <DropDownMenuButton>
         <Icon
           name="lucide:more-horizontal"
-          class="text-(--main-color) scale-125"
+          :class="[
+            'scale-125',
+            isHovered ? 'text-(--main-color)' : 'text-(--sub-alt-color)',
+          ]"
         />
       </DropDownMenuButton>
       <DropDownMenuList>
