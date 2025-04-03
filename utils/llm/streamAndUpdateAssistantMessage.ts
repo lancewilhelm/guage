@@ -13,11 +13,10 @@ export async function streamAndUpdateAssistantMessage({
   assistantMessage: LocalMessage;
   history: LocalMessage[];
 }) {
-  const { updateMessage, updateChatMetadata, setChatAbortController } =
-    useChatStore();
+  const chatStore = useChatStore();
 
   const abortController = new AbortController();
-  setChatAbortController(chatId, abortController);
+  chatStore.setChatAbortController(chatId, abortController);
 
   try {
     await sendMessageToLLM({
@@ -26,7 +25,7 @@ export async function streamAndUpdateAssistantMessage({
       history,
       signal: abortController.signal,
       onChunk: (partialText) => {
-        updateMessage(chatId, assistantMessage.id, partialText);
+        chatStore.updateMessage(chatId, assistantMessage.id, partialText);
         dbUpdateMessage(assistantMessage.id, { content: partialText });
       },
     });
@@ -37,7 +36,7 @@ export async function streamAndUpdateAssistantMessage({
       console.error("LLM streaming error:", err);
     }
   } finally {
-    updateChatMetadata(chatId, { isStreaming: false });
-    setChatAbortController(chatId); // clear abort controller
+    chatStore.setChatStreaming(chatId, false);
+    chatStore.setChatAbortController(chatId); // clear abort controller
   }
 }

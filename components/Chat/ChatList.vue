@@ -1,10 +1,41 @@
 <script setup lang="ts">
-import { dbRetrieveChats } from "~/utils/db/local";
-
 const isOpen = defineModel<boolean>("isOpen");
 
-const chats = (await dbRetrieveChats()).filter((chat) => !chat.deleted);
 const chatStore = useChatStore();
+const sortedChats = computed(() => {
+  const today = new Date(new Date().setHours(0, 0, 0, 0));
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const lastWeek = new Date(today);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+  const lastMonth = new Date(today);
+  lastMonth.setDate(lastMonth.getDate() - 30);
+  return {
+    Pinned: Object.values(chatStore.chats).filter((chat) => chat.pinned),
+    Today: Object.values(chatStore.chats).filter(
+      (chat) => !chat.pinned && chat.updatedAt >= today,
+    ),
+    Yesterday: Object.values(chatStore.chats).filter(
+      (chat) =>
+        !chat.pinned && chat.updatedAt >= yesterday && chat.updatedAt < today,
+    ),
+    "Last 7 Days": Object.values(chatStore.chats).filter(
+      (chat) =>
+        !chat.pinned &&
+        chat.updatedAt >= lastWeek &&
+        chat.updatedAt < yesterday,
+    ),
+    "Last 30 Days": Object.values(chatStore.chats).filter(
+      (chat) =>
+        !chat.pinned &&
+        chat.updatedAt >= lastMonth &&
+        chat.updatedAt < lastWeek,
+    ),
+    Older: Object.values(chatStore.chats).filter(
+      (chat) => !chat.pinned && chat.updatedAt < lastMonth,
+    ),
+  };
+});
 
 const chatListRef = ref<HTMLElement | null>(null);
 const resizerRef = ref<HTMLElement | null>(null);
@@ -49,8 +80,7 @@ useDraggable(resizerRef, {
           name="lucide:plus"
           class="text-(--main-color) cursor-pointer scale-125"
           @click="
-            () => {
-              chatStore.setCurrentChatId(undefined);
+            async () => {
               navigateTo('/chat');
             }
           "
@@ -59,10 +89,17 @@ useDraggable(resizerRef, {
       <div class="flex flex-col justify-center p-2">
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
-            <div v-for="chat in chats" :key="chat.id" class="flex w-full">
+            <div
+              v-for="[groupName, group] of Object.entries(sortedChats)"
+              :key="groupName"
+              class="flex flex-col w-full gap-2"
+            >
+              <ChatListGroupTitle v-if="group.length" :title="groupName" />
               <ChatListItem
+                v-for="chat of group"
+                :key="chat.id"
                 :chat="chat"
-                @click="
+                @mousedown="
                   async () => {
                     navigateTo('/chat/' + chat.id);
                   }

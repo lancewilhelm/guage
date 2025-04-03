@@ -14,6 +14,7 @@ export const useChatStore = defineStore("chat", () => {
   ) {
     if (!chats.value[chatId]) {
       chats.value[chatId] = {
+        id: chatId,
         messages: {},
         activeBranch,
         isStreaming: false,
@@ -199,6 +200,7 @@ function buildBranchFrom(chat: ChatState, startId: string): string[] {
 }
 
 export interface ChatState {
+  id: string;
   messages: Record<string, LocalMessage>;
   activeBranch: string[];
   isStreaming: boolean;

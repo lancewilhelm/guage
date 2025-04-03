@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const isChatListOpen = defineModel<boolean>("isChatListOpen");
-const chatStore = useChatStore();
 
 async function handleSignOut() {
   await authClient.signOut({
@@ -31,7 +30,6 @@ async function handleSignOut() {
         class="text-(--main-color) cursor-pointer scale-125"
         @click="
           () => {
-            chatStore.setCurrentChatId(undefined);
             navigateTo('/chat');
           }
         "

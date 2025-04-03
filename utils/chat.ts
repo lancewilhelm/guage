@@ -92,7 +92,7 @@ export async function handleSubmitMessage(userInput: string) {
 
   if (!chatIdToUse) return;
 
-  chatStore.updateChatMetadata(chatIdToUse, { isStreaming: true });
+  chatStore.setChatStreaming(chatIdToUse, true);
 
   const chat = chatStore.chats[chatIdToUse];
   if (!chat) return;
@@ -126,7 +126,7 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
   const chatStore = useChatStore();
   if (!chatStore.currentChatId) return;
 
-  chatStore.updateChatMetadata(chatStore.currentChatId, { isStreaming: true });
+  chatStore.setChatStreaming(chatStore.currentChatId, true);
 
   const chat = chatStore.chats[chatStore.currentChatId];
   if (!chat) return;

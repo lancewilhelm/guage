@@ -1,45 +1,99 @@
 <script setup lang="ts">
-import { dbRetrieveChat, dbRetrieveMessages } from "~/utils/db/local";
+// Imports
+import {
+  dbRetrieveChat,
+  dbRetrieveChats,
+  dbRetrieveMessages,
+} from "~/utils/db/local";
+const route = useRoute();
+const chatStore = useChatStore();
 
+// Page metadata
 useHead({
   title: "Chat",
 });
 
-const route = useRoute();
-const chatStore = useChatStore();
-watchEffect(async () => {
-  if (route.params.id) {
-    const id = Array.isArray(route.params.id)
-      ? route.params.id[0]
-      : route.params.id;
+// Load chats and messages on page load and navigation
+const routeId = computed(() => {
+  if (!route.params.id) return null;
+  return Array.isArray(route.params.id) ? route.params.id[0] : route.params.id;
+});
 
-    if (id === chatStore.currentChatId) return;
+const initialLoad = ref(true);
 
-    // Load the chat data into the store
-    const chat = await dbRetrieveChat(id);
-    if (!chat) {
-      navigateTo("/chat");
+watch(
+  routeId,
+  async (newId) => {
+    // If the this is the initial load, we need to populate the chat store
+    if (initialLoad.value) {
+      // Populate the chat store on initial page load
+      const allChats = await dbRetrieveChats();
+      if (allChats.length) {
+        allChats.forEach((chat) => {
+          if (!chat.deleted) {
+            chatStore.createChat(
+              chat.id,
+              chat.title,
+              chat.createdAt,
+              chat.updatedAt,
+              chat.activeBranch,
+              chat.pinned,
+            );
+          }
+        });
+      }
+      initialLoad.value = false;
+    }
+
+    // If the chat ID is not provided, set the current chat ID to null
+    if (!newId) {
+      chatStore.setCurrentChatId();
+      focusInput();
       return;
     }
-    chatStore.createChat(
-      id,
-      chat.title,
-      chat.createdAt,
-      chat.updatedAt,
-      chat.activeBranch,
-      chat.pinned,
-    );
+
+    // Check if the chat is already loaded
+    if (newId === chatStore.currentChatId) return;
+
+    // Load the chat data into the store
+    if (!initialLoad.value) {
+      const chat = await dbRetrieveChat(newId);
+      if (!chat) {
+        navigateTo("/chat");
+        return;
+      }
+      chatStore.createChat(
+        newId,
+        chat.title,
+        chat.createdAt,
+        chat.updatedAt,
+        chat.activeBranch,
+        chat.pinned,
+      );
+    }
 
     // Load the chat messages
-    const messages = await dbRetrieveMessages(id);
+    const messages = await dbRetrieveMessages(newId);
     for (const message of messages) {
-      chatStore.addMessage(id, message);
+      chatStore.addMessage(newId, message);
     }
 
     // Set the current chat ID in the store
-    chatStore.setCurrentChatId(id);
+    chatStore.setCurrentChatId(newId);
+
+    focusInput();
+  },
+  { immediate: true },
+);
+
+const chatInputRef = ref<HTMLElement | null>(null);
+function focusInput() {
+  if (chatInputRef.value) {
+    nextTick(() => {
+      chatInputRef.value?.focus();
+    });
   }
-});
+}
 
 const isChatListOpen = ref(true);
 </script>
@@ -57,11 +111,11 @@ const isChatListOpen = ref(true);
       <div
         class="flex flex-grow overflow-y-auto overflow-x-hidden chat-container"
       >
-        <ChatContainer class="mx-auto w-full max-w-(--chat-max-width) px-5" />
+        <ChatContainer />
       </div>
       <div class="absolute bottom-0 left-0 right-0 pt-4 pb-4">
         <div class="w-full max-w-(--chat-max-width) mx-auto">
-          <ChatInput />
+          <ChatInput ref="chatInputRef" />
         </div>
       </div>
     </div>
