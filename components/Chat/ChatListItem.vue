@@ -99,7 +99,11 @@ const chatStore = useChatStore();
           name="lucide:more-horizontal"
           :class="[
             'scale-125',
-            isHovered ? 'text-(--main-color)' : 'text-(--sub-alt-color)',
+            isHovered
+              ? 'text-(--main-color)'
+              : chatStore.currentChatId === chat.id
+                ? 'text-(--bg-color)'
+                : 'text-(--sub-alt-color)',
           ]"
         />
       </DropDownMenuButton>

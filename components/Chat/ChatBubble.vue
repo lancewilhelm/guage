@@ -66,6 +66,14 @@ watch(isEditing, async (val) => {
           ref="textareaRef"
           v-model="editedContent"
           class="w-full p-1 focus:outline-none max-h-[600px] resize-none"
+          @keydown.enter="
+            (e) => {
+              if (e.shiftKey) return;
+              e.preventDefault();
+              isEditing = false;
+              handleEditMessage({ ...message, content: editedContent });
+            }
+          "
         />
         <div class="flex gap-3 justify-end">
           <Icon
@@ -74,6 +82,7 @@ watch(isEditing, async (val) => {
             @click="
               () => {
                 isEditing = false;
+                handleEditMessage({ ...message, content: editedContent });
               }
             "
           />
@@ -100,6 +109,12 @@ watch(isEditing, async (val) => {
             'flex flex-col gap-2 rounded-lg p-3',
             message.role === 'user' ? 'max-w-full' : 'w-full',
           ]"
+          @dblclick="
+            () => {
+              if (isEditing || message.role !== 'user') return;
+              isEditing = true;
+            }
+          "
         >
           <ChatBubbleContent
             v-if="message.content"
@@ -123,6 +138,7 @@ watch(isEditing, async (val) => {
         >
           <ChatBubbleVersions
             v-if="versionInfo && versionInfo.total > 1"
+            :id="message.id"
             :version-info="versionInfo"
           />
           <Icon

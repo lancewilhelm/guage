@@ -73,10 +73,7 @@ watch(
     }
 
     // Load the chat messages
-    const messages = await dbRetrieveMessages(newId);
-    for (const message of messages) {
-      chatStore.addMessage(newId, message);
-    }
+    await retrieveAndStoreMessages(newId);
 
     // Set the current chat ID in the store
     chatStore.setCurrentChatId(newId);
@@ -86,6 +83,14 @@ watch(
   { immediate: true },
 );
 
+async function retrieveAndStoreMessages(messageId: string) {
+  const messages = await dbRetrieveMessages(messageId);
+  for (const message of messages) {
+    chatStore.addMessage(messageId, message);
+  }
+}
+
+// Handler for input focus
 const chatInputRef = ref<HTMLElement | null>(null);
 function focusInput() {
   if (chatInputRef.value) {
