@@ -41,10 +41,22 @@ function computeVersionInfo(
     return { total: versions.length, currentIndex, versionIds: versions };
   }
 }
+
+// const autoScroll = ref(true);
+const scrollContainer = ref<HTMLElement | null>(null);
+defineExpose({
+  scrollToBottom: () => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
+    }
+  },
+});
 </script>
+
 <template>
   <div
     v-if="chatStore.currentChatId"
+    ref="scrollContainer"
     class="flex flex-col gap-2 w-full max-w-(--chat-max-width) mx-auto px-5"
   >
     <div

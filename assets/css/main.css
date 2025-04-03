@@ -97,6 +97,12 @@ math {
   padding: 5px 0;
 }
 
+hr {
+  border: none;
+  border-top: 1px solid var(--sub-alt-color);
+  margin: 1rem 0;
+}
+
 input:focus,
 textarea:focus {
   outline: none;

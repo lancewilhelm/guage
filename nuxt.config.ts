@@ -50,5 +50,8 @@ export default defineNuxtConfig({
       },
     },
   },
-  components: ["~/components", { path: "~/components/mdc", pathPrefix: false }],
+  components: [
+    { path: "~/components", pathPrefix: false },
+    { path: "~/components/mdc", pathPrefix: false },
+  ],
 });
