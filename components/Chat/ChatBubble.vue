@@ -1,5 +1,8 @@
 <script setup lang="ts">
+// Imports
 import type { LocalMessage } from "~/utils/db/local";
+
+// Props
 const props = defineProps<{
   message: LocalMessage;
   versionInfo?: {
@@ -9,18 +12,30 @@ const props = defineProps<{
   };
 }>();
 
-const isEditing = ref(false);
-const isCopied = ref(false);
+// Definitions
 const isButtonRowVisible = ref(false);
 const editedContent = ref(props.message.content);
 const contentRef = ref<HTMLElement | null>(null);
 
+// Handle copying text to clipboard
+const isCopied = ref(false);
 function handleCopy() {
   if (!contentRef.value) return;
   navigator.clipboard.writeText(contentRef.value.innerText);
   isCopied.value = true;
   setTimeout(() => (isCopied.value = false), 2000);
 }
+
+// Focus the textarea when editing
+const isEditing = ref(false);
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+watch(isEditing, async (val) => {
+  if (val) {
+    nextTick(() => {
+      textareaRef.value?.focus();
+    });
+  }
+});
 </script>
 
 <template>
@@ -34,7 +49,7 @@ function handleCopy() {
   >
     <div
       :class="[
-        'flex flex-col gap-1',
+        'flex flex-col gap-1 w-full',
         isEditing && 'w-full',
         message.role === 'user' ? 'items-end' : 'items-start',
       ]"
@@ -48,6 +63,7 @@ function handleCopy() {
       >
         <textarea
           v-if="isEditing"
+          ref="textareaRef"
           v-model="editedContent"
           class="w-full p-1 focus:outline-none max-h-[600px] resize-none"
         />
@@ -55,7 +71,11 @@ function handleCopy() {
           <Icon
             name="lucide:check"
             class="text-(--yes-color) scale-125 cursor-pointer"
-            @click="isEditing = false"
+            @click="
+              () => {
+                isEditing = false;
+              }
+            "
           />
           <Icon
             name="lucide:x"
@@ -68,7 +88,9 @@ function handleCopy() {
         v-else
         :class="[
           'rounded-lg',
-          message.role === 'user' && 'bg-(--sub-alt-color)',
+          message.role === 'user'
+            ? 'max-w-full bg-(--sub-alt-color)'
+            : 'w-full',
         ]"
       >
         <div
@@ -126,7 +148,11 @@ function handleCopy() {
               'cursor-pointer',
               isButtonRowVisible ? 'text-(--main-color)' : 'text-(--bg-color)',
             ]"
-            @click="isEditing = true"
+            @click="
+              () => {
+                isEditing = true;
+              }
+            "
           />
         </div>
       </div>
