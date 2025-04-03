@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     "@vueuse/nuxt",
     "@pinia/nuxt",
     "@nuxtjs/mdc",
+    "pinia-plugin-persistedstate/nuxt",
   ],
   app: {
     head: {

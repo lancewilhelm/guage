@@ -94,17 +94,12 @@ function focusInput() {
     });
   }
 }
-
-const isChatListOpen = ref(true);
 </script>
 
 <template>
   <div class="w-full h-full grid grid-rows-[40px_1fr] grid-cols-[auto_1fr]">
-    <ChatList v-model:is-open="isChatListOpen" class="col-start-1 row-span-2" />
-    <ChatHeader
-      v-model:is-chat-list-open="isChatListOpen"
-      class="col-start-2"
-    />
+    <ChatList class="col-start-1 row-span-2" />
+    <ChatHeader class="col-start-2" />
     <div
       class="flex h-full w-full col-start-2 row-start-2 overflow-hidden relative"
     >

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const isOpen = defineModel<boolean>("isOpen");
-
 const chatStore = useChatStore();
 const sortedChats = computed(() => {
   const today = new Date(new Date().setHours(0, 0, 0, 0));
@@ -42,16 +40,18 @@ const resizerRef = ref<HTMLElement | null>(null);
 
 const minWidth = 250;
 const maxWidth = 600;
-const targetWidth = ref(300);
+const uiStore = useUiStore();
 
 useDraggable(resizerRef, {
   preventDefault: true,
   onMove: (position) => {
     if (position.x < minWidth / 2) {
-      targetWidth.value = minWidth;
-      isOpen.value = false;
+      uiStore.setChatListWidth(minWidth);
+      uiStore.setChatListVisible(false);
     } else {
-      targetWidth.value = Math.max(minWidth, Math.min(position.x, maxWidth));
+      uiStore.setChatListWidth(
+        Math.max(minWidth, Math.min(position.x, maxWidth)),
+      );
     }
   },
 });
@@ -62,18 +62,18 @@ useDraggable(resizerRef, {
     ref="chatListRef"
     class="h-full bg-(--sub-alt-color)"
     :style="{
-      display: isOpen ? 'flex' : 'none',
+      display: uiStore.chatListVisible ? 'flex' : 'none',
     }"
   >
     <div
       class="flex flex-col grow w-full"
-      :style="{ width: targetWidth + 'px' }"
+      :style="{ width: uiStore.chatListWidth + 'px' }"
     >
       <div class="flex w-full h-[40px] items-center px-4">
         <Icon
           name="lucide:panel-left-close"
           class="text-(--main-color) cursor-pointer scale-125"
-          @click="isOpen = false"
+          @click="uiStore.setChatListVisible(false)"
         />
         <div class="grow text-center">Chats</div>
         <Icon

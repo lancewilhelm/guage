@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const isChatListOpen = defineModel<boolean>("isChatListOpen");
-
 async function handleSignOut() {
   await authClient.signOut({
     fetchOptions: {
@@ -13,19 +11,21 @@ async function handleSignOut() {
     },
   });
 }
+
+const uiStore = useUiStore();
 </script>
 
 <template>
   <div class="flex justify-between py-2 px-4 items-center gap-4">
     <div class="flex gap-4 items-center">
       <Icon
-        v-if="!isChatListOpen"
+        v-if="!uiStore.chatListVisible"
         name="lucide:panel-left-open"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="isChatListOpen = true"
+        @click="uiStore.setChatListVisible(true)"
       />
       <Icon
-        v-if="!isChatListOpen"
+        v-if="!uiStore.chatListVisible"
         name="lucide:plus"
         class="text-(--main-color) cursor-pointer scale-125"
         @click="
