@@ -9,16 +9,52 @@ interface Theme {
   textColor: string;
 }
 
+const userSettingsStore = useUserSettingsStore();
+const sortedByName = computed(
+  () => userSettingsStore.settings.themeSorting.sortedByName,
+);
+const reverseSort = computed(
+  () => userSettingsStore.settings.themeSorting.reverseSort,
+);
+function handleSortChange(target: string) {
+  let tempSortedByName, tempReverseSort;
+  if (target === "name") {
+    if (!sortedByName.value) {
+      tempSortedByName = true;
+    } else {
+      tempReverseSort = !reverseSort.value;
+    }
+  } else {
+    if (sortedByName.value) {
+      tempSortedByName = false;
+    } else {
+      tempReverseSort = !reverseSort.value;
+    }
+  }
+  userSettingsStore.updateSettings({
+    themeSorting: {
+      sortedByName: tempSortedByName ?? sortedByName.value,
+      reverseSort: tempReverseSort ?? reverseSort.value,
+    },
+  });
+}
 const nonFavoriteThemes = computed(() =>
   JSON.parse(JSON.stringify(themesList))
     .filter((theme: Theme) => {
       if (!userSettingsStore.settings.favoriteThemes) return true;
       return !userSettingsStore.settings.favoriteThemes.includes(theme.name);
     })
-    .sort(
-      (a: Theme, b: Theme) =>
-        hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
-    ),
+    .sort((a: Theme, b: Theme) => {
+      if (sortedByName.value) {
+        return reverseSort.value
+          ? b.name.localeCompare(a.name)
+          : a.name.localeCompare(b.name);
+      }
+      if (reverseSort.value) {
+        return hexToLuminance(b.bgColor) - hexToLuminance(a.bgColor);
+      }
+      return hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor);
+    }),
 );
 
 const favoriteThemes = computed(() =>
@@ -27,10 +63,17 @@ const favoriteThemes = computed(() =>
       if (!userSettingsStore.settings.favoriteThemes) return false;
       return userSettingsStore.settings.favoriteThemes.includes(theme.name);
     })
-    .sort(
-      (a: Theme, b: Theme) =>
-        hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor),
-    ),
+    .sort((a: Theme, b: Theme) => {
+      if (sortedByName.value) {
+        return reverseSort.value
+          ? b.name.localeCompare(a.name)
+          : a.name.localeCompare(b.name);
+      }
+      if (reverseSort.value) {
+        return hexToLuminance(b.bgColor) - hexToLuminance(a.bgColor);
+      }
+      return hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor);
+    }),
 );
 
 function hexToLuminance(hex: string) {
@@ -49,11 +92,60 @@ function hexToLuminance(hex: string) {
   };
   return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 }
-
-const userSettingsStore = useUserSettingsStore();
 </script>
+
 <template>
   <div class="w-full">
+    <div class="w-full flex gap-2 mb-4">
+      <div
+        :class="[
+          'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
+          sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
+        ]"
+        @click="handleSortChange('name')"
+      >
+        <Icon
+          v-if="!reverseSort"
+          name="lucide:arrow-down-a-z"
+          :class="[
+            'scale-150',
+            sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+          ]"
+        />
+        <Icon
+          v-if="reverseSort"
+          name="lucide:arrow-down-z-a"
+          :class="[
+            'scale-150',
+            sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+          ]"
+        />
+      </div>
+      <div
+        :class="[
+          'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
+          !sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
+        ]"
+        @click="handleSortChange('brightness')"
+      >
+        <Icon
+          v-if="!reverseSort"
+          name="lucide:arrow-down-narrow-wide"
+          :class="[
+            'scale-150',
+            !sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+          ]"
+        />
+        <Icon
+          v-if="reverseSort"
+          name="lucide:arrow-down-wide-narrow"
+          :class="[
+            'scale-150',
+            !sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+          ]"
+        />
+      </div>
+    </div>
     <SettingsGroup
       v-if="favoriteThemes.length"
       title="favorite themes"

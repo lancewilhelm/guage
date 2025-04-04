@@ -19,7 +19,7 @@ const userSettingsStore = useUserSettingsStore();
 <template>
   <div
     :class="[
-      'flex w-full justify-between items-center cursor-pointer rounded-full border font-mono px-2 py-0.5',
+      'flex w-full justify-between items-center cursor-pointer rounded-full border-2 font-mono px-2 py-0.5 pl-3',
     ]"
     :style="{
       backgroundColor: theme.bgColor,
