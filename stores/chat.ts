@@ -1,4 +1,4 @@
-import type { LocalMessage } from "@/utils/db/local";
+import type { LocalMessage } from "~/utils/db/local";
 
 export const useChatStore = defineStore("chat", () => {
   const chats = ref<Record<string, ChatState>>({});

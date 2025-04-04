@@ -28,18 +28,14 @@ const uiStore = useUiStore();
         v-if="!uiStore.chatListVisible"
         name="lucide:plus"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="
-          () => {
-            navigateTo('/chat');
-          }
-        "
+        @click="navigateTo('/chat')"
       />
     </div>
     <div class="flex gap-4 items-center">
       <Icon
         name="lucide:settings"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="() => console.log('open settings')"
+        @click="navigateTo('/settings')"
       />
       <Icon
         name="lucide:log-out"

@@ -1,5 +1,5 @@
-import { logger } from "@/utils/logger";
-import { useChatStore } from "@/stores/chat";
+import { logger } from "~/utils/logger";
+import { useChatStore } from "~/stores/chat";
 import {
   dbCreateChat,
   dbCreateMessage,
@@ -10,9 +10,9 @@ import {
   type LocalChat,
 } from "./db/local";
 import { v4 as uuidv4 } from "uuid";
-import type { ChatState } from "@/stores/chat";
+import type { ChatState } from "~/stores/chat";
 import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAssistantMessage";
-// import { useUserSettingsStore } from "@/store/userSettingsStore";
+// import { useUserSettingsStore } from "~/store/userSettingsStore";
 
 /**
  * Generate a title from the assistant's response

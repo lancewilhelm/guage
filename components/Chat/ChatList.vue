@@ -78,7 +78,7 @@ useDraggable(resizerRef, {
           class="text-(--main-color) cursor-pointer scale-125"
           @click="uiStore.setChatListVisible(false)"
         />
-        <div class="grow text-center">Chats</div>
+        <div class="grow text-center">chats</div>
         <Icon
           name="lucide:plus"
           class="text-(--main-color) cursor-pointer scale-125"

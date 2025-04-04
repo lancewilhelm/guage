@@ -1,7 +1,7 @@
-import { logger } from "@/utils/logger";
-import type { LocalMessage } from "@/utils/db/local";
-import { cloudDb } from "@/utils/db/cloud";
-import { globalSettings } from "@/utils/db/schema";
+import { logger } from "~/utils/logger";
+import type { LocalMessage } from "~/utils/db/local";
+import { cloudDb } from "~/utils/db/cloud";
+import { globalSettings } from "~/utils/db/schema";
 import { eq } from "drizzle-orm";
 
 interface OllamaResponse {

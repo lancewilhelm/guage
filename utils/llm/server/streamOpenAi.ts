@@ -1,6 +1,6 @@
-import { logger } from "@/utils/logger";
+import { logger } from "~/utils/logger";
 import { OpenAI } from "openai";
-import type { LocalMessage } from "@/utils/db/local";
+import type { LocalMessage } from "~/utils/db/local";
 
 export function getOpenAIClient() {
   const config = useRuntimeConfig();

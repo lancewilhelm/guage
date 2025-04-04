@@ -10,24 +10,8 @@
   --transition: all 300ms ease;
   --border-radius: 8px;
   --font-logo: "Poppins", sans-serif;
-  --bg-color: #dddddd; /* Main background color */
-  --sub-color: #555555; /* Secondary background color, used for cards */
-  --sub-alt-color: #cccccc; /* Tertiary background color, used for borders */
-  --text-color: #1b1b1b; /* Main foreground color */
-  --main-color: #1b1b1b; /* Accent color */
   --yes-color: #008800;
   --no-color: #880000;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #1b1b1b; /* Main background color */
-    --sub-color: #555555; /* Secondary background color, used for cards */
-    --sub-alt-color: #252525; /* Tertiary background color, used for borders */
-    --text-color: #dddddd; /* Main foreground color */
-    --main-color: #dddddd; /* Accent color */
-    --error-color: #880000; /* Error color */
-  }
 }
 
 body {

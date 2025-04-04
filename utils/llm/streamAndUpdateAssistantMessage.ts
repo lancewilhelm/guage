@@ -1,5 +1,5 @@
-import { type LocalMessage, dbUpdateMessage } from "@/utils/db/local";
-import { useChatStore } from "@/stores/chat";
+import { type LocalMessage, dbUpdateMessage } from "~/utils/db/local";
+import { useChatStore } from "~/stores/chat";
 import { sendMessageToLLM } from "./sendMessageToLLM";
 
 export async function streamAndUpdateAssistantMessage({

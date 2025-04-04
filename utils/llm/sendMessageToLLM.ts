@@ -1,6 +1,6 @@
-import type { LocalMessage } from "@/utils/db/local";
-import { parseSSEChunk } from "@/utils/chat";
-// import { useUserSettingsStore } from "@/stores/userSettings";
+import type { LocalMessage } from "~/utils/db/local";
+import { parseSSEChunk } from "~/utils/chat";
+// import { useUserSettingsStore } from "~/stores/userSettings";
 
 type SendMessageOptions = {
   chatId: string;

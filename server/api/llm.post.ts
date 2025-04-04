@@ -1,7 +1,7 @@
-import { auth } from "@/utils/auth";
-import { logger } from "@/utils/logger";
-import { streamOpenAI } from "@/utils/llm/server/streamOpenAi";
-import { streamOllama } from "@/utils/llm/server/streamOllama";
+import { auth } from "~/utils/auth";
+import { logger } from "~/utils/logger";
+import { streamOpenAI } from "~/utils/llm/server/streamOpenAi";
+import { streamOllama } from "~/utils/llm/server/streamOllama";
 
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/llm");

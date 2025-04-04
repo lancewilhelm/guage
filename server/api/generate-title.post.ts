@@ -1,7 +1,7 @@
-import { logger } from "@/utils/logger";
-import { auth } from "@/utils/auth";
-import type { LocalMessage } from "@/utils/db/local";
-import { getOpenAIClient } from "@/utils/llm/server/streamOpenAi";
+import { logger } from "~/utils/logger";
+import { auth } from "~/utils/auth";
+import type { LocalMessage } from "~/utils/db/local";
+import { getOpenAIClient } from "~/utils/llm/server/streamOpenAi";
 import type { OpenAI } from "openai";
 
 export default defineEventHandler(async (event) => {
