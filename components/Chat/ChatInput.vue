@@ -67,6 +67,9 @@ defineExpose({
           }
         "
       />
+      <div>
+        <ChatInputModel />
+      </div>
     </div>
     <div class="flex items-center">
       <button

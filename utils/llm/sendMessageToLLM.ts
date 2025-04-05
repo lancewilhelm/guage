@@ -1,6 +1,5 @@
 import type { LocalMessage } from "~/utils/db/local";
 import { parseSSEChunk } from "~/utils/chat";
-// import { useUserSettingsStore } from "~/stores/userSettings";
 
 type SendMessageOptions = {
   chatId: string;
@@ -18,13 +17,12 @@ export async function sendMessageToLLM({
   onChunk,
   signal,
 }: SendMessageOptions): Promise<string> {
-  // const userSettings = useUserSettingsStore.getState().settings;
-  const userSettings = {
-    selectedModel: {
-      name: "gpt-4o-mini",
-      provider: "openai",
-    },
-  }; // Mocked for demonstration
+  const userSettingsStore = useUserSettingsStore();
+
+  if (!userSettingsStore.settings.model) {
+    throw new Error("Model is not set");
+  }
+
   const response = await fetch("/api/llm", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -32,7 +30,7 @@ export async function sendMessageToLLM({
       chatId,
       userMessage,
       history,
-      model: userSettings.selectedModel,
+      model: { ...userSettingsStore.settings.model },
     }),
     signal,
   });

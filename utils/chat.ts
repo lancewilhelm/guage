@@ -30,7 +30,6 @@ export async function generateChatTitle(userMessage: LocalMessage) {
     });
 
     // if (!response.ok) throw new Error("Failed to generate title");
-    logger.debug("response", response);
     return response;
   } catch (error) {
     logger.error("Error generating title:", error);
@@ -68,12 +67,10 @@ export function parseSSEChunk(chunk: string): SSEChunk[] {
  */
 export async function handleSubmitMessage(userInput: string) {
   if (!userInput?.trim()) return;
-  logger.debug("handleSubmitMessage", userInput);
 
   // Get the necessary references
   const chatStore = useChatStore();
 
-  logger.debug("currentChatId", chatStore.currentChatId);
   // If there's no chat ID, create a new chat
   let chatIdToUse = chatStore.currentChatId;
   if (!chatIdToUse) {
@@ -166,13 +163,13 @@ function createMessagePair(
 ): { userMessage: LocalMessage; assistantMessage: LocalMessage } {
   const userMessageId = uuidv4();
   const assistantMessageId = uuidv4();
-  // const model = useUserSettingsStore.getState().settings.selectedModel;
-  const model = {
-    name: "gpt-4o-mini",
-    provider: "openai",
-  };
-  const now = new Date();
+  const userSettingsStore = useUserSettingsStore();
+  const model = { ...userSettingsStore.settings.model } as Model;
+  if (!model) {
+    throw new Error("Model is not set");
+  }
 
+  const now = new Date();
   const userMessage: LocalMessage = {
     id: userMessageId,
     chatId,

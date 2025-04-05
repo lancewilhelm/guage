@@ -74,6 +74,6 @@ defineExpose({
         "
       />
     </div>
-    <div className="h-[calc(var(--input-row-height)+70px)] shrink-0" />
+    <div className="h-[calc(var(--input-row-height)+90px)] shrink-0" />
   </div>
 </template>

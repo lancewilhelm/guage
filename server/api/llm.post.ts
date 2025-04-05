@@ -6,16 +6,17 @@ import { streamOllama } from "~/utils/llm/server/streamOllama";
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/llm");
 
+  // Ensure the user is authenticated
   const session = await auth.api.getSession({
     headers: event.headers,
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/llm");
-    throw createError({
-      statusCode: 401,
+    logger.error("Unauthorized access attempt to /api/generate-title");
+    setResponseStatus(event, 401);
+    return {
       message: "Unauthorized",
-    });
+    };
   }
 
   const { history, userMessage, model } = await readBody(event);
@@ -23,18 +24,18 @@ export default defineEventHandler(async (event) => {
 
   if (!model) {
     logger.error("Invalid request: No provider specified");
-    throw createError({
-      statusCode: 400,
-      message: "Provider is required",
-    });
+    setResponseStatus(event, 400);
+    return {
+      message: "Invalid request: No provider specified",
+    };
   }
 
   if (!history || !Array.isArray(history) || !userMessage) {
     logger.error("Invalid request: messages are required");
-    throw createError({
-      statusCode: 400,
+    setResponseStatus(event, 400);
+    return {
       message: "Invalid request: messages are required",
-    });
+    };
   }
 
   try {
@@ -70,11 +71,11 @@ export default defineEventHandler(async (event) => {
     });
 
     return sendStream(event, stream);
-  } catch (err) {
-    logger.error(err, "Error streaming response");
-    throw createError({
-      statusCode: 500,
+  } catch (error) {
+    logger.error(error, "Error streaming response");
+    setResponseStatus(event, 500);
+    return {
       message: "Internal server error",
-    });
+    };
   }
 });

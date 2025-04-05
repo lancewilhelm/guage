@@ -8,6 +8,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   } else {
     if (to.path === "/login" || to.path === "/register") {
       return navigateTo("/chat");
+    } else if (
+      to.path === "/settings/admin" &&
+      session.value.user.role !== "admin"
+    ) {
+      return navigateTo("/settings");
     }
   }
 });

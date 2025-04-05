@@ -1,10 +1,6 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
-
-interface Model {
-  name: string;
-  provider: string;
-}
+import type { Model } from "~/stores/userSettings";
 
 //------------------------//
 //         Local          //

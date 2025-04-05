@@ -13,11 +13,16 @@ definePageMeta({
 // Compute the current page based on the route parameter
 const route = useRoute();
 const currentPageName = computed(() =>
-  route.params.page !== "" ? route.params.page : "profile",
+  route.params.page !== ""
+    ? Array.isArray(route.params.page)
+      ? route.params.page[0]
+      : route.params.page
+    : "profile",
 );
 const profilePage = resolveComponent("SettingsProfile");
 const themePage = resolveComponent("SettingsTheme");
 const dangerZonePage = resolveComponent("SettingsDangerZone");
+const adminPage = resolveComponent("SettingsAdmin");
 const currentPage = computed(() => {
   switch (currentPageName.value) {
     case "profile":
@@ -26,6 +31,8 @@ const currentPage = computed(() => {
       return themePage;
     case "danger-zone":
       return dangerZonePage;
+    case "admin":
+      return adminPage;
     default:
       return profilePage;
   }
@@ -34,46 +41,7 @@ const currentPage = computed(() => {
 <template>
   <div class="flex flex-col items-center w-full h-full">
     <SettingsHeader class="w-full h-[40px]" />
-    <div
-      class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
-    >
-      <div
-        :class="[
-          'flex items-center gap-1 cursor-pointer hover:opacity-80',
-          currentPageName === 'profile'
-            ? 'text-(--main-color) underline'
-            : 'text-(--text-color)',
-        ]"
-        @click="navigateTo('/settings/profile')"
-      >
-        <Icon name="lucide:circle-user" class="text-(--main-color)" />
-        profile
-      </div>
-      <div
-        :class="[
-          'flex items-center gap-1 cursor-pointer hover:opacity-80',
-          currentPageName === 'theme'
-            ? 'text-(--main-color) underline'
-            : 'text-(--text-color)',
-        ]"
-        @click="navigateTo('/settings/theme')"
-      >
-        <Icon name="lucide:palette" class="text-(--main-color)" />
-        theme
-      </div>
-      <div
-        :class="[
-          'flex items-center gap-1 cursor-pointer hover:opacity-80',
-          currentPageName === 'danger-zone'
-            ? 'text-(--main-color) underline'
-            : 'text-(--text-color)',
-        ]"
-        @click="navigateTo('/settings/danger-zone')"
-      >
-        <Icon name="lucide:triangle-alert" class="text-(--main-color)" />
-        danger zone
-      </div>
-    </div>
+    <SettingsTabBar :current-page-name="currentPageName" />
     <div
       class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
     >

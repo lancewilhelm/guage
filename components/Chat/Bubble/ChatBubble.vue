@@ -106,8 +106,8 @@ watch(isEditing, async (val) => {
           v-if="message.content"
           ref="contentRef"
           :class="[
-            'flex flex-col gap-2 rounded-lg p-3',
-            message.role === 'user' ? 'max-w-full' : 'w-full',
+            'flex flex-col gap-2 rounded-lg',
+            message.role === 'user' ? 'max-w-full p-3' : 'w-full',
           ]"
           @dblclick="
             () => {
@@ -136,6 +136,7 @@ watch(isEditing, async (val) => {
             message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
           ]"
         >
+          <ChatBubbleResponseInfo :model="message.model" />
           <ChatBubbleVersions
             v-if="versionInfo && versionInfo.total > 1"
             :id="message.id"
