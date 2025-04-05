@@ -97,7 +97,7 @@ function hexToLuminance(hex: string) {
 <template>
   <div class="w-full">
     <div class="w-full flex gap-2 mb-4">
-      <div
+      <button
         :class="[
           'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
           sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
@@ -120,8 +120,8 @@ function hexToLuminance(hex: string) {
             sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
           ]"
         />
-      </div>
-      <div
+      </button>
+      <button
         :class="[
           'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
           !sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
@@ -144,12 +144,12 @@ function hexToLuminance(hex: string) {
             !sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
           ]"
         />
-      </div>
+      </button>
     </div>
     <SettingsGroup
       v-if="favoriteThemes.length"
       title="favorite themes"
-      icon="lucide:palette"
+      icon="lucide:star"
     >
       <div class="grid grid-cols-3 gap-2 w-full">
         <SettingsThemeItem

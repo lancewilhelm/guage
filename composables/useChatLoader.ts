@@ -9,6 +9,9 @@ export function useChatLoader() {
   const initialLoad = ref(true);
 
   async function loadAllChats() {
+    // Check if the app is running in the client
+    if (!import.meta.client) return;
+
     const allChats = await dbRetrieveChats();
     if (allChats.length) {
       allChats.forEach((chat) => {
@@ -27,6 +30,9 @@ export function useChatLoader() {
   }
 
   async function loadChat(chatId: string) {
+    // Check if the app is running in the client
+    if (!import.meta.client) return;
+
     const chat = await dbRetrieveChat(chatId);
     if (!chat) {
       return false;
@@ -45,6 +51,10 @@ export function useChatLoader() {
   }
 
   async function loadChatMessages(chatId: string) {
+    // Check if the app is running in the client
+    if (!import.meta.client) return;
+
+    // Load messages only if the chat is not empty
     if (!chatStore.chats[chatId].messages.length) {
       const messages = await dbRetrieveMessages(chatId);
       for (const message of messages) {

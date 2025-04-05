@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
-
-const { data: session } = await authClient.useSession(useFetch);
+import { triggerDebouncedSync } from "~/utils/sync/debounce";
 
 export interface GlobalSettings {
   availableModels: {
@@ -14,23 +13,47 @@ const defaultSettings: GlobalSettings = {
   availableModels: [],
 };
 
+async function adminCheck() {
+  const session = await $fetch<Session>("/api/auth/get-session");
+  if (session.user.role !== "admin") {
+    throw new Error("Unauthorized");
+  }
+}
+
 export const useGlobalSettingsStore = defineStore(
   "globalSettings",
   () => {
     const settings = ref<GlobalSettings>(defaultSettings);
-    function updateSettings(updated: Partial<GlobalSettings>) {
-      if (session.value?.user.role !== "admin") return;
+    async function updateSettings(updated: Partial<GlobalSettings>) {
+      await adminCheck();
+
+      // Update settings
       settings.value = { ...settings.value, ...updated };
+
+      // Update sync status
+      updatedAt.value = new Date();
+      synced.value = false;
+
+      // Trigger sync
+      triggerDebouncedSync();
     }
 
+    const synced = ref(false);
+    async function setSynced(value: boolean) {
+      await adminCheck();
+      synced.value = value;
+    }
+
+    const updatedAt = ref<Date>(new Date());
     return {
       settings,
+      updatedAt,
       updateSettings,
+      synced,
+      setSynced,
     };
   },
   {
-    persist: {
-      storage: localStorage,
-    },
+    persist: true,
   },
 );

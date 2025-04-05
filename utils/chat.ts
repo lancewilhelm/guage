@@ -88,6 +88,7 @@ export async function handleSubmitMessage(userInput: string) {
   }
 
   if (!chatIdToUse) return;
+  navigateTo(`/chat/${chatIdToUse}`);
 
   chatStore.setChatStreaming(chatIdToUse, true);
 

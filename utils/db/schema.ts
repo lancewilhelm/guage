@@ -1,5 +1,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { v4 as uuidv4 } from "uuid";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // Users table for better-auth
 export const users = sqliteTable("users", {
@@ -122,3 +123,14 @@ export const globalSettings = sqliteTable("global_settings", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+// TYPE
+export type InsertChats = InferInsertModel<typeof chats>;
+export type InsertMessages = InferInsertModel<typeof messages>;
+export type InsertUserSettings = InferInsertModel<typeof userSettings>;
+export type InsertGlobalSettings = InferInsertModel<typeof globalSettings>;
+
+export type SelectChats = InferSelectModel<typeof chats>;
+export type SelectMessages = InferSelectModel<typeof messages>;
+export type SelectUserSettings = InferSelectModel<typeof userSettings>;
+export type SelectGlobalSettings = InferSelectModel<typeof globalSettings>;

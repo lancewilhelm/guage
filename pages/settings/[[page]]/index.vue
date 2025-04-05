@@ -19,22 +19,22 @@ const currentPageName = computed(() =>
       : route.params.page
     : "profile",
 );
-const profilePage = resolveComponent("SettingsProfile");
-const themePage = resolveComponent("SettingsTheme");
-const dangerZonePage = resolveComponent("SettingsDangerZone");
-const adminPage = resolveComponent("SettingsAdmin");
-const currentPage = computed(() => {
+const profileTab = resolveComponent("SettingsProfile");
+const themeTab = resolveComponent("SettingsTheme");
+const cloudTab = resolveComponent("SettingsCloud");
+const adminTab = resolveComponent("SettingsAdmin");
+const currentTab = computed(() => {
   switch (currentPageName.value) {
     case "profile":
-      return profilePage;
+      return profileTab;
     case "theme":
-      return themePage;
-    case "danger-zone":
-      return dangerZonePage;
+      return themeTab;
+    case "cloud":
+      return cloudTab;
     case "admin":
-      return adminPage;
+      return adminTab;
     default:
-      return profilePage;
+      return profileTab;
   }
 });
 </script>
@@ -46,7 +46,7 @@ const currentPage = computed(() => {
       class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
     >
       <div class="flex justify-center w-full max-w-[900px] p-4">
-        <component :is="currentPage" />
+        <component :is="currentTab" />
       </div>
     </div>
   </div>

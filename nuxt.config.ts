@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-  ssr: false,
+  ssr: true,
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
   modules: [
@@ -18,13 +18,6 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: "en",
       },
-      script: [
-        {
-          src: "/js/theme-loader.js",
-          type: "text/javascript",
-          defer: false,
-        },
-      ],
     },
   },
   css: ["~/assets/css/main.css", "~/assets/css/hljs.css"],
@@ -55,6 +48,18 @@ export default defineNuxtConfig({
           detect: true,
         },
       },
+    },
+  },
+  icon: {
+    provider: "server",
+    customCollections: [
+      {
+        prefix: "local",
+        dir: "./assets/icons",
+      },
+    ],
+    clientBundle: {
+      scan: true,
     },
   },
   components: [

@@ -20,8 +20,6 @@ export const useUiStore = defineStore(
     };
   },
   {
-    persist: {
-      storage: localStorage,
-    },
+    persist: true,
   },
 );

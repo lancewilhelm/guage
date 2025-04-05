@@ -1,4 +1,4 @@
-import type { LocalMessage } from "~/utils/db/local";
+import type { LocalChat, LocalMessage } from "~/utils/db/local";
 
 export const useChatStore = defineStore("chat", () => {
   const chats = ref<Record<string, ChatState>>({});
@@ -136,7 +136,7 @@ export const useChatStore = defineStore("chat", () => {
   function updateChatMetadata(chatId: string, metadata: Partial<ChatState>) {
     const chat = chats.value[chatId];
     if (chat) {
-      Object.assign(chat, metadata);
+      chats.value[chatId] = { ...chat, ...metadata };
     }
   }
 
@@ -148,6 +148,45 @@ export const useChatStore = defineStore("chat", () => {
   function resetChatStore() {
     chats.value = {};
     currentChatId.value = undefined;
+  }
+
+  function upsertChatFromSync(chat: LocalChat) {
+    if (chat.deleted) {
+      deleteChat(chat.id);
+      return;
+    }
+
+    const existing = chats.value[chat.id];
+    if (!existing) {
+      createChat(
+        chat.id,
+        chat.title,
+        new Date(chat.createdAt),
+        new Date(chat.updatedAt),
+        chat.activeBranch,
+        chat.pinned,
+      );
+    } else if (new Date(chat.updatedAt) > existing.updatedAt) {
+      updateChatMetadata(chat.id, {
+        title: chat.title,
+        updatedAt: new Date(chat.updatedAt),
+        pinned: chat.pinned,
+        activeBranch: chat.activeBranch,
+      });
+    }
+  }
+
+  function upsertMessageFromSync(chatId: string, message: LocalMessage) {
+    const chat = chats.value[chatId];
+    if (!chat) return;
+
+    const existing = chat.messages[message.id];
+    if (
+      !existing ||
+      new Date(message.updatedAt) > new Date(existing.updatedAt)
+    ) {
+      chat.messages[message.id] = message;
+    }
   }
 
   return {
@@ -166,6 +205,8 @@ export const useChatStore = defineStore("chat", () => {
     updateChatMetadata,
     deleteChat,
     resetChatStore,
+    upsertChatFromSync,
+    upsertMessageFromSync,
   };
 });
 

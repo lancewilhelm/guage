@@ -3,19 +3,44 @@
  * @param themeName - The name of the theme to load.
  * @returns
  */
-export function loadTheme(themeName: string) {
-  const existingThemeLink: HTMLLinkElement | null =
-    document.querySelector("#currentTheme");
-  if (existingThemeLink) {
-    existingThemeLink.href = "/css/themes/" + themeName + ".css";
-  } else {
-    const linkElement = document.createElement("link");
-    linkElement.id = "currentTheme";
-    linkElement.type = "text/css";
-    linkElement.rel = "stylesheet";
-    linkElement.href = "/css/themes/" + themeName + ".css";
-    document.head.appendChild(linkElement);
-  }
+export function loadTheme(themeName: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    document.body.classList.add("theme-transitioning");
+    const existing = document.querySelector<HTMLLinkElement>("#currentTheme");
+    const oldTheme = existing || null;
 
-  // updateFavicon(themeName);
+    // Remove any previous pending theme switch
+    const prevNext = document.querySelector("#nextTheme");
+    if (prevNext) prevNext.remove();
+
+    const next = document.createElement("link");
+    next.id = "nextTheme";
+    next.rel = "stylesheet";
+    next.type = "text/css";
+    next.href = `/css/themes/${themeName}.css`;
+
+    next.onload = () => {
+      if (oldTheme) oldTheme.remove();
+      next.id = "currentTheme";
+      resolve();
+    };
+
+    next.onerror = (err) => {
+      console.error("Failed to load theme:", themeName, err);
+      next.remove();
+      reject(err);
+    };
+
+    // Insert after current theme to maintain stylesheet order
+    if (oldTheme && oldTheme.parentNode) {
+      oldTheme.parentNode.insertBefore(next, oldTheme.nextSibling);
+    } else {
+      document.head.appendChild(next);
+    }
+
+    // Remove the transition class after a delay
+    setTimeout(() => {
+      document.body.classList.remove("theme-transitioning");
+    }, 1000);
+  });
 }

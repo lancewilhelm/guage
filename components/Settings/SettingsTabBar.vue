@@ -3,7 +3,7 @@ defineProps<{
   currentPageName: string;
 }>();
 
-const { data: session } = await authClient.useSession(useFetch);
+const session = authClient.useSession();
 </script>
 <template>
   <div
@@ -22,12 +22,12 @@ const { data: session } = await authClient.useSession(useFetch);
       label="theme"
     />
     <SettingsTabBarItem
-      :is-active-tab="currentPageName === 'danger-zone'"
-      icon="lucide:triangle-alert"
-      path="/settings/danger-zone"
-      label="danger zone"
+      :is-active-tab="currentPageName === 'cloud'"
+      icon="lucide:cloud"
+      path="/settings/cloud"
+      label="cloud"
     />
-    <div v-if="session?.user.role === 'admin'">
+    <div v-if="session.data?.user.role === 'admin'">
       <SettingsTabBarItem
         :is-active-tab="currentPageName === 'admin'"
         icon="lucide:shield-check"

@@ -36,7 +36,7 @@ const userSettingsStore = useUserSettingsStore();
     <div class="flex gap-1 shrink-0">
       <Icon
         v-if="!isFavorite && isHovered"
-        name="fa6-regular:star"
+        name="lucide:star"
         class="cursor-pointer"
         :style="{ text: theme.textColor }"
         @click.stop="
@@ -50,7 +50,7 @@ const userSettingsStore = useUserSettingsStore();
       />
       <Icon
         v-if="isFavorite && isHovered"
-        name="fa6-solid:star"
+        name="lucide:star-off"
         class="cursor-pointer"
         :style="{ text: theme.textColor }"
         @click.stop="

@@ -75,13 +75,15 @@ export default defineEventHandler(async (event) => {
       };
     }
     const parsedSettings = settings[0].settings as GlobalSettings;
-    const ollamaModels = await (
-      await fetch(`${parsedSettings.ollamaUrl}/api/tags`)
-    ).json();
+    const ollamaModels = parsedSettings.ollamaUrl
+      ? await (await fetch(`${parsedSettings.ollamaUrl}/api/tags`)).json()
+      : [];
 
     return {
       openaiModels: openaiModels.map((model) => model.id),
-      ollamaModels: ollamaModels.models.map((model: OllamaModel) => model.name),
+      ollamaModels: ollamaModels.length
+        ? ollamaModels.models.map((model: OllamaModel) => model.name)
+        : [],
     };
   } catch (error) {
     logger.error(error, "Error in fetching models:");

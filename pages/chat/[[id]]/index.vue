@@ -28,6 +28,7 @@ const routeId = computed(() => {
 });
 
 // Watch for route changes
+const router = useRouter();
 watch(
   routeId,
   async (newId) => {
@@ -51,7 +52,7 @@ watch(
     if (!initialLoad.value) {
       const success = await loadChat(newId);
       if (!success) {
-        navigateTo("/chat");
+        router.push("/chat");
         return;
       }
     }
@@ -113,7 +114,23 @@ watch(
       >
         <ChatContainer />
       </div>
-      <div class="absolute bottom-0 left-0 right-0 pt-4 pb-4">
+      <div
+        :class="[
+          'absolute left-0 right-0 pt-4 pb-4',
+          routeId ? 'bottom-0' : 'bottom-1/2 transform translate-y-1/2',
+        ]"
+      >
+        <div
+          v-if="!routeId"
+          class="absolute bottom-full left-0 right-0 mb-4 px-6 text-center"
+        >
+          <div class="text-3xl font-medium text-(--sub-color) mb-2">
+            Start a new conversation
+          </div>
+          <div class="text-sm text-(--sub-color)">
+            Type your message below to begin chatting
+          </div>
+        </div>
         <div class="w-full max-w-(--chat-max-width) mx-auto relative">
           <button
             v-if="scrollButtonVisible"

@@ -1,18 +1,47 @@
 <script setup lang="ts">
 import { dbNuke } from "~/utils/db/local";
 const chatStore = useChatStore();
-
 const showNukeConfirm = ref(false);
-const nukeData = () => {
-  dbNuke();
+async function nukeData() {
   chatStore.resetChatStore();
+  dbNuke();
+  await $fetch("/api/nuke");
   showNukeConfirm.value = false;
   window.location.reload();
-};
+}
+
+const syncStore = useSyncStore();
 </script>
 
 <template>
   <div class="w-full">
+    <SettingsGroup
+      title="Status"
+      icon="lucide:cloud"
+      description="Status of the your cloud database"
+    >
+      <SettingsSubGroup title="Last Sync" icon="lucide:clock">
+        <p class="text-sm text-(--text-color) mt-2">
+          {{
+            syncStore.lastSyncTime
+              ? new Date(syncStore.lastSyncTime).toLocaleString()
+              : "Never"
+          }}
+        </p>
+      </SettingsSubGroup>
+    </SettingsGroup>
+    <SettingsGroup
+      title="Pull"
+      icon="lucide:git-pull-request"
+      description="Pull all data from the cloud"
+    >
+      <button
+        class="bg-(--sub-alt-color) text-white font-bold py-2 px-4 rounded cursor-pointer"
+        @click="showNukeConfirm = true"
+      >
+        Pull Data
+      </button>
+    </SettingsGroup>
     <SettingsGroup
       title="Nuke"
       icon="lucide:bomb"

@@ -1,32 +1,15 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
-import type { Model } from "~/stores/userSettings";
+import { triggerDebouncedSync } from "../sync/debounce";
 
 //------------------------//
-//         Local          //
-// Dexie (IndexedDb) Init //
+//         Types          //
 //------------------------//
-
-// Define the local database
-class ChatDatabase extends Dexie {
-  messagesTable!: EntityTable<LocalMessage, "id">;
-  chatsTable!: EntityTable<LocalChat, "id">;
-
-  constructor() {
-    super("guage");
-    this.version(1).stores({
-      messagesTable: "&id, chatId, lastUpdated",
-      chatsTable: "&id, updatedAt",
-    });
-  }
+export interface Model {
+  name: string;
+  provider: string;
 }
 
-// Initialize database
-export const localDb = new ChatDatabase();
-
-//------------//
-//   Types    //
-//------------//
 export interface LocalMessage {
   id: string;
   chatId: string;
@@ -51,6 +34,29 @@ export interface LocalChat {
   pinned: boolean;
   activeBranch: string[];
 }
+
+//------------------------//
+//         Local          //
+// Dexie (IndexedDb) Init //
+//------------------------//
+
+// Define the local database
+class ChatDatabase extends Dexie {
+  messagesTable!: EntityTable<LocalMessage, "id">;
+  chatsTable!: EntityTable<LocalChat, "id">;
+
+  constructor() {
+    super("guage");
+    this.version(1).stores({
+      messagesTable: "&id, chatId, lastUpdated",
+      chatsTable: "&id, updatedAt",
+    });
+  }
+}
+
+// Initialize database
+export const localDb = new ChatDatabase();
+
 // ----------------------------------------------//
 // Functions to interact with the local database //
 // ----------------------------------------------//
@@ -68,11 +74,12 @@ export async function dbCreateMessage(message: LocalMessage | LocalMessage[]) {
       await localDb.messagesTable.put(message);
     }
   } catch (error) {
-    console.error("Failed to insert message(s) in local DB:", error);
+    logger.error("Failed to insert message(s) in local DB:", error);
     throw new Error(
       `Failed to insert message(s): ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+  triggerDebouncedSync();
 }
 
 /**
@@ -106,6 +113,7 @@ export async function dbUpdateMessage(
     updatedAt: new Date(),
     synced: false,
   });
+  triggerDebouncedSync();
 }
 
 /**
@@ -119,6 +127,7 @@ export async function dbMarkMessageDeleted(messageId: string) {
     synced: false,
     updatedAt: new Date(),
   });
+  triggerDebouncedSync();
 }
 
 /**
@@ -140,6 +149,7 @@ export async function dbCreateChat(
     pinned: false,
   };
   await localDb.chatsTable.put(newChat);
+  triggerDebouncedSync();
   return newChat;
 }
 
@@ -155,6 +165,7 @@ export async function dbUpdateChat(chatId: string, update: Partial<LocalChat>) {
     updatedAt: new Date(),
     synced: false,
   });
+  triggerDebouncedSync();
 }
 
 /**
@@ -185,7 +196,6 @@ export async function dbRetrieveChat(chatId: string) {
  * @returns Promise that resolves when the operation is complete.
  */
 export async function dbMarkChatDeleted(chatId: string) {
-  logger.debug("Marking chat as deleted", chatId);
   await localDb.chatsTable.update(chatId, {
     deleted: true,
     synced: false,
@@ -196,6 +206,7 @@ export async function dbMarkChatDeleted(chatId: string) {
     .where("chatId")
     .equals(chatId)
     .modify({ deleted: true, synced: false, updatedAt: new Date() });
+  triggerDebouncedSync();
 }
 
 /**

@@ -1,9 +1,6 @@
 import { defineStore } from "pinia";
-
-export interface Model {
-  name: string;
-  provider: string;
-}
+import type { Model } from "~/utils/db/local";
+import { triggerDebouncedSync } from "~/utils/sync/debounce";
 
 export interface UserSettings {
   theme?: string;
@@ -28,17 +25,39 @@ export const useUserSettingsStore = defineStore(
   () => {
     const settings = ref<UserSettings>(defaultSettings);
     function updateSettings(updated: Partial<UserSettings>) {
+      if (Object.keys(updated).length === 0) return;
+
+      // Change theme if it is not the same as the current one
+      if (updated.theme && settings.value.theme !== updated.theme) {
+        console.log("Changing theme to", updated.theme);
+        loadTheme(updated.theme);
+      }
+      // Update the settings
       settings.value = { ...settings.value, ...updated };
+
+      // Update sync status
+      updatedAt.value = new Date();
+      synced.value = false;
+
+      // Trigger sync
+      triggerDebouncedSync();
     }
+
+    const updatedAt = ref<Date>(new Date());
+    const synced = ref(false);
+    const setSynced = (value: boolean) => {
+      synced.value = value;
+    };
 
     return {
       settings,
+      updatedAt,
       updateSettings,
+      synced,
+      setSynced,
     };
   },
   {
-    persist: {
-      storage: localStorage,
-    },
+    persist: true,
   },
 );

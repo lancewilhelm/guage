@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       return navigateTo("/login");
     }
   } else {
-    if (to.path === "/login" || to.path === "/register") {
+    if (to.path === "/login" || to.path === "/register" || to.path === "/") {
       return navigateTo("/chat");
     } else if (
       to.path === "/settings/admin" &&

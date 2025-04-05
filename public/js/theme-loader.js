@@ -53,11 +53,12 @@ function loadTheme() {
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)",
     ).matches;
-    const theme = config.settings.theme
+    const theme = config.settings?.theme
       ? config.settings.theme
       : prefersDark
         ? "guage_dark"
         : "guage_light";
+    console.log("Loading theme:", theme);
 
     // Inject theme CSS file
     const link = document.createElement("link");

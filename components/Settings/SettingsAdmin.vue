@@ -36,6 +36,7 @@ async function testOllamaUrl() {
       body: { url },
     },
   );
+
   if (response.success) {
     ollamaTestStatus.value = true;
   } else {
@@ -50,77 +51,72 @@ onMounted(() => {
     testOllamaUrl();
   }
 });
+
+const openAiIcon = resolveComponent("OpenAiIcon");
+const ollamaIcon = resolveComponent("OllamaIcon");
 </script>
 
 <template>
   <div class="w-full">
     <SettingsGroup
-      title="Models"
+      title="models"
       icon="lucide:bot"
-      description="Select what models are available to the users"
+      description="select what models are available to the users"
     >
-      <div
-        class="flex gap-1 items-center fill-(--main-color) text-(--main-color) text-lg border-b border-(--sub-color) mb-3 px-2"
-      >
-        <OpenAiIcon />
-        openai
-      </div>
-      <div class="grid grid-cols-3 gap-2 text-nowrap mb-3">
-        <div
-          v-for="model in models?.openaiModels.sort((a, b) =>
-            a.localeCompare(b),
-          )"
-          :key="model"
-          :class="[
-            ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
-            availableModelNames.includes(model)
-              ? 'bg-(--main-color) text-(--bg-color)'
-              : 'text-(--text-color)',
-          ]"
-          @click="
-            () =>
-              globalSettingsStore.updateSettings({
-                availableModels: availableModelNames.includes(model)
-                  ? availableModels.filter((m) => m.name !== model)
-                  : [...availableModels, { name: model, provider: 'openai' }],
-              })
-          "
-        >
-          {{ model }}
+      <SettingsSubGroup title="openai" :icon="openAiIcon">
+        <div class="grid grid-cols-3 gap-2 text-nowrap mb-3">
+          <div
+            v-for="model in models?.openaiModels.sort((a, b) =>
+              a.localeCompare(b),
+            )"
+            :key="model"
+            :class="[
+              ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
+              availableModelNames.includes(model)
+                ? 'bg-(--main-color) text-(--bg-color)'
+                : 'text-(--text-color)',
+            ]"
+            @click="
+              () =>
+                globalSettingsStore.updateSettings({
+                  availableModels: availableModelNames.includes(model)
+                    ? availableModels.filter((m) => m.name !== model)
+                    : [...availableModels, { name: model, provider: 'openai' }],
+                })
+            "
+          >
+            {{ model }}
+          </div>
         </div>
-      </div>
+      </SettingsSubGroup>
 
-      <div
-        class="flex gap-1 items-center fill-(--main-color) text-(--main-color) text-lg border-b border-(--sub-color) mb-3 px-2"
-      >
-        <OllamaIcon />
-        ollama
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="text-(--main-color)">url</div>
-        <input
-          v-model="ollamaUrl"
-          type="text"
-          class="border border-(--main-color) rounded px-3 py-1"
-          placeholder="Ollama url"
-        />
-        <button
-          class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer"
-          @click="testOllamaUrl"
-        >
-          test
-        </button>
-        <Icon
-          v-if="ollamaTestStatus"
-          name="lucide:smile"
-          class="text-(--yes-color) scale-125"
-        />
-        <Icon
-          v-if="ollamaTestStatus === false"
-          name="lucide:frown"
-          class="text-(--no-color) scale-125"
-        />
-      </div>
+      <SettingsSubGroup title="ollama" :icon="ollamaIcon">
+        <div class="flex items-center gap-2">
+          <div class="text-(--main-color)">url</div>
+          <input
+            v-model="ollamaUrl"
+            type="text"
+            class="border border-(--main-color) rounded px-3 py-1"
+            placeholder="Ollama url"
+          />
+          <button
+            class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer"
+            @click="testOllamaUrl"
+          >
+            test
+          </button>
+          <Icon
+            v-if="ollamaTestStatus"
+            name="lucide:smile"
+            class="text-(--yes-color) scale-125"
+          />
+          <Icon
+            v-if="ollamaTestStatus === false"
+            name="lucide:frown"
+            class="text-(--no-color) scale-125"
+          />
+        </div>
+      </SettingsSubGroup>
     </SettingsGroup>
   </div>
 </template>

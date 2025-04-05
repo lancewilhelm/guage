@@ -27,7 +27,7 @@ function copyCode() {
           {{ language }}
         </div>
         <div
-          class="flex justify-center w-[30px] items-center bg-(--sub-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-all duration-300 copy-code-btn"
+          class="flex justify-center w-[30px] items-center bg-(--sub-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-colors duration-300 copy-code-btn"
           @mousedown="copyCode"
         >
           <Icon

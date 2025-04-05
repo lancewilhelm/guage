@@ -17,7 +17,6 @@ export default defineEventHandler(async (event) => {
     };
   }
   const { url } = await readBody(event);
-  console.log("url:", url);
 
   try {
     const ollamaResponse = await fetch(`${url}/api/version`);

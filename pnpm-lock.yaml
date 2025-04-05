@@ -102,6 +102,9 @@ importers:
         specifier: ^4.5.0
         version: 4.5.0(vue@3.5.13(typescript@5.8.2))
     devDependencies:
+      '@iconify-json/lucide':
+        specifier: ^1.2.34
+        version: 1.2.34
       '@nuxtjs/tailwindcss':
         specifier: 6.13.2
         version: 6.13.2(magicast@0.3.5)
@@ -801,6 +804,9 @@ packages:
   '@humanwhocodes/retry@0.4.2':
     resolution: {integrity: sha512-xeO57FpIu4p1Ri3Jq/EXq4ClRm86dVF2z/+kvFnyqVYRavTZmaFaUBbWCOuuTh0o/g7DSsk6kc2vrS4Vl5oPOQ==}
     engines: {node: '>=18.18'}
+
+  '@iconify-json/lucide@1.2.34':
+    resolution: {integrity: sha512-6xiITvlYP/5d6KQPRBHDQ+eaLxRWiTvXfuVGuNX2ahNLbEi0VKB04v008IQLPrMu/C4tRMI4+sRzHd/wSFxGZQ==}
 
   '@iconify/collections@1.0.533':
     resolution: {integrity: sha512-sd9cHWYOWwdngaK93I33L3vjaxXrb0bxNCfRBQlVEDZahwGIMHYhlCbaLuhrpBftusE6RBLIt/lzTGs4VR5KLQ==}
@@ -6233,6 +6239,10 @@ snapshots:
   '@humanwhocodes/retry@0.3.1': {}
 
   '@humanwhocodes/retry@0.4.2': {}
+
+  '@iconify-json/lucide@1.2.34':
+    dependencies:
+      '@iconify/types': 2.0.0
 
   '@iconify/collections@1.0.533':
     dependencies:

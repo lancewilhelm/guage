@@ -110,6 +110,7 @@ function getIconByProvider(provider?: string) {
         >
           <component
             :is="model.provider === 'openai' ? openAiIcon : ollamaIcon"
+            class="fill-(--main-color)"
           />
           <div>{{ model.name }}</div>
         </div>

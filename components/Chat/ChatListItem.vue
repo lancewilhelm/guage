@@ -5,6 +5,14 @@ const props = defineProps<{
 }>();
 
 const newTitle = ref(props.chat.title);
+watch(
+  () => props.chat.title,
+  (title) => {
+    if (!isRenaming.value) {
+      newTitle.value = title;
+    }
+  },
+);
 
 const isRenaming = ref(false);
 const isHovered = ref(false);
@@ -30,7 +38,7 @@ const chatStore = useChatStore();
     @mouseover="isHovered = true"
     @mouseleave="isHovered = false"
   >
-    <div class="flex cursor-pointer hover:opacity-80 overflow-hidden">
+    <div class="flex cursor-pointer hover:opacity-80 overflow-hidden w-full">
       <input
         v-if="isRenaming"
         ref="inputRef"
@@ -55,7 +63,7 @@ const chatStore = useChatStore();
       />
       <div v-else class="flex gap-1.5 items-center truncate">
         <div class="w-full truncate">
-          {{ newTitle }}
+          {{ chat.title }}
         </div>
         <Icon
           v-if="chat.isStreaming"
