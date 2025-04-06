@@ -1,9 +1,30 @@
 <script setup lang="ts">
+import { useDynamicFavicon } from "@/composables/useDynamicFavicon";
+
+const favicon = useDynamicFavicon();
+
+// Reactive title
 useHead({
-  titleTemplate: (title) => {
-    return title ? `${title} | Guage` : "Guage";
-  },
+  titleTemplate: (title) => (title ? `${title} | Guage` : "Guage"),
 });
+
+// Favicon updater: watch and re-apply the head link
+watch(
+  favicon,
+  (newFavicon) => {
+    useHead({
+      link: [
+        {
+          rel: "icon",
+          id: "favicon",
+          type: "image/svg+xml",
+          href: newFavicon,
+        },
+      ],
+    });
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

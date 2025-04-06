@@ -32,7 +32,7 @@ const userSettingsStore = useUserSettingsStore();
     @mouseover="isHovered = true"
     @mouseleave="isHovered = false"
   >
-    {{ theme.name }}
+    <div class="truncate">{{ theme.name }}</div>
     <div class="flex gap-1 shrink-0">
       <Icon
         v-if="!isFavorite && isHovered"

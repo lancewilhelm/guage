@@ -18,6 +18,14 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: "en",
       },
+      link: [
+        {
+          rel: "icon",
+          id: "fallback-favicon",
+          type: "image/svg+xml",
+          href: "/favicon.svg",
+        },
+      ],
     },
   },
   css: ["~/assets/css/main.css", "~/assets/css/hljs.css"],
