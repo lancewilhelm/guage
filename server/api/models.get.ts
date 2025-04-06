@@ -77,7 +77,7 @@ export default defineEventHandler(async (event) => {
     const parsedSettings = settings[0].settings as GlobalSettings;
     const ollamaModels = parsedSettings.ollamaUrl
       ? await (await fetch(`${parsedSettings.ollamaUrl}/api/tags`)).json()
-      : [];
+      : { models: [] };
 
     return {
       openaiModels: openaiModels.map((model) => model.id),

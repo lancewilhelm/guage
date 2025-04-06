@@ -37,7 +37,7 @@ const syncStore = useSyncStore();
     >
       <button
         class="bg-(--sub-alt-color) text-white font-bold py-2 px-4 rounded cursor-pointer"
-        @click="showNukeConfirm = true"
+        @click="syncStore.pull"
       >
         Pull Data
       </button>

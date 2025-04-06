@@ -1,4 +1,3 @@
-// ~/stores/sync.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { localDb, type LocalChat, type LocalMessage } from "~/utils/db/local";
@@ -8,11 +7,13 @@ export const useSyncStore = defineStore(
   "sync",
   () => {
     const isSyncing = ref(false);
-    const lastSyncTime = ref<Date | null>(null);
+    const lastSyncTime = ref<Date>(new Date(0));
     const syncError = ref<string | null>(null);
 
-    async function syncAll() {
-      logger.debug("Syncing all data...");
+    async function sync() {
+      const session = await $fetch<Session>("/api/auth/get-session");
+      if (!session) return;
+
       isSyncing.value = true;
       syncError.value = null;
 
@@ -74,11 +75,17 @@ export const useSyncStore = defineStore(
       }
     }
 
+    function pull() {
+      lastSyncTime.value = new Date(0);
+      sync();
+    }
+
     return {
       isSyncing,
       lastSyncTime,
       syncError,
-      syncAll,
+      sync,
+      pull,
     };
   },
   {

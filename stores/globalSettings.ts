@@ -38,7 +38,7 @@ export const useGlobalSettingsStore = defineStore(
       triggerDebouncedSync();
     }
 
-    const synced = ref(false);
+    const synced = ref(true);
     async function setSynced(value: boolean) {
       await adminCheck();
       synced.value = value;

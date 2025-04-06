@@ -16,10 +16,17 @@ async function handleSubmit() {
     return;
   }
 
+  // Sync with the server
+  const syncStore = useSyncStore();
+  syncStore.sync();
+
+  // Load the theme
   const userSettingsStore = useUserSettingsStore();
   if (userSettingsStore.settings.theme) {
     loadTheme(userSettingsStore.settings.theme);
   }
+
+  // Navigate to the chat page
   return navigateTo("/chat");
 }
 </script>

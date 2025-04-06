@@ -43,7 +43,7 @@ export const useUserSettingsStore = defineStore(
     }
 
     const updatedAt = ref<Date>(new Date());
-    const synced = ref(false);
+    const synced = ref(true);
     const setSynced = (value: boolean) => {
       synced.value = value;
     };

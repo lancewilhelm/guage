@@ -6,7 +6,7 @@ const DEBOUNCE_MS = 500;
 const _triggerSync = () => {
   const sync = useSyncStore();
   if (!sync.isSyncing) {
-    sync.syncAll();
+    sync.sync();
   }
 };
 

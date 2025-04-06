@@ -129,7 +129,7 @@ export default defineEventHandler(async (event) => {
     logger.debug("POST /api/sync: Insert successful");
 
     // Select all the unsynced data from the cloud database
-    const since = body.lastSyncTime || 0;
+    const since = body.lastSyncTime;
     // Select chats
     const unsyncedChats = await cloudDb
       .select()
