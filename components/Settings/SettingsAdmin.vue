@@ -91,7 +91,7 @@ const ollamaIcon = resolveComponent("OllamaIcon");
       </SettingsSubGroup>
 
       <SettingsSubGroup title="ollama" :icon="ollamaIcon">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 mb-4">
           <div class="text-(--main-color)">url</div>
           <input
             v-model="ollamaUrl"
@@ -115,6 +115,30 @@ const ollamaIcon = resolveComponent("OllamaIcon");
             name="lucide:frown"
             class="text-(--no-color) scale-125"
           />
+        </div>
+        <div class="w-full grid grid-cols-3 gap-2 text-nowrap mb-3">
+          <div
+            v-for="model in models?.ollamaModels.sort((a, b) =>
+              a.localeCompare(b),
+            )"
+            :key="model"
+            :class="[
+              ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
+              availableModelNames.includes(model)
+                ? 'bg-(--main-color) text-(--bg-color)'
+                : 'text-(--text-color)',
+            ]"
+            @click="
+              () =>
+                globalSettingsStore.updateSettings({
+                  availableModels: availableModelNames.includes(model)
+                    ? availableModels.filter((m) => m.name !== model)
+                    : [...availableModels, { name: model, provider: 'ollama' }],
+                })
+            "
+          >
+            {{ model }}
+          </div>
         </div>
       </SettingsSubGroup>
     </SettingsGroup>

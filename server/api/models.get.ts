@@ -81,7 +81,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       openaiModels: openaiModels.map((model) => model.id),
-      ollamaModels: ollamaModels.length
+      ollamaModels: ollamaModels.models.length
         ? ollamaModels.models.map((model: OllamaModel) => model.name)
         : [],
     };
