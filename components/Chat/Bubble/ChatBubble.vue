@@ -118,8 +118,10 @@ watch(isEditing, async (val) => {
         >
           <ChatBubbleContent
             v-if="message.content"
+            :id="message.id"
             :content="message.content"
             :role="message.role"
+            :updated-at="message.updatedAt"
           />
         </div>
         <div v-else class="flex flex-col gap-2 rounded-lg p-3">

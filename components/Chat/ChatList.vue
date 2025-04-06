@@ -63,7 +63,7 @@ useDraggable(resizerRef, {
 <template>
   <div
     ref="chatListRef"
-    class="h-full bg-(--sub-alt-color)"
+    class="chat-list h-full bg-(--sub-alt-color)"
     :style="{
       display: uiStore.chatListVisible ? 'flex' : 'none',
     }"
@@ -89,7 +89,7 @@ useDraggable(resizerRef, {
           "
         />
       </div>
-      <div class="flex flex-col justify-center p-2">
+      <div class="flex flex-col p-2 overflow-y-auto">
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
             <div
@@ -119,3 +119,9 @@ useDraggable(resizerRef, {
     />
   </div>
 </template>
+
+<style scoped>
+.chat-list ::-webkit-scrollbar-track {
+  background: var(--sub-alt-color);
+}
+</style>
