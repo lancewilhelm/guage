@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/generate-title");
+    logger.error("POST /api/sync: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -130,7 +130,6 @@ export default defineEventHandler(async (event) => {
 
     // Select all the unsynced data from the cloud database
     const since = body.lastSyncTime || 0;
-    console.log("lastSyncTime:", body.lastSyncTime);
     // Select chats
     const unsyncedChats = await cloudDb
       .select()
@@ -188,7 +187,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, data };
   } catch (error) {
-    logger.error(error, "Sync error:");
+    logger.error(error, "POST /api/sync: Error during sync");
     setResponseStatus(event, 500);
     return {
       success: false,

@@ -11,6 +11,9 @@ importers:
       '@libsql/client':
         specifier: ^0.15.1
         version: 0.15.1
+      '@libsql/darwin-arm64':
+        specifier: ^0.5.4
+        version: 0.5.4
       '@nuxt/eslint':
         specifier: 1.3.0
         version: 1.3.0(@vue/compiler-sfc@3.5.13)(eslint@9.23.0(jiti@2.4.2))(magicast@0.3.5)(typescript@5.8.2)(vite@6.2.4(@types/node@22.13.14)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(tsx@4.19.3)(yaml@2.7.1))
@@ -878,6 +881,11 @@ packages:
 
   '@libsql/darwin-arm64@0.5.3':
     resolution: {integrity: sha512-yAitxSuiaLT465uAvqXi1TzirXb+IOxa6sfC+uIuyCzAusLEhOFlEhutqenVx93lhPkJZJIiZkK1pIETIatnfg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@libsql/darwin-arm64@0.5.4':
+    resolution: {integrity: sha512-4PnRdklaQg27vAZxtQgKl+xBHimCH2KRgKId+h63gkAtz5yFTMmX+Q4Ez804T1BgrZuB5ujIvueEEuust2ceSQ==}
     cpu: [arm64]
     os: [darwin]
 
@@ -6344,6 +6352,8 @@ snapshots:
 
   '@libsql/darwin-arm64@0.5.3':
     optional: true
+
+  '@libsql/darwin-arm64@0.5.4': {}
 
   '@libsql/darwin-x64@0.5.3':
     optional: true

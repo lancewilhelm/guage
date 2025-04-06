@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/generate-title");
+    logger.error("POST /api/ollama/version: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
     if (!data.version) {
       logger.error(
         { data },
-        "POST /api/version: Version not found in response",
+        "POST /api/ollama/version: Version not found in response",
       );
       return {
         success: false,
@@ -44,13 +44,15 @@ export default defineEventHandler(async (event) => {
     }
 
     const version = data.version;
-    logger.debug({ version }, "POST /api/version: Version retrieved");
     return {
       success: true,
       version,
     };
   } catch (error) {
-    logger.error(error, "Error in retrieving Ollama version:");
+    logger.error(
+      error,
+      "POST /api/ollama/version: Error in retrieving Ollama version:",
+    );
     return {
       success: false,
       message: "Internal server error",

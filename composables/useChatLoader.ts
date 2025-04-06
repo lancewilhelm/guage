@@ -10,7 +10,7 @@ export function useChatLoader() {
 
   async function loadAllChats() {
     // Check if the app is running in the client
-    if (!import.meta.client) return;
+    if (import.meta.server) return;
 
     const allChats = await dbRetrieveChats();
     if (allChats.length) {
@@ -31,7 +31,7 @@ export function useChatLoader() {
 
   async function loadChat(chatId: string) {
     // Check if the app is running in the client
-    if (!import.meta.client) return;
+    if (import.meta.server) return;
 
     const chat = await dbRetrieveChat(chatId);
     if (!chat) {
@@ -52,7 +52,7 @@ export function useChatLoader() {
 
   async function loadChatMessages(chatId: string) {
     // Check if the app is running in the client
-    if (!import.meta.client) return;
+    if (import.meta.server) return;
 
     // Load messages only if the chat is not empty
     if (!chatStore.chats[chatId].messages.length) {

@@ -1,7 +1,6 @@
 /**
  * Loads the CSS file for the specified theme.
  * @param themeName - The name of the theme to load.
- * @returns
  */
 export function loadTheme(themeName: string): Promise<void> {
   return new Promise((resolve, reject) => {

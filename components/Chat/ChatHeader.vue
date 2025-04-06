@@ -1,17 +1,4 @@
 <script setup lang="ts">
-async function handleSignOut() {
-  await authClient.signOut({
-    fetchOptions: {
-      onSuccess: () => {
-        navigateTo("/login");
-      },
-      onError: (error) => {
-        console.error("Sign out error:", error);
-      },
-    },
-  });
-}
-
 const uiStore = useUiStore();
 </script>
 
@@ -40,7 +27,7 @@ const uiStore = useUiStore();
       <Icon
         name="lucide:log-out"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="handleSignOut"
+        @click="useSignOut"
       />
     </div>
   </div>

@@ -16,6 +16,10 @@ async function handleSubmit() {
     return;
   }
 
+  const userSettingsStore = useUserSettingsStore();
+  if (userSettingsStore.settings.theme) {
+    loadTheme(userSettingsStore.settings.theme);
+  }
   return navigateTo("/chat");
 }
 </script>
@@ -24,9 +28,7 @@ async function handleSubmit() {
   <div
     class="login-container w-full h-full flex flex-col items-center justify-center"
   >
-    <div className="text-7xl font-bold font-logo mb-6 text-(--main-color)">
-      guage
-    </div>
+    <div class="logo text-7xl font-bold mb-6 text-(--main-color)">guage</div>
     <form
       class="flex flex-col gap-2 items-center"
       @submit.prevent="handleSubmit"
@@ -53,3 +55,9 @@ async function handleSubmit() {
     </form>
   </div>
 </template>
+
+<style>
+.logo {
+  font-family: Poppins, sans-serif;
+}
+</style>

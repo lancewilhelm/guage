@@ -32,9 +32,11 @@ async function handleSubmit() {
   <div
     class="login-container w-full h-full flex flex-col items-center justify-center"
   >
-    <div className="text-7xl font-bold font-logo mb-6 text-(--main-color)">
-      guage
-    </div>
+    <NuxtLink
+      to="/login"
+      class="logo text-7xl font-bold mb-6 text-(--main-color)"
+      >guage</NuxtLink
+    >
     <form
       class="flex flex-col gap-2 items-center"
       @submit.prevent="handleSubmit"
@@ -73,3 +75,9 @@ async function handleSubmit() {
     </form>
   </div>
 </template>
+
+<style>
+.logo {
+  font-family: Poppins, sans-serif;
+}
+</style>

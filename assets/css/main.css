@@ -1,14 +1,9 @@
 @import "tailwindcss";
 
-@theme {
-  --font-logo: "Poppins", sans-serif;
-}
-
 :root {
   --gutter: 32px;
   --chat-max-width: 1000px;
   --border-radius: 8px;
-  --font-logo: "Poppins", sans-serif;
   --yes-color: #008800;
   --no-color: #880000;
 }
@@ -16,7 +11,7 @@
 body {
   background: var(--bg-color);
   color: var(--text-color);
-  font-family: "Geist", sans-serif;
+  font-family: "geist", sans-serif;
 }
 
 h1 {

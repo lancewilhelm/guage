@@ -1,9 +1,15 @@
 export default defineNuxtPlugin(() => {
+  if (import.meta.client) return;
+  const route = useRoute();
+  const isLoggedIn = route.path !== "/login" && route.path !== "/register";
+
   const userSettings = useUserSettingsStore(); // SSR-compatible
 
-  const theme = userSettings.settings.theme || "guage_light";
+  const theme =
+    userSettings.settings.theme && isLoggedIn
+      ? userSettings.settings.theme
+      : "guage";
 
-  // Inject the theme stylesheet in SSR response
   useHead({
     link: [
       {

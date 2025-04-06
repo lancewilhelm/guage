@@ -29,7 +29,6 @@ export const useUserSettingsStore = defineStore(
 
       // Change theme if it is not the same as the current one
       if (updated.theme && settings.value.theme !== updated.theme) {
-        console.log("Changing theme to", updated.theme);
         loadTheme(updated.theme);
       }
       // Update the settings

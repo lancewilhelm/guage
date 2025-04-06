@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/generate-title");
+    logger.error("POST /api/llm: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   logger.debug({ history, userMessage, model }, "Request body:");
 
   if (!model) {
-    logger.error("Invalid request: No provider specified");
+    logger.error("POST /api/llm: Invalid request: No provider specified");
     setResponseStatus(event, 400);
     return {
       message: "Invalid request: No provider specified",
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!history || !Array.isArray(history) || !userMessage) {
-    logger.error("Invalid request: messages are required");
+    logger.error("POST /api/llm: Invalid request: messages are required");
     setResponseStatus(event, 400);
     return {
       message: "Invalid request: messages are required",
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
 
     return sendStream(event, stream);
   } catch (error) {
-    logger.error(error, "Error streaming response");
+    logger.error(error, "POST /api/llm: Error processing request");
     setResponseStatus(event, 500);
     return {
       message: "Internal server error",

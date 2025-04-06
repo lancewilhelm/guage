@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/generate-title");
+    logger.error("GET /api/models: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -86,7 +86,7 @@ export default defineEventHandler(async (event) => {
         : [],
     };
   } catch (error) {
-    logger.error(error, "Error in fetching models:");
+    logger.error(error, "GET /api/models: Error fetching models");
     setResponseStatus(event, 500);
     return {
       message: "Failed to fetch models",

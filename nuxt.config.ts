@@ -62,6 +62,9 @@ export default defineNuxtConfig({
       scan: true,
     },
   },
+  fonts: {
+    families: [{ name: "Poppins", provider: "google", weight: "bold" }],
+  },
   components: [
     { path: "~/components", pathPrefix: false },
     { path: "~/components/mdc", pathPrefix: false },

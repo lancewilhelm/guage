@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/generate-title");
+    logger.error("POST /api/generate-title: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -23,7 +23,9 @@ export default defineEventHandler(async (event) => {
   // Parse the request body
   const { userMessage }: { userMessage: LocalMessage } = await readBody(event);
   if (!userMessage) {
-    logger.error("Invalid request: meessage required");
+    logger.error(
+      "POST /api/generate-title: Invalid request, meessage required",
+    );
     setResponseStatus(event, 400);
     return { message: "Invalid request: meessage required" };
   }
@@ -33,28 +35,18 @@ export default defineEventHandler(async (event) => {
     content:
       "Generate a short title for a chat based on the users first message. Please do not put quotes around the title.",
   };
-  const { role, content } = userMessage;
-  const parsedMessage = {
-    role,
-    content,
-  } as OpenAI.Chat.ChatCompletionMessageParam;
 
   try {
     // Start the OpenAI completion
-    logger.debug(
-      { userMessage: parsedMessage },
-      "POST /api/chat/generate-title: Generating title",
-    );
     const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
       messages: [systemPrompt, userMessage],
       model: "gpt-4o-mini",
     };
     const completion = await openai.chat.completions.create(params);
     const title = completion.choices[0].message.content;
-    logger.debug({ title }, "POST /api/chat/generate-title: Generated title");
     return title;
   } catch (error) {
-    logger.error(error, "Error generating title:");
+    logger.error(error, "POST /api/generate-title: Error generating title:");
     setResponseStatus(event, 500);
     return { message: "Internal server error" };
   }

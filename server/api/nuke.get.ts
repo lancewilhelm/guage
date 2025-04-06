@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("Unauthorized access attempt to /api/nuke");
+    logger.error("GET /api/nuke: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
 
     return { success: true };
   } catch (error) {
-    logger.error("Error in nuke:", error);
+    logger.error(error, "GET /api/nuke: Error deleting data");
     setResponseStatus(event, 500);
     return {
       message: "Internal Server Error",

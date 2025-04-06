@@ -1,5 +1,4 @@
 function setFavIcon() {
-  console.log("setting favicon");
   setTimeout(async () => {
     let mainColor, subColor, textColor, bgColor;
     const st = getComputedStyle(document.body);
@@ -58,7 +57,6 @@ function loadTheme() {
       : prefersDark
         ? "guage_dark"
         : "guage_light";
-    console.log("Loading theme:", theme);
 
     // Inject theme CSS file
     const link = document.createElement("link");
@@ -68,7 +66,7 @@ function loadTheme() {
     document.head.appendChild(link);
     // setFavIcon();
   } catch (e) {
-    console.error("Theme loading error:", e);
+    logger.error("Theme loading error:", e);
   }
 }
 
