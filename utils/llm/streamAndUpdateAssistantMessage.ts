@@ -4,13 +4,13 @@ import { sendMessageToLLM } from "./sendMessageToLLM";
 
 export async function streamAndUpdateAssistantMessage({
   chatId,
-  userMessage,
-  assistantMessage,
+  userMessageId,
+  assistantMessageId,
   history,
 }: {
   chatId: string;
-  userMessage: LocalMessage;
-  assistantMessage: LocalMessage;
+  userMessageId: string;
+  assistantMessageId: string;
   history: LocalMessage[];
 }) {
   const chatStore = useChatStore();
@@ -21,12 +21,12 @@ export async function streamAndUpdateAssistantMessage({
   try {
     await sendMessageToLLM({
       chatId,
-      userMessage,
+      userMessage: chatStore.chats[chatId].messages[userMessageId],
       history,
       signal: abortController.signal,
       onChunk: (partialText) => {
-        chatStore.updateMessage(chatId, assistantMessage.id, partialText);
-        dbUpdateMessage(assistantMessage.id, { content: partialText });
+        chatStore.updateMessage(chatId, assistantMessageId, partialText);
+        dbUpdateMessage(assistantMessageId, { content: partialText });
       },
     });
   } catch (err) {

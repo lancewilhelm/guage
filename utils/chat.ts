@@ -8,6 +8,7 @@ import {
   dbRetrieveMessages,
   type LocalMessage,
   type LocalChat,
+  type Model,
 } from "./db/local";
 import { v4 as uuidv4 } from "uuid";
 import type { ChatState } from "~/stores/chat";
@@ -197,7 +198,7 @@ function createMessagePair(
   };
 
   // Persist messages to IndexedDB
-  dbCreateMessage([userMessage, assistantMessage]);
+  dbCreateMessage([{ ...userMessage }, { ...assistantMessage }]);
 
   return { userMessage, assistantMessage };
 }
@@ -294,8 +295,8 @@ async function updateChatAndGetResponse(
 
   await streamAndUpdateAssistantMessage({
     chatId,
-    userMessage,
-    assistantMessage,
+    userMessageId: userMessage.id,
+    assistantMessageId: assistantMessage.id,
     history: messageHistory,
   });
 

@@ -62,7 +62,7 @@ defineExpose({
     <div
       v-for="message in activeMessages"
       :key="message.id"
-      class="flex gap-2 items-center"
+      class="flex flex-col gap-2 items-center"
     >
       <ChatBubble
         :message="message"

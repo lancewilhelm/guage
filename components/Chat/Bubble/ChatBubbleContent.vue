@@ -6,6 +6,6 @@ defineProps<{
 </script>
 
 <template>
-  <MDC v-if="role === 'assistant'" :value="content" />
+  <MDC v-if="role === 'assistant'" :key="content" :value="content" />
   <div v-else class="whitespace-pre-wrap">{{ content }}</div>
 </template>

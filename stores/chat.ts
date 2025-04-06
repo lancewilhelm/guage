@@ -62,15 +62,20 @@ export const useChatStore = defineStore("chat", () => {
 
   function addMessage(chatId: string, message: LocalMessage) {
     if (chats.value[chatId]) {
-      chats.value[chatId].messages[message.id] = message;
+      chats.value[chatId].messages[message.id] = { ...message };
     }
   }
 
   function updateMessage(chatId: string, id: string, content: string) {
     const chat = chats.value[chatId];
-    if (chat?.messages[id]) {
-      chat.messages[id].content = content;
-    }
+    if (!chat?.messages[id]) return;
+
+    // Replace with a new object to ensure Vue's reactivity system notices
+    const existing = chat.messages[id];
+    chat.messages[id] = {
+      ...existing,
+      content,
+    };
   }
 
   function setActiveBranch(chatId: string, branch?: string[]) {

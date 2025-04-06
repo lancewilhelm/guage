@@ -44,7 +44,7 @@ export const useSyncStore = defineStore(
               }
             : null,
         };
-        logger.debug("Sync request body:", body);
+        // logger.debug("Sync request body:", body);
 
         const response = await $fetch<SyncResponse>("/api/sync", {
           method: "POST",
@@ -119,12 +119,12 @@ async function processSyncResponse(response: SyncResponse) {
     unsyncedGlobalSettings,
   } = response.data;
 
-  logger.debug("Processing sync response:", {
-    unsyncedChats,
-    unsyncedMessages,
-    unsyncedUserSettings,
-    unsyncedGlobalSettings,
-  });
+  // logger.debug("Processing sync response:", {
+  //   unsyncedChats,
+  //   unsyncedMessages,
+  //   unsyncedUserSettings,
+  //   unsyncedGlobalSettings,
+  // });
 
   const chatStore = useChatStore();
 
