@@ -48,11 +48,7 @@ export async function streamOllama({
         if (!settings || !settings[0]) {
           logger.error("GET /api/models: Global settings not found");
         }
-        // const parsedSettings = settings[0].settings as GlobalSettings;
-        const parsedSettings = {
-          ollamaUrl: "http://localhost:11434",
-          // Add other settings as needed
-        };
+        const parsedSettings = settings[0].settings as GlobalSettings;
 
         const response = await fetch(`${parsedSettings.ollamaUrl}/api/chat`, {
           method: "POST",
