@@ -31,9 +31,6 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css", "~/assets/css/hljs.css"],
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY || "",
-    public: {
-      baseUrl: process.env.BASE_URL || "http://localhost:3000",
-    },
   },
   imports: {
     dirs: ["utils"],
