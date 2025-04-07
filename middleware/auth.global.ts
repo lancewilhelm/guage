@@ -49,6 +49,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo("/register");
   }
 
+  // Handle root path redirect
+  if (to.path === "/") {
+    if (loggedIn.value) return navigateTo(redirectUserTo);
+    return navigateTo(redirectGuestTo);
+  }
+
   // Guest-only pages
   if (only === "guest" && loggedIn.value) {
     if (to.path === redirectUserTo) return;
