@@ -75,9 +75,17 @@ export default defineEventHandler(async (event) => {
       };
     }
     const parsedSettings = settings[0].settings as GlobalSettings;
-    const ollamaModels = parsedSettings.ollamaUrl
-      ? await (await fetch(`${parsedSettings.ollamaUrl}/api/tags`)).json()
-      : { models: [] };
+    let ollamaModels = { models: [] };
+    try {
+      ollamaModels = parsedSettings.ollamaUrl
+        ? await (await fetch(`${parsedSettings.ollamaUrl}/api/tags`)).json()
+        : { models: [] };
+    } catch (error) {
+      logger.error(
+        error,
+        "GET /api/models: Error fetching Ollama models from the provided URL",
+      );
+    }
 
     return {
       openaiModels: openaiModels.map((model) => model.id),
