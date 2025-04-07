@@ -3,7 +3,7 @@ name: Build & Push Docker Image
 on:
   push:
     branches:
-      - nuxt # trigger only on 'nuxt' branch
+      - main # trigger only on 'main' branch
 
 jobs:
   build-and-push:
@@ -40,4 +40,3 @@ jobs:
           push: true
           tags: |
             ${{ steps.meta.outputs.image_name }}:latest
-            ${{ steps.meta.outputs.image_name }}:${{ steps.meta.outputs.tag }}
