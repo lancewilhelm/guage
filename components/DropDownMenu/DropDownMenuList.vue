@@ -8,6 +8,7 @@ const align = ref(props.align || "left");
 const context = inject("dropdownContext") as {
   isOpen: Ref<boolean>;
   menuRef: Ref<HTMLElement | null>;
+  dropdownRef: Ref<HTMLElement | null>;
 };
 const isOpen = context.isOpen;
 const buttonRef = context.menuRef;

@@ -3,6 +3,7 @@ import { provide, ref, onMounted, onBeforeUnmount } from "vue";
 
 const isOpen = ref(false);
 const menuRef = ref<HTMLElement | null>(null);
+const dropdownRef = ref<HTMLElement | null>(null);
 
 const setIsOpen = (val: boolean) => {
   isOpen.value = val;
@@ -12,10 +13,15 @@ provide("dropdownContext", {
   isOpen,
   setIsOpen,
   menuRef,
+  dropdownRef,
 });
 
 const handleClickOutside = (e: MouseEvent) => {
-  if (menuRef.value && !menuRef.value.contains(e.target as Node)) {
+  const clickedOutsideMenu =
+    menuRef.value && !menuRef.value.contains(e.target as Node);
+  const clickedOutsideDropdown =
+    dropdownRef.value && !dropdownRef.value.contains(e.target as Node);
+  if (clickedOutsideMenu && clickedOutsideDropdown) {
     isOpen.value = false;
   }
 };
@@ -38,7 +44,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="menuRef" class="relative inline-block">
+  <div ref="menuRef" class="relative">
     <slot />
   </div>
 </template>
