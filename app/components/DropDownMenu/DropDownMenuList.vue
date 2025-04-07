@@ -39,6 +39,7 @@ onMounted(() => {
   watch(isOpen, async (val) => {
     if (val) {
       await nextTick();
+      context.dropdownRef.value = dropdownRef.value;
       updateDropdownPosition();
     }
   });

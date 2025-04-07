@@ -17,10 +17,10 @@ provide("dropdownContext", {
 });
 
 const handleClickOutside = (e: MouseEvent) => {
-  const clickedOutsideMenu =
-    menuRef.value && !menuRef.value.contains(e.target as Node);
+  const target = e.target as Node;
+  const clickedOutsideMenu = menuRef.value && !menuRef.value.contains(target);
   const clickedOutsideDropdown =
-    dropdownRef.value && !dropdownRef.value.contains(e.target as Node);
+    dropdownRef.value && !dropdownRef.value.contains(target);
   if (clickedOutsideMenu && clickedOutsideDropdown) {
     isOpen.value = false;
   }
