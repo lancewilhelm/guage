@@ -3,7 +3,7 @@ defineProps<{
   currentPageName: string;
 }>();
 
-const session = authClient.useSession();
+const { user } = useAuth();
 </script>
 <template>
   <div
@@ -27,7 +27,7 @@ const session = authClient.useSession();
       path="/settings/cloud"
       label="cloud"
     />
-    <div v-if="session.data?.user.role === 'admin'">
+    <div v-if="user?.role === 'admin'">
       <SettingsTabBarItem
         :is-active-tab="currentPageName === 'admin'"
         icon="lucide:shield-check"

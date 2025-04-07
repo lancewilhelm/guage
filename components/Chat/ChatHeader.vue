@@ -1,5 +1,6 @@
 <script setup lang="ts">
 const uiStore = useUiStore();
+const { signOut } = useAuth();
 </script>
 
 <template>
@@ -27,7 +28,7 @@ const uiStore = useUiStore();
       <Icon
         name="lucide:log-out"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="useSignOut"
+        @click="signOut('/login')"
       />
     </div>
   </div>

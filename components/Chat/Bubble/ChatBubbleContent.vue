@@ -81,7 +81,12 @@ const showThinking = ref(false);
         v-if="showThinking"
         class="border border-(--sub-color) rounded p-3 mt-1 whitespace-pre-wrap"
       >
-        {{ parsed.thinking }}
+        <MDC
+          v-if="parsed.thinking"
+          :key="id + updatedAt.getTime().toString() + 'thoughts'"
+          :value="parsed.thinking"
+          class="flex flex-col gap-2"
+        />
       </div>
     </div>
 

@@ -1,19 +1,63 @@
-import { authClient } from "~/utils/authClient";
+import { defu } from "defu";
+
+type MiddlewareOptions =
+  | false
+  | {
+      /**
+       * Only apply auth middleware to guest or user
+       */
+      only?: "guest" | "user";
+      /**
+       * Redirect authenticated user to this route
+       */
+      redirectUserTo?: string;
+      /**
+       * Redirect guest to this route
+       */
+      redirectGuestTo?: string;
+    };
+
+declare module "#app" {
+  interface PageMeta {
+    auth?: MiddlewareOptions;
+  }
+}
+
+declare module "vue-router" {
+  interface RouteMeta {
+    auth?: MiddlewareOptions;
+  }
+}
+
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (import.meta.server) return;
-  const { data: session } = await authClient.useSession(useFetch);
-  if (!session.value?.session) {
-    if (to.path !== "/login" && to.path !== "/register") {
-      return navigateTo("/login");
-    }
-  } else {
-    if (to.path === "/login" || to.path === "/register" || to.path === "/") {
-      return navigateTo("/chat");
-    } else if (
-      to.path === "/settings/admin" &&
-      session.value.user.role !== "admin"
-    ) {
-      return navigateTo("/settings");
-    }
+  // If auth is disabled, skip middleware
+  if (to.meta?.auth === false) {
+    return;
+  }
+  const { loggedIn, options, fetchSession } = useAuth();
+  const { only, redirectUserTo, redirectGuestTo } = defu(
+    to.meta?.auth,
+    options,
+  );
+
+  // Always fetch session on client
+  if (import.meta.client) await fetchSession();
+
+  // Optional: first-time setup redirect
+  const userCount = await $fetch<number>("/api/auth/user-count");
+  if (!loggedIn.value && userCount === 0 && to.path !== "/register") {
+    return navigateTo("/register");
+  }
+
+  // Guest-only pages
+  if (only === "guest" && loggedIn.value) {
+    if (to.path === redirectUserTo) return;
+    return navigateTo(redirectUserTo);
+  }
+
+  // User-only pages
+  if (!loggedIn.value && only === "user") {
+    if (to.path === redirectGuestTo) return;
+    return navigateTo(redirectGuestTo);
   }
 });

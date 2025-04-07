@@ -16,8 +16,9 @@ const defaultSettings: GlobalSettings = {
 async function adminCheck() {
   const session = await $fetch<Session>("/api/auth/get-session");
   if (session.user.role !== "admin") {
-    throw new Error("Unauthorized");
+    return false;
   }
+  return true;
 }
 
 export const useGlobalSettingsStore = defineStore(
@@ -25,7 +26,7 @@ export const useGlobalSettingsStore = defineStore(
   () => {
     const settings = ref<GlobalSettings>(defaultSettings);
     async function updateSettings(updated: Partial<GlobalSettings>) {
-      await adminCheck();
+      if (!(await adminCheck())) return;
 
       // Update settings
       settings.value = { ...settings.value, ...updated };

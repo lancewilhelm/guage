@@ -1,4 +1,10 @@
 <script setup lang="ts">
+definePageMeta({
+  auth: {
+    only: "user",
+    redirectGuestTo: "/login",
+  },
+});
 // Imports
 const route = useRoute();
 const chatStore = useChatStore();

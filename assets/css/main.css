@@ -12,6 +12,7 @@ body {
   background: var(--bg-color);
   color: var(--text-color);
   font-family: "geist", sans-serif;
+  overflow: hidden;
 }
 
 h1 {

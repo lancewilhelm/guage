@@ -1,4 +1,10 @@
 <script setup lang="ts">
+definePageMeta({
+  auth: {
+    only: "guest",
+    redirectUserTo: "/chat",
+  },
+});
 useHead({
   title: "Register",
 });
@@ -13,7 +19,8 @@ async function handleSubmit() {
     return;
   }
 
-  const { error } = await authClient.signUp.email({
+  const { signUp } = useAuth();
+  const { error } = await signUp.email({
     email: email.value,
     password: password.value,
     name: "",

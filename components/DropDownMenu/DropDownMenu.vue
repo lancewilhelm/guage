@@ -38,7 +38,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="menuRef" class="relative">
+  <div ref="menuRef" class="relative inline-block">
     <slot />
   </div>
 </template>

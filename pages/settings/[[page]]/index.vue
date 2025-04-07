@@ -1,6 +1,10 @@
 <script setup lang="ts">
 // Redirect to the profile page if the page parameter is empty
 definePageMeta({
+  auth: {
+    only: "user",
+    redirectGuestTo: "/login",
+  },
   middleware: [
     function (to) {
       if (to.params.page === "") {

@@ -89,7 +89,7 @@ useDraggable(resizerRef, {
           "
         />
       </div>
-      <div class="flex flex-col p-2 overflow-y-auto">
+      <div class="flex flex-col p-2 overflow-y-auto overflow-x-hidden">
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
             <div
@@ -109,6 +109,7 @@ useDraggable(resizerRef, {
                 "
               />
             </div>
+            <div id="bottom" class="h-[100px]" />
           </div>
         </div>
       </div>
@@ -123,5 +124,9 @@ useDraggable(resizerRef, {
 <style scoped>
 .chat-list ::-webkit-scrollbar-track {
   background: var(--sub-alt-color);
+}
+
+.chat-list ::-webkit-scrollbar-thumb {
+  border: solid 5px var(--sub-alt-color);
 }
 </style>

@@ -4,6 +4,8 @@ import { onMounted, onBeforeUnmount, ref, computed } from "vue";
 const userSettingsStore = useUserSettingsStore();
 const globalSettingsStore = useGlobalSettingsStore();
 
+console.log("userSettingsStore", userSettingsStore.settings);
+
 const openAiIcon = resolveComponent("OpenAiIcon");
 const ollamaIcon = resolveComponent("OllamaIcon");
 

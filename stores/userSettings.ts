@@ -18,6 +18,7 @@ const defaultSettings: UserSettings = {
     sortedByName: false,
     reverseSort: false,
   },
+  model: undefined,
 };
 
 export const useUserSettingsStore = defineStore(
