@@ -1,75 +1,58 @@
-# Nuxt Minimal Starter
+# Guage
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+A clean and simple front-end for large-language models.
 
-## Setup
+## Notable Features
 
-Make sure to install dependencies:
+- Nuxt 3 / Vue 3
+- Drizzle ORM
+- SQLite backend by default, Postgres optional
+- TypeScript
+- Tailwind CSS
+- Multiple LLM providers (OpenAI, Ollama, more coming)
+- Themes
+
+## Usage
+
+### Docker (recommended)
+
+Run with docker
 
 ```bash
-# npm
-npm install
+docker run -p 3000:3000 -e NUXT_OPENAI_API_KEY=sk-xxx -v guage:/app/data ghcr.io/lancewilhelm/guage:latest
+```
 
-# pnpm
+If you want to use a different local directory for the volume data (so that you can more easily access the SQLite database), you can do so by changing "guage" in the volume to the path you want to use.
+
+### Manual (for development)
+
+1. Clone the repo
+
+```bash
+git clone https://github.com/lancewilhelm/guage.git
+cd guage
+```
+
+2. Install dependencies
+
+```bash
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+3. Create a `.env` file in the root directory and add your OpenAI API key, and a secret for the auth middleware. This is typically a random string of 32 characters. You can use openSSL to generate a random string:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+openssl rand -base64 32
 ```
-
-## Production
-
-Build the application for production:
 
 ```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+# .env
+BETTER_AUTH_SECRET=
+OPENAI_API_KEY=
 ```
 
-Locally preview production build:
+4. Run the app
 
 ```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+pnpm run dev
 ```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
