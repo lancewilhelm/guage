@@ -4,7 +4,7 @@ A clean and simple front-end for large-language models.
 
 ## Notable Features
 
-- Nuxt 3 / Vue 3
+- Nuxt 4 / Vue 3
 - Drizzle ORM
 - SQLite backend by default, Postgres optional
 - TypeScript

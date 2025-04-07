@@ -30,6 +30,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
     "eslint": "^9.23.0",
+    "hast-util-to-jsx-runtime": "^2.3.6",
     "lowlight": "^3.3.0",
     "nuxt": "^3.16.2",
     "openai": "^4.91.1",

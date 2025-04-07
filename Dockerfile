@@ -49,7 +49,7 @@ COPY --chown=nuxt:nodejs --from=build /app/.output .output
 
 # Copy schema + drizzle artifacts if needed at runtime
 COPY --from=build /app/node_modules ./node_modules
-COPY --chown=nuxt:nodejs --from=build /app/utils ./utils
+COPY --chown=nuxt:nodejs --from=build /app/app/utils ./app/utils
 COPY --chown=nuxt:nodejs --from=build /app/drizzle.config.ts ./drizzle.config.ts
 COPY --chown=nuxt:nodejs --from=build /app/drizzle ./drizzle
 COPY --chown=nuxt:nodejs --from=build /app/package.json ./package.json

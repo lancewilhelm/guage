@@ -51,11 +51,10 @@ export default defineNuxtConfig({
     },
     rehypePlugins: {
       "rehype-katex": {},
-      "rehype-highlight": {
-        options: {
-          detect: true,
-        },
-      },
+    },
+    highlight: {
+      theme: "one-dark-pro",
+      langs: ["python"],
     },
   },
   icon: {

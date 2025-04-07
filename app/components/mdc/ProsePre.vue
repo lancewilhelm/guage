@@ -1,21 +1,18 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   language?: string;
+  code?: string;
 }>();
 
-const preRef = ref<HTMLElement | null>(null);
 const isCopied = ref(false);
 function copyCode() {
-  if (!preRef.value) return;
-  const codeElement = preRef.value.querySelector("code");
-  if (!codeElement) return;
-  navigator.clipboard.writeText(codeElement.innerText);
+  navigator.clipboard.writeText(props.code || "");
   isCopied.value = true;
   setTimeout(() => (isCopied.value = false), 2000);
 }
 </script>
 <template>
-  <div class="flex flex-col my-[10px] sm:m-[10px] code">
+  <div class="flex flex-col my-[10px] sm:m-[10px]">
     <div class="flex flex-col">
       <div
         class="grid grid-cols-[min-content_max-content_minmax(0,auto)_min-content] text-sm font-mono"
@@ -32,22 +29,21 @@ function copyCode() {
         >
           <Icon
             v-if="isCopied"
+            id="thumbs-up-icon"
             name="lucide:thumbs-up"
-            class="text-(--text-color)"
+            class="text-(--text-color) bg-current!"
           />
           <Icon
             v-if="!isCopied"
+            id="copy-icon"
             name="lucide:copy"
-            class="text-(--text-color)"
+            class="text-(--text-color) bg-current!"
           />
         </div>
       </div>
     </div>
-    <pre
-      ref="preRef"
-      :class="['rounded-b shadow', language ? '' : 'rounded-tl']"
-    >
-        <slot />
-      </pre>
+    <pre :class="['rounded-b shadow', language ? '' : 'rounded-tl']">
+      <slot />
+    </pre>
   </div>
 </template>

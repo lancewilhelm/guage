@@ -66,6 +66,7 @@ pre::after {
 .hljs {
   color: var(--hljs-fg1);
   background: var(--hljs-bg0);
+  white-space: pre;
 }
 
 .hljs::selection,
