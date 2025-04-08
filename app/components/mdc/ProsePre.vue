@@ -1,23 +1,13 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   language?: string;
   code?: string;
 }>();
 
-const isCopied = ref(false);
-const copyFailed = ref(false);
-function copyCode() {
-  const result = copyToClipboard(props.code || "");
-
-  if (!result) {
-    console.error("Copy failed");
-    copyFailed.value = true;
-    setTimeout(() => (copyFailed.value = false), 2000);
-    return;
-  }
-  isCopied.value = true;
-  setTimeout(() => (isCopied.value = false), 2000);
-}
+const { copy, copied } = useClipboard({
+  copiedDuring: 2000,
+  legacy: true,
+});
 </script>
 <template>
   <div class="flex flex-col my-[10px] sm:m-[10px]">
@@ -33,20 +23,15 @@ function copyCode() {
         </div>
         <div
           class="flex justify-center w-[30px] items-center bg-(--sub-alt-color) p-[5px] rounded-t-(--border-radius) col-start-4 cursor-pointer hover:opacity-80 transition-colors duration-300 copy-code-btn"
-          @mousedown="copyCode"
+          @mousedown="copy(code || '')"
         >
           <Icon
-            v-if="isCopied && !copyFailed"
+            v-if="copied"
             name="lucide:thumbs-up"
             class="text-(--main-color)! bg-current!"
           />
           <Icon
-            v-if="copyFailed"
-            name="lucide:thumbs-down"
-            class="text-(--error-color)! bg-current!"
-          />
-          <Icon
-            v-if="!isCopied && !copyFailed"
+            v-if="!copied"
             name="lucide:copy"
             class="text-(--text-color)! bg-current!"
           />

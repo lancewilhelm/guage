@@ -17,15 +17,6 @@ const isButtonRowVisible = ref(false);
 const editedContent = ref(props.message.content);
 const contentRef = ref<HTMLElement | null>(null);
 
-// Handle copying text to clipboard
-const isCopied = ref(false);
-function handleCopy() {
-  if (!contentRef.value) return;
-  navigator.clipboard.writeText(contentRef.value.innerText);
-  isCopied.value = true;
-  setTimeout(() => (isCopied.value = false), 2000);
-}
-
 // Focus the textarea when editing
 const isEditing = ref(false);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
@@ -35,6 +26,11 @@ watch(isEditing, async (val) => {
       textareaRef.value?.focus();
     });
   }
+});
+
+const { copied, copy } = useClipboard({
+  copiedDuring: 2000,
+  legacy: true,
 });
 </script>
 
@@ -145,7 +141,7 @@ watch(isEditing, async (val) => {
             :version-info="versionInfo"
           />
           <Icon
-            v-if="isCopied"
+            v-if="copied"
             name="lucide:thumbs-up"
             :class="[
               'cursor-pointer',
@@ -159,7 +155,7 @@ watch(isEditing, async (val) => {
               'cursor-pointer',
               isButtonRowVisible ? 'text-(--main-color)' : 'text-(--bg-color)',
             ]"
-            @mousedown="handleCopy"
+            @mousedown="copy(contentRef?.innerText || '')"
           />
           <Icon
             name="lucide:edit"
