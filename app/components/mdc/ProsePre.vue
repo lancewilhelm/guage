@@ -5,8 +5,16 @@ const props = defineProps<{
 }>();
 
 const isCopied = ref(false);
+const copyFailed = ref(false);
 function copyCode() {
-  navigator.clipboard.writeText(props.code || "");
+  const result = copyToClipboard(props.code || "");
+
+  if (!result) {
+    console.error("Copy failed");
+    copyFailed.value = true;
+    setTimeout(() => (copyFailed.value = false), 2000);
+    return;
+  }
   isCopied.value = true;
   setTimeout(() => (isCopied.value = false), 2000);
 }
@@ -28,16 +36,19 @@ function copyCode() {
           @mousedown="copyCode"
         >
           <Icon
-            v-if="isCopied"
-            id="thumbs-up-icon"
+            v-if="isCopied && !copyFailed"
             name="lucide:thumbs-up"
-            class="text-(--text-color) bg-current!"
+            class="text-(--main-color)! bg-current!"
           />
           <Icon
-            v-if="!isCopied"
-            id="copy-icon"
+            v-if="copyFailed"
+            name="lucide:thumbs-down"
+            class="text-(--error-color)! bg-current!"
+          />
+          <Icon
+            v-if="!isCopied && !copyFailed"
             name="lucide:copy"
-            class="text-(--text-color) bg-current!"
+            class="text-(--text-color)! bg-current!"
           />
         </div>
       </div>
