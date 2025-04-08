@@ -65,7 +65,7 @@ watch(isEditing, async (val) => {
           v-if="isEditing"
           ref="textareaRef"
           v-model="editedContent"
-          class="w-full p-1 focus:outline-none max-h-[600px] resize-none"
+          class="w-full p-1 focus:outline-none max-h-[600px] resize-y"
           @keydown.enter="
             (e) => {
               if (e.shiftKey) return;
@@ -178,3 +178,17 @@ watch(isEditing, async (val) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.chat-bubble {
+  scrollbar-color: var(--main-color) var(--bg-color);
+}
+
+.chat-bubble textarea::-webkit-scrollbar-track {
+  background: var(--sub-alt-color);
+}
+
+.chat-bubble textarea::-webkit-scrollbar-thumb {
+  border: 5px solid var(--sub-alt-color);
+}
+</style>

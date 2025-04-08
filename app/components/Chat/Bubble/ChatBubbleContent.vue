@@ -95,6 +95,7 @@ const showThinking = ref(false);
       v-if="role === 'assistant'"
       :key="id + updatedAt.getTime().toString()"
       :value="parsed.body"
+      class="flex flex-col gap-4"
     />
     <div v-else class="whitespace-pre-wrap">{{ content }}</div>
   </div>

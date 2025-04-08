@@ -13,6 +13,8 @@ body {
   color: var(--text-color);
   font-family: "geist", sans-serif;
   overflow: hidden;
+  scrollbar-color: var(--main-color) transparent;
+  scrollbar-width: auto;
 }
 
 h1 {
@@ -93,34 +95,4 @@ textarea:focus {
 
 .katex-html {
   display: none;
-}
-
-::-webkit-scrollbar {
-  width: 17px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--main-color);
-  border-radius: 10px;
-  border: 5px solid var(--bg-color);
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-color);
-}
-
-.input-row textarea::-webkit-scrollbar-track {
-  background: var(--bg-color);
-}
-
-.input-row textarea::-webkit-scrollbar-thumb {
-  border: 5px solid var(--bg-color);
-}
-
-.chat-bubble textarea::-webkit-scrollbar-track {
-  background: var(--sub-alt-color);
-}
-
-.chat-bubble textarea::-webkit-scrollbar-thumb {
-  border: 5px solid var(--sub-alt-color);
 }

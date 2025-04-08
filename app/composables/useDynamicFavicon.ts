@@ -21,10 +21,10 @@ export function useDynamicFavicon() {
       <svg width="100%" height="100%" viewBox="0 0 250 250" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
         <style>
           #bg {
-            fill: ${mainColor};
+            fill: ${bgColor};
           }
           #fg {
-            fill: ${bgColor};
+            fill: ${mainColor};
           }
         </style>
         <g id="bg" transform="matrix(1.07238,0,0,1.07238,-11.6867,-8.81532)">

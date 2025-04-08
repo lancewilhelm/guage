@@ -82,7 +82,9 @@ defineExpose({
               inputValue = '';
             } else {
               if (!chatStore.currentChatId) return;
-              chatStore.chats[chatStore.currentChatId].abortController?.abort();
+              chatStore.chats[
+                chatStore.currentChatId
+              ]?.abortController?.abort();
             }
             if (inputValue.trim() === '') return;
             handleSubmitMessage(inputValue);
@@ -103,3 +105,17 @@ defineExpose({
     </div>
   </div>
 </template>
+
+<style scoped>
+.input-row textarea {
+  scrollbar-color: var(--main-color) transparent;
+}
+
+.input-row textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.input-row textarea::-webkit-scrollbar-thumb {
+  border: 5px solid var(--bg-color);
+}
+</style>
