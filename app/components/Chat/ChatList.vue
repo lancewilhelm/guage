@@ -58,6 +58,8 @@ useDraggable(resizerRef, {
     }
   },
 });
+
+const { width } = useWindowSize();
 </script>
 
 <template>
@@ -107,10 +109,10 @@ useDraggable(resizerRef, {
                     navigateTo('/chat/' + chat.id);
                   }
                 "
-                @touchstart="
+                @touchstart.passive="
                   async () => {
                     navigateTo('/chat/' + chat.id);
-                    uiStore.setChatListVisible(false);
+                    if (width < 448) uiStore.setChatListVisible(false);
                   }
                 "
               />

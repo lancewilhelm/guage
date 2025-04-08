@@ -43,7 +43,10 @@ export default defineNuxtConfig({
   },
   mdc: {
     components: {
-      prose: true,
+      prose: false,
+      map: {
+        pre: "ProsePre",
+      },
     },
     remarkPlugins: {
       "remark-gfm": {},

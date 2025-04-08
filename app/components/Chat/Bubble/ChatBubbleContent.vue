@@ -57,10 +57,10 @@ const showThinking = ref(false);
 <template>
   <div>
     <!-- Thinking dropdown if present -->
-    <div v-if="parsed.thinking" class="mb-2 rounded-lg">
+    <div v-if="parsed.thinking" class="mb-4 rounded-lg">
       <div class="flex">
         <button
-          class="flex items-center gap-2 p-2 cursor-pointer bg-(--sub-alt-color) border border-(--sub-color) rounded-lg"
+          class="flex items-center gap-2 p-2 cursor-pointer bg-(--sub-alt-color) rounded-lg shadow-md"
           @click="showThinking = !showThinking"
         >
           <Icon name="lucide:brain" class="text-(--main-color) scale-125" />
@@ -79,13 +79,13 @@ const showThinking = ref(false);
       </div>
       <div
         v-if="showThinking"
-        class="border border-(--sub-color) rounded p-3 mt-1 whitespace-pre-wrap"
+        class="rounded-lg p-3 mt-1 whitespace-pre-wrap shadow-md bg-(--sub-alt-color) mb-4"
       >
         <MDC
           v-if="parsed.thinking"
           :key="id + updatedAt.getTime().toString() + 'thoughts'"
           :value="parsed.thinking"
-          class="flex flex-col gap-2"
+          class="flex flex-col gap-4"
         />
       </div>
     </div>

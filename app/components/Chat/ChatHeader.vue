@@ -29,7 +29,7 @@ const { signOut } = useAuth();
       <Icon
         name="lucide:log-out"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="signOut()"
+        @click="signOut"
       />
     </div>
   </div>
