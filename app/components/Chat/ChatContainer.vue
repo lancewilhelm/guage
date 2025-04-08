@@ -4,9 +4,9 @@ import type { LocalMessage } from "~/utils/db/local";
 const chatStore = useChatStore();
 const activeMessages = computed(() => {
   if (!chatStore.currentChatId) return [];
-  const messages = chatStore.chats[chatStore.currentChatId]?.messages || [];
+  const messages = chatStore.chats[chatStore.currentChatId]?.messages || {};
   const activeBranch = chatStore.chats[chatStore.currentChatId]?.activeBranch;
-  if (!Object.keys(messages).length || !activeBranch.length) return [];
+  if (!Object.keys(messages).length || !activeBranch?.length) return [];
   return activeBranch.map((messageId) => {
     return messages[messageId];
   });
@@ -20,8 +20,9 @@ interface ComputedVersionInfo {
 
 function computeVersionInfo(
   message: LocalMessage,
-  messages: Record<string, LocalMessage>,
+  messages: Record<string, LocalMessage> | undefined,
 ): ComputedVersionInfo | undefined {
+  if (!messages) return undefined;
   if (message.parentId === null) {
     const rootMessages = Object.values(messages).filter(
       (msg) => msg.parentId === null,
@@ -61,15 +62,16 @@ defineExpose({
   >
     <div
       v-for="message in activeMessages"
-      :key="message.id"
+      :key="message?.id"
       class="flex flex-col gap-2 items-center"
     >
       <ChatBubble
+        v-if="message"
         :message="message"
         :version-info="
           computeVersionInfo(
             message,
-            chatStore.chats[chatStore.currentChatId].messages,
+            chatStore.chats[chatStore.currentChatId]?.messages,
           )
         "
       />
