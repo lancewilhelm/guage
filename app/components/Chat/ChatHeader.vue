@@ -10,7 +10,8 @@ const { signOut } = useAuth();
         v-if="!uiStore.chatListVisible"
         name="lucide:panel-left-open"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="uiStore.setChatListVisible(true)"
+        @mousedown="uiStore.setChatListVisible(true)"
+        @touch="uiStore.setChatListVisible(true)"
       />
       <Icon
         v-if="!uiStore.chatListVisible"
@@ -28,7 +29,7 @@ const { signOut } = useAuth();
       <Icon
         name="lucide:log-out"
         class="text-(--main-color) cursor-pointer scale-125"
-        @click="signOut('/login')"
+        @click="signOut()"
       />
     </div>
   </div>

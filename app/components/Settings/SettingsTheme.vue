@@ -151,7 +151,7 @@ function hexToLuminance(hex: string) {
       title="favorite themes"
       icon="lucide:star"
     >
-      <div class="grid grid-cols-3 gap-2 w-full">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
         <SettingsThemeItem
           v-for="theme in favoriteThemes"
           :key="theme.name"
@@ -167,7 +167,7 @@ function hexToLuminance(hex: string) {
       </div>
     </SettingsGroup>
     <SettingsGroup title="themes" icon="lucide:palette">
-      <div class="grid grid-cols-3 gap-2 w-full">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
         <SettingsThemeItem
           v-for="theme in nonFavoriteThemes"
           :key="theme.name"

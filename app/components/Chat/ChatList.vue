@@ -107,6 +107,12 @@ useDraggable(resizerRef, {
                     navigateTo('/chat/' + chat.id);
                   }
                 "
+                @touchstart="
+                  async () => {
+                    navigateTo('/chat/' + chat.id);
+                    uiStore.setChatListVisible(false);
+                  }
+                "
               />
             </div>
             <div id="bottom" class="h-[100px]" />

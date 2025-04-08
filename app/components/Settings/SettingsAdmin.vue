@@ -64,7 +64,7 @@ const ollamaIcon = resolveComponent("OllamaIcon");
       description="select what models are available to the users"
     >
       <SettingsSubGroup title="openai" :icon="openAiIcon">
-        <div class="grid grid-cols-3 gap-2 text-nowrap mb-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
           <div
             v-for="model in models?.openaiModels.sort((a, b) =>
               a.localeCompare(b),
@@ -116,7 +116,9 @@ const ollamaIcon = resolveComponent("OllamaIcon");
             class="text-(--no-color) scale-125"
           />
         </div>
-        <div class="w-full grid grid-cols-3 gap-2 text-nowrap mb-3">
+        <div
+          class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+        >
           <div
             v-for="model in models?.ollamaModels.sort((a, b) =>
               a.localeCompare(b),

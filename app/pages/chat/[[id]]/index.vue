@@ -105,6 +105,9 @@ watch(
   },
   { immediate: true },
 );
+
+const uiStore = useUiStore();
+const { width } = useWindowSize();
 </script>
 
 <template>
@@ -112,7 +115,17 @@ watch(
     <ChatList class="col-start-1 row-span-2" />
     <ChatHeader class="col-start-2" />
     <div
-      class="flex h-full w-full col-start-2 row-start-2 overflow-hidden relative"
+      :class="[
+        'flex h-full md:w-full col-start-2 row-start-2 overflow-hidden relative',
+        uiStore.chatListVisible ? 'w-screen' : '',
+      ]"
+      @touchstart="
+        () => {
+          if (uiStore.chatListVisible && width < 448) {
+            uiStore.setChatListVisible(false);
+          }
+        }
+      "
     >
       <div
         ref="chatContainerRef"
