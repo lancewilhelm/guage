@@ -123,12 +123,20 @@ export const useChatStore = defineStore("chat", () => {
       const rootMessages = Object.values(chat.messages)
         .filter((msg) => msg.parentId === null)
         .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-      if (newVersionIndex >= rootMessages.length) return;
-      newVersionId = rootMessages[newVersionIndex].id;
+      if (
+        newVersionIndex >= rootMessages.length ||
+        !rootMessages[newVersionIndex]?.id
+      )
+        return;
+      newVersionId = rootMessages[newVersionIndex]?.id;
     } else {
       const parent = chat.messages[target.parentId];
       if (!parent?.childrenIds) return;
-      if (newVersionIndex >= parent.childrenIds.length) return;
+      if (
+        newVersionIndex >= parent.childrenIds.length ||
+        !parent.childrenIds[newVersionIndex]
+      )
+        return;
       newVersionId = parent.childrenIds[newVersionIndex];
       const parentIndex = chat.activeBranch.indexOf(parent.id);
       prefix =
@@ -239,6 +247,7 @@ function buildBranchFrom(chat: ChatState, startId: string): string[] {
   let current = chat.messages[startId];
   while (current?.childrenIds?.length) {
     const nextId = current.childrenIds[0];
+    if (!nextId) break;
     branch.push(nextId);
     current = chat.messages[nextId];
   }

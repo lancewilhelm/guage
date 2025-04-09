@@ -12,11 +12,19 @@ export const useUiStore = defineStore(
     function setChatListVisible(visible: boolean) {
       chatListVisible.value = visible;
     }
+
+    const inputHeight = ref(0);
+    function setInputHeight(height: number) {
+      inputHeight.value = height;
+    }
+
     return {
       chatListWidth,
       setChatListWidth,
       chatListVisible,
       setChatListVisible,
+      inputHeight,
+      setInputHeight,
     };
   },
   {

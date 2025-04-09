@@ -55,7 +55,7 @@ export function useChatLoader() {
     if (import.meta.server) return;
 
     // Load messages only if the chat is not empty
-    if (!chatStore.chats[chatId].messages.length) {
+    if (!chatStore.chats[chatId]?.messages.length) {
       const messages = await dbRetrieveMessages(chatId);
       for (const message of messages) {
         chatStore.addMessage(chatId, message);
