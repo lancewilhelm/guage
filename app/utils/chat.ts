@@ -55,6 +55,7 @@ export function parseSSEChunk(chunk: string): SSEChunk[] {
     const lines = event.split("\n");
     const eventType = lines[0]?.replace("event: ", "");
     const data = lines[1]?.replace("data: ", "");
+    if (!eventType || !data) continue;
     parsedEvents.push({ eventType, data });
   }
   return parsedEvents;
@@ -213,6 +214,7 @@ function findLastAssistantMessageId(chat: ChatState): string | null {
     return null;
 
   const lastMessageId = chat.activeBranch[chat.activeBranch.length - 1];
+  if (!lastMessageId) return null;
   const lastMessage = chat.messages[lastMessageId];
 
   return lastMessage && lastMessage.role === "assistant"
@@ -257,6 +259,8 @@ async function updateChatAndGetResponse(
 ) {
   const chatStore = useChatStore();
   const now = new Date();
+
+  if (!chatStore.chats[chatId]) return;
 
   // Update parent's childrenIds if applicable
   if (parentId) {

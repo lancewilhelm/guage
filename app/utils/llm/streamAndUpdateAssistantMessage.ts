@@ -14,14 +14,23 @@ export async function streamAndUpdateAssistantMessage({
   history: LocalMessage[];
 }) {
   const chatStore = useChatStore();
+  if (!chatStore.chats[chatId]) {
+    logger.error("Chat not found:", chatId);
+    return;
+  }
+
+  const userMessage = chatStore.chats[chatId].messages[userMessageId];
+  if (!userMessage) {
+    logger.error("User message not found:", userMessageId);
+    return;
+  }
 
   const abortController = new AbortController();
   chatStore.setChatAbortController(chatId, abortController);
 
   try {
     await sendMessageToLLM({
-      chatId,
-      userMessage: chatStore.chats[chatId].messages[userMessageId],
+      userMessage: userMessage,
       history,
       signal: abortController.signal,
       onChunk: (partialText) => {

@@ -2,7 +2,6 @@ import type { LocalMessage } from "~/utils/db/local";
 import { parseSSEChunk } from "~/utils/chat";
 
 type SendMessageOptions = {
-  chatId: string;
   userMessage: LocalMessage;
   history: LocalMessage[];
   provider?: "openai" | "ollama"; // extendable
@@ -11,7 +10,6 @@ type SendMessageOptions = {
 };
 
 export async function sendMessageToLLM({
-  chatId,
   userMessage,
   history,
   onChunk,
@@ -27,7 +25,6 @@ export async function sendMessageToLLM({
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      chatId,
       userMessage,
       history,
       model: { ...userSettingsStore.settings.model },

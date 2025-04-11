@@ -11,8 +11,8 @@ export const useSyncStore = defineStore(
     const syncError = ref<string | null>(null);
 
     async function sync() {
-      const session = await $fetch<Session>("/api/auth/get-session");
-      if (!session) return;
+      const { session } = useAuth();
+      if (!session.value) return;
 
       isSyncing.value = true;
       syncError.value = null;

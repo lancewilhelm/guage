@@ -14,8 +14,8 @@ const defaultSettings: GlobalSettings = {
 };
 
 async function adminCheck() {
-  const session = await $fetch<Session>("/api/auth/get-session");
-  if (session.user.role !== "admin") {
+  const { user } = useAuth();
+  if (user.value?.role !== "admin") {
     return false;
   }
   return true;

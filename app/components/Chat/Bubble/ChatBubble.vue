@@ -65,10 +65,13 @@ const { copied, copy } = useClipboard({
           class="w-full p-1 focus:outline-none max-h-[600px] resize-y"
           @keydown.enter="
             (e) => {
-              if (e.shiftKey) return;
+              if (e.shiftKey || !editedContent) return;
               e.preventDefault();
               isEditing = false;
-              handleEditMessage({ ...message, content: editedContent });
+              handleEditMessage({
+                ...message,
+                content: editedContent,
+              } as LocalMessage);
             }
           "
         />
@@ -78,8 +81,12 @@ const { copied, copy } = useClipboard({
             class="text-(--yes-color) scale-125 cursor-pointer"
             @click="
               () => {
+                if (!editedContent) return;
                 isEditing = false;
-                handleEditMessage({ ...message, content: editedContent });
+                handleEditMessage({
+                  ...message,
+                  content: editedContent,
+                } as LocalMessage);
               }
             "
           />

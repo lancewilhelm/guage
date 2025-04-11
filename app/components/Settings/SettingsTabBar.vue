@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  currentPageName: string;
+  currentPageName?: string;
 }>();
 
 const { user } = useAuth();
@@ -10,7 +10,7 @@ const { user } = useAuth();
     class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
   >
     <SettingsTabBarItem
-      :is-active-tab="currentPageName === 'profile'"
+      :is-active-tab="!currentPageName || currentPageName === 'profile'"
       icon="lucide:circle-user"
       path="/settings/profile"
       label="profile"

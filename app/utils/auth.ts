@@ -35,7 +35,7 @@ export const auth = betterAuth({
           const userCount = await cloudDb
             .select({ count: count() })
             .from(schema.users);
-          const isFirstUser = userCount[0].count === 0;
+          const isFirstUser = !userCount[0] || userCount[0].count === 0;
           const role = isFirstUser ? "admin" : "user";
 
           return {

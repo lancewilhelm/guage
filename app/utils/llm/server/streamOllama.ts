@@ -58,6 +58,10 @@ export async function streamOllama({
         if (!settings || !settings[0]) {
           logger.error("GET /api/models: Global settings not found");
         }
+        if (!settings[0]?.settings) {
+          logger.error("GET /api/models: Global settings are empty");
+          throw new Error("Global settings are empty");
+        }
         const parsedSettings = settings[0].settings as GlobalSettings;
 
         const response = await fetch(`${parsedSettings.ollamaUrl}/api/chat`, {
