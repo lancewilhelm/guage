@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const inputValue = ref("");
-const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const chatInputRef = ref<HTMLTextAreaElement | null>(null);
 const chatStore = useChatStore();
 
 const isStreaming = computed(() => {
@@ -8,14 +8,13 @@ const isStreaming = computed(() => {
   return chatStore.chats[chatStore.currentChatId]?.isStreaming;
 });
 
+const uiStore = useUiStore();
+
 // Set intial height of the textarea
 onMounted(() => {
-  document.documentElement.style.setProperty(
-    "--input-row-height",
-    `${textareaRef.value?.scrollHeight}px`,
-  );
   nextTick().then(() => {
-    if (textareaRef.value) {
+    if (chatInputRef.value) {
+      uiStore.setInputHeight(chatInputRef.value.scrollHeight);
       resizeTextarea();
     }
   });
@@ -23,22 +22,19 @@ onMounted(() => {
 
 // Autorezize the textarea
 function resizeTextarea() {
-  if (textareaRef.value) {
-    textareaRef.value.style.height = "auto";
-    const newHeight = Math.min(textareaRef.value.scrollHeight, 300);
-    textareaRef.value.style.height = `${newHeight}px`;
-    document.documentElement.style.setProperty(
-      "--input-row-height",
-      `${newHeight}px`,
-    );
+  if (chatInputRef.value) {
+    chatInputRef.value.style.height = "auto";
+    const newHeight = Math.min(chatInputRef.value.scrollHeight, 300);
+    chatInputRef.value.style.height = `${newHeight}px`;
+    uiStore.setInputHeight(newHeight);
   }
 }
 
 // Expose function to focus the input
 defineExpose({
   focus: () => {
-    if (textareaRef.value) {
-      textareaRef.value.focus();
+    if (chatInputRef.value) {
+      chatInputRef.value.focus();
     }
   },
 });
@@ -46,11 +42,11 @@ defineExpose({
 
 <template>
   <div
+    ref="chatInputRef"
     class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
   >
     <div class="flex flex-col gap-2 grow items-start">
       <textarea
-        ref="textareaRef"
         v-model="inputValue"
         class="input-box w-full p-1 resize-none focus:outline-none"
         placeholder="Send a message..."
