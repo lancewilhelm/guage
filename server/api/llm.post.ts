@@ -2,6 +2,17 @@ import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
 import { streamOpenAI } from "~/utils/llm/server/streamOpenAi";
 import { streamOllama } from "~/utils/llm/server/streamOllama";
+import type { LocalMessage } from "~/utils/db/local";
+
+export interface LLMRequest {
+  history: LocalMessage[];
+  userMessage: LocalMessage;
+  model: {
+    name: string;
+    provider: string;
+  };
+  systemPrompt: string;
+}
 
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/llm");
@@ -19,7 +30,8 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const { history, userMessage, model } = await readBody(event);
+  const { history, userMessage, model, systemPrompt }: LLMRequest =
+    await readBody(event);
   logger.debug({ history, userMessage, model }, "Request body:");
 
   if (!model) {
@@ -47,6 +59,7 @@ export default defineEventHandler(async (event) => {
           history,
           userMessage,
           model: model.name,
+          systemPrompt,
         });
         break;
       case "ollama":
@@ -54,6 +67,7 @@ export default defineEventHandler(async (event) => {
           history,
           userMessage,
           model: model.name,
+          systemPrompt,
         });
         break;
       default:

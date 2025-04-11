@@ -15,10 +15,12 @@ export async function streamOpenAI({
   history,
   userMessage,
   model,
+  systemPrompt,
 }: {
   history: LocalMessage[];
   userMessage: LocalMessage;
   model: string;
+  systemPrompt: string;
 }): Promise<ReadableStream> {
   const openai = getOpenAIClient();
   const encoder = new TextEncoder();
@@ -27,13 +29,16 @@ export async function streamOpenAI({
     async start(controller) {
       try {
         const messages = history.concat([userMessage]);
+        const formattedMessages: OpenAI.Chat.ChatCompletionMessageParam[] =
+          messages.map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          }));
+        formattedMessages.unshift({ role: "system", content: systemPrompt });
 
         const completion = await openai.chat.completions.create({
           model: model,
-          messages: messages.map((m) => ({
-            role: m.role as "user" | "assistant" | "system",
-            content: m.content,
-          })),
+          messages: formattedMessages,
           stream: true,
         });
 

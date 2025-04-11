@@ -4,6 +4,11 @@ import { cloudDb } from "~/utils/db/cloud";
 import { globalSettings } from "~/utils/db/schema";
 import { eq } from "drizzle-orm";
 
+interface OllamaMesageParam {
+  role: "user" | "assistant" | "system";
+  content: string;
+}
+
 interface OllamaResponse {
   model: string;
   created_at: string;
@@ -23,20 +28,25 @@ export async function streamOllama({
   history,
   userMessage,
   model,
+  systemPrompt,
 }: {
   history: LocalMessage[];
   userMessage: LocalMessage;
   model: string;
+  systemPrompt: string;
 }): Promise<ReadableStream> {
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const formattedMessages = history.concat([userMessage]).map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-        }));
+        const formattedMessages: OllamaMesageParam[] = history
+          .concat([userMessage])
+          .map((msg) => ({
+            role: msg.role,
+            content: msg.content,
+          }));
+        formattedMessages.unshift({ role: "system", content: systemPrompt });
 
         // Fetch the base URL from the global settings
         const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";

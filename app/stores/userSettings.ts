@@ -10,6 +10,7 @@ export interface UserSettings {
     reverseSort: boolean;
   };
   model?: Model;
+  defaultSystemPrompt?: string;
 }
 
 const defaultSettings: UserSettings = {
@@ -19,6 +20,7 @@ const defaultSettings: UserSettings = {
     reverseSort: false,
   },
   model: undefined,
+  defaultSystemPrompt: "You are a helpful assistant.",
 };
 
 export const useUserSettingsStore = defineStore(

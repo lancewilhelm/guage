@@ -16,6 +16,12 @@ const { user } = useAuth();
       label="profile"
     />
     <SettingsTabBarItem
+      :is-active-tab="currentPageName === 'model'"
+      icon="lucide:bot"
+      path="/settings/model"
+      label="model"
+    />
+    <SettingsTabBarItem
       :is-active-tab="currentPageName === 'theme'"
       icon="lucide:palette"
       path="/settings/theme"

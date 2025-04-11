@@ -24,6 +24,7 @@ const currentPageName = computed(() =>
     : "profile",
 );
 const profileTab = resolveComponent("SettingsProfile");
+const modelTab = resolveComponent("SettingsModel");
 const themeTab = resolveComponent("SettingsTheme");
 const cloudTab = resolveComponent("SettingsCloud");
 const adminTab = resolveComponent("SettingsAdmin");
@@ -31,6 +32,8 @@ const currentTab = computed(() => {
   switch (currentPageName.value) {
     case "profile":
       return profileTab;
+    case "model":
+      return modelTab;
     case "theme":
       return themeTab;
     case "cloud":

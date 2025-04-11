@@ -31,6 +31,7 @@ export async function sendMessageToLLM({
       userMessage,
       history,
       model: { ...userSettingsStore.settings.model },
+      systemPrompt: userSettingsStore.settings.defaultSystemPrompt,
     }),
     signal,
   });
