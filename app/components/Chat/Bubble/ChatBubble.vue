@@ -4,7 +4,7 @@ import type { LocalMessage } from "~/utils/db/local";
 
 // Props
 const props = defineProps<{
-  message: LocalMessage;
+  message?: LocalMessage;
   versionInfo?: {
     total: number;
     currentIndex: number;
@@ -14,7 +14,7 @@ const props = defineProps<{
 
 // Definitions
 const isButtonRowVisible = ref(false);
-const editedContent = ref(props.message.content);
+const editedContent = ref(props.message?.content);
 const contentRef = ref<HTMLElement | null>(null);
 
 // Focus the textarea when editing
@@ -36,6 +36,7 @@ const { copied, copy } = useClipboard({
 
 <template>
   <div
+    v-if="message"
     :class="[
       'chat-bubble flex cursor-default w-full',
       message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
@@ -107,7 +108,7 @@ const { copied, copy } = useClipboard({
           ]"
           @dblclick="
             () => {
-              if (isEditing || message.role !== 'user') return;
+              if (isEditing || message?.role !== 'user') return;
               isEditing = true;
             }
           "

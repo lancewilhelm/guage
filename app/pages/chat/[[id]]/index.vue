@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ChatContainer from "~/components/Chat/ChatContainer.vue";
 definePageMeta({
   auth: {
     only: "user",
@@ -12,14 +13,6 @@ const chatStore = useChatStore();
 // Use composables
 const { initialLoad, loadAllChats, loadChat, loadChatMessages } =
   useChatLoader();
-const {
-  chatContainerRef,
-  shouldAutoScroll,
-  scrollButtonVisible,
-  scrollToBottom,
-  updateScrollButtonVisibility,
-  initialScrollToBottom,
-} = useChatScroll();
 const { chatInputRef, focusInput } = useChatInput();
 
 // Page metadata
@@ -74,40 +67,9 @@ watch(
   { immediate: true },
 );
 
-// Scroll to bottom when messages change - respecting auto-scroll preference
-watch(
-  () =>
-    chatStore.currentChatId
-      ? chatStore.chats[chatStore.currentChatId]?.messages
-      : [],
-  () => {
-    // Only auto-scroll if enabled or if this is a new message
-    if (!chatContainerRef.value) return;
-
-    // Auto-scroll if enabled and it's a new message
-    if (shouldAutoScroll.value) {
-      nextTick(() => scrollToBottom());
-    }
-
-    // Update scroll button visibility after messages are rendered
-    nextTick(updateScrollButtonVisibility);
-  },
-  { deep: true },
-);
-
-// Handle initial scroll on mount and whenever chat changes
-watch(
-  () => chatStore.currentChatId,
-  (newChatId) => {
-    if (newChatId && chatContainerRef.value) {
-      nextTick(() => initialScrollToBottom());
-    }
-  },
-  { immediate: true },
-);
-
 const uiStore = useUiStore();
 const { width } = useWindowSize();
+const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
 </script>
 
 <template>
@@ -119,7 +81,7 @@ const { width } = useWindowSize();
         'flex h-full md:w-full col-start-2 row-start-2 overflow-hidden relative',
         uiStore.chatListVisible ? 'w-screen' : '',
       ]"
-      @touchstart="
+      @touchstart.passive="
         () => {
           if (uiStore.chatListVisible && width < 448) {
             uiStore.setChatListVisible(false);
@@ -127,11 +89,8 @@ const { width } = useWindowSize();
         }
       "
     >
-      <div
-        ref="chatContainerRef"
-        class="flex flex-grow overflow-y-auto overflow-x-hidden chat-container"
-      >
-        <ChatContainer />
+      <div class="flex flex-grow overflow-hidden chat-container">
+        <ChatContainer ref="chatContainerRef" />
       </div>
       <div
         :class="[
@@ -152,9 +111,9 @@ const { width } = useWindowSize();
         </div>
         <div class="w-full max-w-(--chat-max-width) mx-auto relative">
           <button
-            v-if="scrollButtonVisible"
+            v-if="!chatContainerRef?.isNearBottom"
             class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10"
-            @mousedown="scrollToBottom()"
+            @mousedown="chatContainerRef?.scrollToBottom()"
           >
             <Icon
               name="lucide:chevron-down"

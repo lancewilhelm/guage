@@ -90,13 +90,22 @@ const showThinking = ref(false);
       </div>
     </div>
 
-    <!-- Normal assistant/user message -->
-    <MDC
-      v-if="role === 'assistant'"
-      :key="id + updatedAt.getTime().toString()"
-      :value="parsed.body"
-      class="flex flex-col gap-4"
-    />
+    <!-- Assistant message -->
+    <Suspense v-if="role === 'assistant'">
+      <template #default>
+        <MDC
+          v-if="role === 'assistant'"
+          :key="id + updatedAt.getTime().toString()"
+          :value="parsed.body"
+          class="flex flex-col gap-4"
+        />
+      </template>
+      <template #fallback>
+        <div class="whitespace-pre-wrap">{{ content }}</div>
+      </template>
+    </Suspense>
+
+    <!-- User message -->
     <div v-else class="whitespace-pre-wrap">{{ content }}</div>
   </div>
 </template>

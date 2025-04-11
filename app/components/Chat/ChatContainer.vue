@@ -19,10 +19,13 @@ interface ComputedVersionInfo {
 }
 
 function computeVersionInfo(
-  message: LocalMessage,
-  messages: Record<string, LocalMessage> | undefined,
+  message: LocalMessage | undefined,
 ): ComputedVersionInfo | undefined {
+  if (!message || !chatStore.currentChatId) return undefined;
+
+  const messages = chatStore.chats[chatStore.currentChatId]?.messages;
   if (!messages) return undefined;
+
   if (message.parentId === null) {
     const rootMessages = Object.values(messages).filter(
       (msg) => msg.parentId === null,
@@ -43,39 +46,35 @@ function computeVersionInfo(
   }
 }
 
-// const autoScroll = ref(true);
-const scrollContainer = ref<HTMLElement | null>(null);
+// Handle scrolling
+const { containerRef, scrollToBottom, isNearBottom, vMeasure } =
+  useScrollList();
+
 defineExpose({
-  scrollToBottom: () => {
-    if (scrollContainer.value) {
-      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight;
-    }
-  },
+  scrollToBottom,
+  isNearBottom,
 });
+
+// uiStore
+const uiStore = useUiStore();
+const inputPadding = uiStore.inputHeight + 70;
 </script>
 
 <template>
   <div
-    v-if="chatStore.currentChatId"
-    ref="scrollContainer"
-    class="flex flex-col gap-2 w-full max-w-(--chat-max-width) mx-auto px-5"
+    ref="containerRef"
+    class="h-full w-full overflow-x-hidden overflow-y-auto"
   >
-    <div
-      v-for="message in activeMessages"
-      :key="message?.id"
-      class="flex flex-col gap-2 items-center"
-    >
-      <ChatBubble
-        v-if="message"
-        :message="message"
-        :version-info="
-          computeVersionInfo(
-            message,
-            chatStore.chats[chatStore.currentChatId]?.messages,
-          )
-        "
-      />
+    <div class="max-w-(--chat-max-width) mx-auto px-6">
+      <div>
+        <div v-for="message in activeMessages" :key="message?.id" v-measure>
+          <ChatBubble
+            :message="message"
+            :version-info="computeVersionInfo(message)"
+          />
+        </div>
+        <div :style="{ height: inputPadding + 'px' }" />
+      </div>
     </div>
-    <div class="h-[calc(var(--input-row-height)+90px)] shrink-0" />
   </div>
 </template>
