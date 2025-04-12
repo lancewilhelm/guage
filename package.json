@@ -24,7 +24,7 @@
     "@pinia/nuxt": "^0.10.1",
     "@tailwindcss/vite": "^4.0.17",
     "@vueuse/core": "^13.0.0",
-    "@vueuse/nuxt": "13.0.0",
+    "@vueuse/nuxt": "^13.1.0",
     "better-auth": "^1.2.5",
     "dexie": "^4.0.11",
     "dotenv": "^16.4.7",
