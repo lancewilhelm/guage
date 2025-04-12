@@ -53,6 +53,8 @@ async function handleUpdatePassword() {
         </div>
       </div>
     </SettingsGroup>
+
+    <!-- Change Password Modal -->
     <ModalWindow
       :open="changePasswordModalVisible"
       @close="

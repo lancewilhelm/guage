@@ -10,9 +10,8 @@ export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
     headers: event.headers,
   });
-  console.log("Session:", session);
 
-  if (!session) {
+  if (!session || session.user.role !== "admin") {
     logger.error("GET /api/users: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {

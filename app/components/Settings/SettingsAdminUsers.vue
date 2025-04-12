@@ -28,11 +28,12 @@ const fetchUsers = async () => {
 // Call fetchUsers on component mount
 onMounted(fetchUsers);
 
-// Handlers for creating and deleting users
+// Create user handlers
 const createUserModalVisible = ref(false);
 const newUserEmail = ref("");
 const newUserPassword = ref("");
 const newUserRole = ref("user");
+const createUserEmailInput = ref<HTMLInputElement | null>(null);
 
 async function createUser() {
   if (!newUserEmail.value || !newUserPassword.value) {
@@ -61,6 +62,42 @@ async function createUser() {
   // Refetch users to update the list
   await fetchUsers();
 }
+
+// Delete user handlers
+const deleteUserModalVisible = ref(false);
+const deleteUserEmail = ref("");
+const deleteUserEmailConfirmation = ref("");
+const deleteUserEmailConfirmationRef = ref<HTMLInputElement | null>(null);
+const deleteUserId = ref("");
+async function deleteUser() {
+  if (deleteUserEmailConfirmation.value !== deleteUserEmail.value) {
+    alert("Email confirmation does not match");
+    return;
+  }
+
+  const { error } = await $fetch(`/api/users/delete`, {
+    method: "DELETE",
+    body: {
+      id: deleteUserId.value,
+    },
+  });
+
+  if (error) {
+    alert("Error deleting user: " + error.message);
+    return;
+  }
+
+  // Reset the form
+  deleteUserModalVisible.value = false;
+  deleteUserEmailConfirmation.value = "";
+  deleteUserEmail.value = "";
+  deleteUserId.value = "";
+
+  // Refetch users to update the list
+  await fetchUsers();
+}
+
+const { user } = useAuth();
 </script>
 
 <template>
@@ -82,44 +119,55 @@ async function createUser() {
           </thead>
           <tbody class="divide-y divide-(--sub-color) text-(--text-color)">
             <template v-if="sortedUsers.length > 0">
-              <tr v-for="user in sortedUsers" :key="user.id">
+              <tr v-for="u in sortedUsers" :key="u.id" class="h-[40px]">
                 <td class="px-6 py-1 whitespace-nowrap text-sm">
-                  {{ user.email }}
+                  {{ u.email }}
                 </td>
                 <td class="px-6 py-1 whitespace-nowrap text-sm">
-                  {{ user.role }}
+                  {{ u.role }}
                 </td>
                 <td class="px-6 py-1 whitespace-nowrap text-sm">
-                  {{ new Date(user.createdAt).toLocaleDateString() }}
+                  {{ new Date(u.createdAt).toLocaleDateString() }}
                 </td>
-                <td class="px-6 py-1 whitespace-nowrap text-sm flex gap-2">
-                  <button
-                    class="flex items-center bg-(--sub-alt-color) p-2 rounded-lg text-(--text-color) cursor-pointer"
-                    @click="() => console.log('Edit user', user.id)"
-                  >
-                    <Icon
-                      name="lucide:user-pen"
-                      class="text-(--text-color) scale-125"
-                    />
-                  </button>
-                  <button
-                    class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
-                    @click="() => console.log('Disable user', user.id)"
-                  >
-                    <Icon
-                      name="lucide:octagon-pause"
-                      class="text-(--bg-color) scale-125"
-                    />
-                  </button>
-                  <button
-                    class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
-                    @click="() => console.log('Delete user', user.id)"
-                  >
-                    <Icon
-                      name="lucide:trash-2"
-                      class="text-(--bg-color) scale-125"
-                    />
-                  </button>
+                <td class="px-6 py-1 whitespace-nowrap text-sm">
+                  <div v-if="u.id !== user?.id" class="flex gap-2">
+                    <button
+                      class="flex items-center bg-(--sub-alt-color) p-2 rounded-lg text-(--text-color) cursor-pointer"
+                      @click="() => console.log('Edit user', u.id)"
+                    >
+                      <Icon
+                        name="lucide:user-pen"
+                        class="text-(--text-color) scale-125"
+                      />
+                    </button>
+                    <button
+                      class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
+                      @click="() => console.log('Disable user', u.id)"
+                    >
+                      <Icon
+                        name="lucide:octagon-pause"
+                        class="text-(--bg-color) scale-125"
+                      />
+                    </button>
+                    <button
+                      class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
+                      @click="
+                        () => {
+                          deleteUserModalVisible = true;
+                          deleteUserEmail = u.email;
+                          deleteUserId = u.id;
+                          nextTick(() => {
+                            deleteUserEmailConfirmationRef?.focus();
+                          });
+                        }
+                      "
+                    >
+                      <Icon
+                        name="lucide:trash-2"
+                        class="text-(--bg-color) scale-125"
+                      />
+                    </button>
+                  </div>
                 </td>
               </tr>
             </template>
@@ -134,37 +182,49 @@ async function createUser() {
       <div class="w-full flex justify-center">
         <button
           class="flex items-center gap-2 mt-4 bg-(--main-color) text-(--bg-color) p-2 rounded-lg px-4 cursor-pointer"
-          @click="createUserModalVisible = true"
+          @click="
+            () => {
+              createUserModalVisible = true;
+              nextTick(() => {
+                createUserEmailInput?.focus();
+              });
+            }
+          "
         >
           <Icon name="lucide:user-plus" class="text-(--bg-color) scale-125" />
           add user
         </button>
       </div>
     </SettingsGroup>
+
+    <!-- Create User Modal -->
     <ModalWindow
       :open="createUserModalVisible"
       @close="createUserModalVisible = false"
     >
       <div class="flex flex-col gap-4 items-center">
-        <div class="text-(--main-color) text-lg">create new user</div>
-        <div class="flex flex-col gap-2">
+        <div class="text-(--main-color) text-lg self-start">
+          create new user
+        </div>
+        <div class="flex flex-col gap-2 w-[250px]">
           <input
+            ref="createUserEmailInput"
             v-model="newUserEmail"
             type="email"
             placeholder="email"
-            class="border border-(--main-color) rounded px-3 py-1 w-[300px]"
+            class="w-full p-2 border border-(--sub-color) rounded-lg"
             @keyup.enter="createUser"
           />
           <input
             v-model="newUserPassword"
             type="password"
             placeholder="password"
-            class="border border-(--main-color) rounded px-3 py-1 w-[300px]"
+            class="w-full p-2 border border-(--sub-color) rounded-lg"
             @keyup.enter="createUser"
           />
           <select
             v-model="newUserRole"
-            class="border border-(--main-color) rounded px-3 py-1"
+            class="w-full p-2 border border-(--sub-color) rounded-lg"
           >
             <option value="user">user</option>
             <option value="admin">admin</option>
@@ -175,6 +235,47 @@ async function createUser() {
           @click="createUser"
         >
           create
+        </button>
+      </div>
+    </ModalWindow>
+
+    <!-- Delete User Modal -->
+    <ModalWindow
+      :open="deleteUserModalVisible"
+      @close="
+        () => {
+          deleteUserModalVisible = false;
+          deleteUserEmailConfirmation = '';
+        }
+      "
+    >
+      <div class="flex flex-col items-center justify-center gap-2">
+        <div class="text-(--text-color) text-lg text-center">
+          Are you sure you want to delete {{ deleteUserEmail }}? This action
+          cannot be undone.
+        </div>
+        <div class="text-(--text-color) text-lg text-center">
+          If you are sure, please type their email below.
+        </div>
+        <input
+          ref="deleteUserEmailConfirmationRef"
+          v-model="deleteUserEmailConfirmation"
+          type="email"
+          placeholder="user email"
+          class="w-full p-2 border border-(--sub-color) rounded-lg"
+          @keyup.enter="deleteUser"
+        />
+        <button
+          :class="[
+            'flex items-center gap-2 mt-2 bg-(--main-color) text-(--bg-color) p-2 rounded-lg px-4',
+            deleteUserEmailConfirmation === deleteUserEmail
+              ? 'opacity-100 cursor-pointer'
+              : 'opacity-50 cursor-default',
+          ]"
+          :disabled="deleteUserEmailConfirmation !== deleteUserEmail"
+          @click="deleteUser"
+        >
+          delete account
         </button>
       </div>
     </ModalWindow>
