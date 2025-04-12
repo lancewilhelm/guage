@@ -1,148 +1,65 @@
 <script setup lang="ts">
-interface ModelsResponse {
-  openaiModels: string[];
-  ollamaModels: string[];
-}
-const { data: models } = useFetch<ModelsResponse>("/api/models");
-const globalSettingsStore = useGlobalSettingsStore();
-const availableModels = computed(() => {
-  return globalSettingsStore.settings.availableModels;
-});
-const availableModelNames = computed(() => {
-  return globalSettingsStore.settings.availableModels.map((model) => {
-    return model.name;
-  });
-});
-const ollamaUrl = computed({
-  get: () => {
-    return globalSettingsStore.settings.ollamaUrl;
-  },
-  set: (value) => {
-    globalSettingsStore.updateSettings({ ollamaUrl: value });
-    ollamaTestStatus.value = null;
-  },
-});
+import type { ConcreteComponent } from "vue";
 
-const ollamaTestStatus = ref<boolean | null>(null);
-async function testOllamaUrl() {
-  const url = ollamaUrl.value;
-  if (!url) {
-    return;
-  }
-  const response = await $fetch<{ success: boolean; message: string }>(
-    "/api/ollama/version",
-    {
-      method: "POST",
-      body: { url },
-    },
-  );
+// Compute the current page based on the route parameter
+const route = useRoute();
+const currentPageName = computed(() =>
+  route.params.page !== ""
+    ? Array.isArray(route.params.page)
+      ? route.params.page[1]
+      : route.params.page
+    : "profile",
+);
 
-  if (response.success) {
-    ollamaTestStatus.value = true;
-  } else {
-    ollamaTestStatus.value = false;
-  }
+interface Tab {
+  name: string;
+  component: string | ConcreteComponent;
+  icon: string;
+  path: string;
 }
 
-// Check the ollama endpoint on mount
-onMounted(() => {
-  // Check if the ollama url is set
-  if (ollamaUrl.value) {
-    testOllamaUrl();
-  }
-});
-
-const openAiIcon = resolveComponent("OpenAiIcon");
-const ollamaIcon = resolveComponent("OllamaIcon");
+const tabs: Record<string, Tab> = {
+  models: {
+    name: "models",
+    component: resolveComponent("SettingsAdminModels"),
+    icon: "lucide:bot",
+    path: "/settings/admin/models",
+  },
+  users: {
+    name: "users",
+    component: resolveComponent("SettingsAdminUsers"),
+    icon: "lucide:users",
+    path: "/settings/admin/users",
+  },
+};
 </script>
 
 <template>
-  <div class="w-full">
-    <SettingsGroup
-      title="models"
-      icon="lucide:bot"
-      description="select what models are available to the users"
+  <div class="flex flex-col items-center w-full h-full">
+    <div
+      class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
     >
-      <SettingsSubGroup title="openai" :icon="openAiIcon">
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
-          <div
-            v-for="model in models?.openaiModels.sort((a, b) =>
-              a.localeCompare(b),
-            )"
-            :key="model"
-            :class="[
-              ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
-              availableModelNames.includes(model)
-                ? 'bg-(--main-color) text-(--bg-color)'
-                : 'text-(--text-color)',
-            ]"
-            @click="
-              () =>
-                globalSettingsStore.updateSettings({
-                  availableModels: availableModelNames.includes(model)
-                    ? availableModels.filter((m) => m.name !== model)
-                    : [...availableModels, { name: model, provider: 'openai' }],
-                })
-            "
-          >
-            {{ model }}
-          </div>
-        </div>
-      </SettingsSubGroup>
-
-      <SettingsSubGroup title="ollama" :icon="ollamaIcon">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="text-(--main-color)">url</div>
-          <input
-            v-model="ollamaUrl"
-            type="text"
-            class="border border-(--main-color) rounded px-3 py-1"
-            placeholder="Ollama url"
-          />
-          <button
-            class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer"
-            @click="testOllamaUrl"
-          >
-            test
-          </button>
-          <Icon
-            v-if="ollamaTestStatus"
-            name="lucide:smile"
-            class="text-(--yes-color) scale-125"
-          />
-          <Icon
-            v-if="ollamaTestStatus === false"
-            name="lucide:frown"
-            class="text-(--no-color) scale-125"
-          />
-        </div>
-        <div
-          class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
-        >
-          <div
-            v-for="model in models?.ollamaModels.sort((a, b) =>
-              a.localeCompare(b),
-            )"
-            :key="model"
-            :class="[
-              ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
-              availableModelNames.includes(model)
-                ? 'bg-(--main-color) text-(--bg-color)'
-                : 'text-(--text-color)',
-            ]"
-            @click="
-              () =>
-                globalSettingsStore.updateSettings({
-                  availableModels: availableModelNames.includes(model)
-                    ? availableModels.filter((m) => m.name !== model)
-                    : [...availableModels, { name: model, provider: 'ollama' }],
-                })
-            "
-          >
-            {{ model }}
-          </div>
-        </div>
-      </SettingsSubGroup>
-    </SettingsGroup>
+      <SettingsTabBarItem
+        v-for="tab in Object.values(tabs)"
+        :key="tab.name"
+        :is-active-tab="currentPageName === tab.name"
+        :icon="tab.icon"
+        :path="tab.path"
+        :label="tab.name"
+      />
+    </div>
+    <div
+      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
+    >
+      <div class="flex justify-center w-full max-w-[900px] p-4">
+        <component
+          :is="
+            currentPageName
+              ? tabs[currentPageName]?.component
+              : tabs.model?.component
+          "
+        />
+      </div>
+    </div>
   </div>
 </template>

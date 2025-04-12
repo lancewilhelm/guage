@@ -92,6 +92,8 @@ export function useAuth() {
     loggedIn: computed(() => !!session.value),
     signIn: client.signIn,
     signUp: client.signUp,
+    changePassword: client.changePassword,
+    changeEmail: client.changeEmail,
     async signOut() {
       const res = await client.signOut();
       session.value = null;

@@ -1,0 +1,114 @@
+<script setup lang="ts">
+import type { ConcreteComponent } from "vue";
+// Redirect to the profile page if the page parameter is empty
+definePageMeta({
+  auth: {
+    only: "user",
+    redirectGuestTo: "/login",
+  },
+  middleware: [
+    function (to) {
+      if (!to.params.page) {
+        return navigateTo("/settings/profile");
+      } else if (
+        Array.isArray(to.params.page) &&
+        to.params.page.length === 1 &&
+        to.params.page[0] === "admin"
+      ) {
+        return navigateTo("/settings/admin/models");
+      }
+    },
+  ],
+});
+
+// Compute the current page based on the route parameter
+const route = useRoute();
+const currentPageName = computed(() =>
+  route.params.page !== ""
+    ? Array.isArray(route.params.page)
+      ? route.params.page[0]
+      : route.params.page
+    : "profile",
+);
+
+interface Tab {
+  name: string;
+  component: string | ConcreteComponent;
+  icon: string;
+  path: string;
+  admin: boolean;
+}
+
+const tabs: Record<string, Tab> = {
+  profile: {
+    name: "profile",
+    component: resolveComponent("SettingsProfile"),
+    icon: "lucide:circle-user",
+    path: "/settings/profile",
+    admin: false,
+  },
+  model: {
+    name: "model",
+    component: resolveComponent("SettingsModel"),
+    icon: "lucide:bot",
+    path: "/settings/model",
+    admin: false,
+  },
+  theme: {
+    name: "theme",
+    component: resolveComponent("SettingsTheme"),
+    icon: "lucide:palette",
+    path: "/settings/theme",
+    admin: false,
+  },
+  cloud: {
+    name: "cloud",
+    component: resolveComponent("SettingsCloud"),
+    icon: "lucide:cloud",
+    path: "/settings/cloud",
+    admin: false,
+  },
+  admin: {
+    name: "admin",
+    component: resolveComponent("SettingsAdmin"),
+    icon: "lucide:shield-check",
+    path: "/settings/admin",
+    admin: true,
+  },
+};
+
+const { user } = useAuth();
+</script>
+
+<template>
+  <div class="flex flex-col items-center w-full h-full">
+    <SettingsHeader class="w-full h-[40px]" />
+    <div
+      class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
+    >
+      <SettingsTabBarItem
+        v-for="tab in Object.values(tabs).filter(
+          (t) => !t.admin || user?.role === 'admin',
+        )"
+        :key="tab.name"
+        :is-active-tab="currentPageName === tab.name"
+        :icon="tab.icon"
+        :path="tab.path"
+        :label="tab.name"
+      />
+    </div>
+    <div
+      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
+    >
+      <div class="flex justify-center w-full max-w-[900px] p-4">
+        <component
+          :is="
+            currentPageName
+              ? tabs[currentPageName]?.component
+              : tabs.profile?.component
+          "
+        />
+      </div>
+    </div>
+  </div>
+</template>

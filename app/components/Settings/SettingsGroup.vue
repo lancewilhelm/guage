@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   title: string;
-  icon: string;
+  icon: string | Component;
   description?: string;
 }>();
 </script>
@@ -11,7 +11,16 @@ defineProps<{
       class="flex w-full items-center justify-between gap-1 text-(--main-color) text-xl"
     >
       <div class="flex items-center gap-1">
-        <Icon :name="icon" class="text-(--main-color)" />
+        <Icon
+          v-if="typeof icon === 'string'"
+          :name="icon"
+          class="text-(--main-color)"
+        />
+        <component
+          :is="icon"
+          v-else
+          class="text-(--main-color) fill-(--main-color)"
+        />
         {{ title }}
       </div>
       <div class="justify-self-end text-(--sub-color) text-sm">
