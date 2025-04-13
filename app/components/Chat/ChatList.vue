@@ -74,7 +74,7 @@ const { width } = useWindowSize();
       class="flex flex-col grow w-full"
       :style="{ width: uiStore.chatListWidth + 'px' }"
     >
-      <div class="flex w-full h-[40px] items-center px-4">
+      <div class="flex w-full h-[40px] items-center px-4 shrink-0">
         <Icon
           name="lucide:panel-left-close"
           class="text-(--main-color) cursor-pointer scale-125"
