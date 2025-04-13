@@ -42,11 +42,11 @@ defineExpose({
 
 <template>
   <div
-    ref="chatInputRef"
     class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
   >
     <div class="flex flex-col gap-2 grow items-start">
       <textarea
+        ref="chatInputRef"
         v-model="inputValue"
         class="input-box w-full p-1 resize-none focus:outline-none"
         placeholder="Send a message..."
@@ -59,7 +59,9 @@ defineExpose({
             if (inputValue.trim() === '') return;
             handleSubmitMessage(inputValue);
             inputValue = '';
-            resizeTextarea();
+            nextTick().then(() => {
+              resizeTextarea();
+            });
           }
         "
       />

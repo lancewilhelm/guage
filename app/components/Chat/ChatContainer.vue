@@ -57,7 +57,13 @@ defineExpose({
 
 // uiStore
 const uiStore = useUiStore();
-const inputPadding = uiStore.inputHeight + 70;
+const inputPadding = computed(() => uiStore.inputHeight + 110);
+
+watch(inputPadding, () => {
+  if (containerRef.value) {
+    scrollToBottom();
+  }
+});
 </script>
 
 <template>
