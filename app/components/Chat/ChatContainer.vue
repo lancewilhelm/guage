@@ -60,7 +60,7 @@ const uiStore = useUiStore();
 const inputPadding = computed(() => uiStore.inputHeight + 110);
 
 watch(inputPadding, () => {
-  if (containerRef.value) {
+  if (containerRef.value && isNearBottom.value) {
     scrollToBottom();
   }
 });
