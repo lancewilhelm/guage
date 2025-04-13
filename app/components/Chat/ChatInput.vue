@@ -84,8 +84,6 @@ defineExpose({
                 chatStore.currentChatId
               ]?.abortController?.abort();
             }
-            if (inputValue.trim() === '') return;
-            handleSubmitMessage(inputValue);
           }
         "
       >
