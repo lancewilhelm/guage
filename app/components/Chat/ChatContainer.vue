@@ -71,16 +71,14 @@ watch(inputPadding, () => {
     ref="containerRef"
     class="h-full w-full overflow-x-hidden overflow-y-auto"
   >
-    <div class="max-w-(--chat-max-width) mx-auto px-6">
-      <div>
-        <div v-for="message in activeMessages" :key="message?.id" v-measure>
-          <ChatBubble
-            :message="message"
-            :version-info="computeVersionInfo(message)"
-          />
-        </div>
-        <div :style="{ height: inputPadding + 'px' }" />
+    <div class="max-w-(--chat-max-width) mx-auto px-6 flex flex-col gap-4">
+      <div v-for="message in activeMessages" :key="message?.id" v-measure>
+        <ChatBubble
+          :message="message"
+          :version-info="computeVersionInfo(message)"
+        />
       </div>
+      <div :style="{ height: inputPadding + 'px' }" />
     </div>
   </div>
 </template>
