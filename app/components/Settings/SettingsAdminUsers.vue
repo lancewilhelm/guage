@@ -75,15 +75,15 @@ async function deleteUser() {
     return;
   }
 
-  const { error } = await $fetch(`/api/users/delete`, {
+  const { success } = await $fetch<{ success: boolean }>(`/api/users/delete`, {
     method: "DELETE",
     body: {
       id: deleteUserId.value,
     },
   });
 
-  if (error) {
-    alert("Error deleting user: " + error.message);
+  if (!success) {
+    alert("Error deleting user");
     return;
   }
 
@@ -98,6 +98,8 @@ async function deleteUser() {
 }
 
 const { user } = useAuth();
+
+const globalSettingsStore = useGlobalSettingsStore();
 </script>
 
 <template>
@@ -196,7 +198,18 @@ const { user } = useAuth();
         </button>
       </div>
     </SettingsGroup>
-
+    <SettingsGroup title="allow registration" icon="lucide:lock">
+      <SettingsToggleItem
+        :value="globalSettingsStore.settings.allowRegistration"
+        true-label="registration allowed"
+        false-label="registration not allowed"
+        @toggle="
+          globalSettingsStore.updateSettings({
+            allowRegistration: !globalSettingsStore.settings.allowRegistration,
+          })
+        "
+      />
+    </SettingsGroup>
     <!-- Create User Modal -->
     <ModalWindow
       :open="createUserModalVisible"

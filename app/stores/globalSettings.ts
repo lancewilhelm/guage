@@ -6,11 +6,13 @@ export interface GlobalSettings {
     name: string;
     provider: string;
   }[];
+  allowRegistration: boolean;
   ollamaUrl?: string;
 }
 
 const defaultSettings: GlobalSettings = {
   availableModels: [],
+  allowRegistration: false,
 };
 
 async function adminCheck() {

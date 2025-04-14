@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { cloudDb } from "./db/cloud";
 import * as schema from "./db/schema";
@@ -31,6 +32,17 @@ export const auth = betterAuth({
     user: {
       create: {
         before: async (user) => {
+          // Check if registration is allowed
+          const response = await cloudDb.select().from(schema.globalSettings);
+          const settings = response[0]?.settings as GlobalSettings;
+          const allowRegistration = settings.allowRegistration ?? false;
+
+          if (!allowRegistration) {
+            throw new APIError("UNAUTHORIZED", {
+              message: "Registration is closed.",
+            });
+          }
+
           // Determine if this is the first user
           const userCount = await cloudDb
             .select({ count: count() })

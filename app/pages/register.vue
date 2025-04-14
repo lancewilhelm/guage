@@ -27,7 +27,8 @@ async function handleSubmit() {
   });
 
   if (error) {
-    console.error("Error signing up:", error);
+    console.log(error);
+    alert(`Error signing up: ${error.message}. ${error.details.body.message}`);
     return;
   }
 
