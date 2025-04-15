@@ -40,13 +40,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
     options,
   );
 
-  // Always fetch session on client
-  if (import.meta.client) await fetchSession();
-
   // Optional: first-time setup redirect
-  const userCount = await $fetch<number>("/api/auth/user-count");
-  if (!loggedIn.value && userCount === 0 && to.path !== "/register") {
-    return navigateTo("/register");
+  if (!loggedIn.value) {
+    const userCount = await $fetch<number>("/api/auth/user-count");
+    if (userCount === 0 && to.path !== "/register") {
+      return navigateTo("/register");
+    }
   }
 
   // Handle root path redirect

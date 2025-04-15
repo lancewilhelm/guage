@@ -63,6 +63,7 @@ export function useAuth() {
     : useState("auth:sessionFetching", () => false);
 
   const fetchSession = async () => {
+    console.log("fetching session");
     if (sessionFetching.value) {
       console.log("already fetching session");
       return;
