@@ -96,4 +96,7 @@ export default defineNuxtConfig({
     { path: "~/components", pathPrefix: false },
     { path: "~/components/mdc", pathPrefix: false },
   ],
+  piniaPluginPersistedstate: {
+    key: "guage.%id",
+  },
 });
