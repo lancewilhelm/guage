@@ -6,6 +6,10 @@ import * as schema from "./db/schema";
 import { count } from "drizzle-orm";
 
 export const auth = betterAuth({
+  baseURL: getBaseURL(),
+  advanced: {
+    cookiePrefix: "guage",
+  },
   database: drizzleAdapter(cloudDb, {
     provider: "sqlite",
     schema: {
@@ -60,7 +64,16 @@ export const auth = betterAuth({
       },
     },
   },
-  advanced: {
-    cookiePrefix: "guage",
-  },
 });
+
+function getBaseURL() {
+  let baseURL = process.env.BETTER_AUTH_URL;
+  if (!baseURL) {
+    try {
+      baseURL = getRequestURL(useEvent()).origin;
+    } catch {
+      //pass
+    }
+  }
+  return baseURL;
+}
