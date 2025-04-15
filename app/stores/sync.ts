@@ -169,8 +169,6 @@ async function processSyncResponse(response: SyncResponse) {
   // --- Process settings ---
   if (unsyncedUserSettings) {
     const userSettingsStore = useUserSettingsStore();
-    console.log(unsyncedUserSettings.updatedAt);
-    console.log(userSettingsStore.updatedAt);
     if (
       new Date(unsyncedUserSettings.updatedAt) >
       new Date(userSettingsStore.updatedAt)
