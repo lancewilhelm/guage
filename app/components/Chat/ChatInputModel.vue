@@ -12,7 +12,7 @@ const availableModels = computed(
   () => globalSettingsStore.settings.availableModels,
 );
 
-const popupVisible = ref(currentModel.value === undefined);
+const popupVisible = ref(false);
 const popupRef = ref<HTMLElement | null>(null);
 
 // Close on escape or outside click

@@ -28,7 +28,7 @@ async function handleSubmit() {
 
   // Sync with the server
   const syncStore = useSyncStore();
-  syncStore.sync();
+  syncStore.doSyncAtLogin();
 
   // Load the theme
   const userSettingsStore = useUserSettingsStore();

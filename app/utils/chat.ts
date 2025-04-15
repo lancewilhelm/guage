@@ -173,9 +173,15 @@ function createMessagePair(
   }
 
   const now = new Date();
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User is not authenticated");
+  }
+
   const userMessage: LocalMessage = {
     id: userMessageId,
     chatId,
+    userId: user.value.id,
     content,
     role: "user",
     parentId,
@@ -188,6 +194,7 @@ function createMessagePair(
   const assistantMessage: LocalMessage = {
     id: assistantMessageId,
     chatId,
+    userId: user.value.id,
     content: "",
     role: "assistant",
     parentId: userMessageId,

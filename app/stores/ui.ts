@@ -18,6 +18,12 @@ export const useUiStore = defineStore(
       inputHeight.value = height;
     }
 
+    function $reset() {
+      chatListWidth.value = 300;
+      chatListVisible.value = true;
+      inputHeight.value = 0;
+    }
+
     return {
       chatListWidth,
       setChatListWidth,
@@ -25,6 +31,7 @@ export const useUiStore = defineStore(
       setChatListVisible,
       inputHeight,
       setInputHeight,
+      $reset,
     };
   },
   {

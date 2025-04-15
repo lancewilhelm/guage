@@ -13,6 +13,7 @@ export interface Model {
 export interface LocalMessage {
   id: string;
   chatId: string;
+  userId: string;
   parentId: string | null;
   childrenIds: string[] | null;
   content: string;
@@ -27,6 +28,7 @@ export interface LocalMessage {
 export interface LocalChat {
   id: string;
   title: string;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
   synced: boolean;
@@ -48,8 +50,8 @@ class ChatDatabase extends Dexie {
   constructor() {
     super("guage");
     this.version(1).stores({
-      messagesTable: "&id, chatId, lastUpdated",
-      chatsTable: "&id, updatedAt",
+      messagesTable: "++id, chatId, userId, updatedAt",
+      chatsTable: "++id, userId, updatedAt",
     });
   }
 }
@@ -89,8 +91,7 @@ export async function dbCreateMessage(message: LocalMessage | LocalMessage[]) {
  */
 export async function dbRetrieveMessages(chatId: string) {
   return await localDb.messagesTable
-    .where("chatId")
-    .equals(chatId)
+    .where({ chatId })
     .filter((msg) => !msg.deleted)
     .toArray()
     .then((messages) =>
@@ -139,9 +140,15 @@ export async function dbCreateChat(
   title: string = "New Chat",
   date: Date = new Date(),
 ) {
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User not authenticated");
+  }
+
   const newChat = {
     id: uuidv4(),
     title,
+    userId: user.value.id,
     createdAt: date,
     updatedAt: date,
     synced: false,
@@ -173,8 +180,13 @@ export async function dbUpdateChat(chatId: string, update: Partial<LocalChat>) {
  * @returns Promise that resolves with an array of chats.
  */
 export async function dbRetrieveChats() {
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User not authenticated");
+  }
+
   return await localDb.chatsTable
-    .filter((chat) => !chat.deleted)
+    .where({ userId: user.value.id })
     .toArray()
     .then((chats) =>
       chats.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
@@ -187,7 +199,11 @@ export async function dbRetrieveChats() {
  * @returns Promise that resolves with the chat.
  */
 export async function dbRetrieveChat(chatId: string) {
-  return await localDb.chatsTable.get(chatId);
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User not authenticated");
+  }
+  return await localDb.chatsTable.get({ id: chatId });
 }
 
 /**
@@ -203,8 +219,7 @@ export async function dbMarkChatDeleted(chatId: string) {
   });
   // Update the deleted flag for all messages in the chat
   await localDb.messagesTable
-    .where("chatId")
-    .equals(chatId)
+    .where({ chatId })
     .modify({ deleted: true, synced: false, updatedAt: new Date() });
   triggerDebouncedSync();
 }

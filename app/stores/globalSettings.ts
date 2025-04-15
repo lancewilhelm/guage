@@ -15,20 +15,20 @@ const defaultSettings: GlobalSettings = {
   allowRegistration: false,
 };
 
-async function adminCheck() {
-  const { user } = useAuth();
-  if (user.value?.role !== "admin") {
-    return false;
-  }
-  return true;
-}
+// async function adminCheck() {
+//   const { user } = useAuth();
+//   if (user.value?.role !== "admin") {
+//     return false;
+//   }
+//   return true;
+// }
 
 export const useGlobalSettingsStore = defineStore(
   "globalSettings",
   () => {
     const settings = ref<GlobalSettings>(defaultSettings);
     async function updateSettings(updated: Partial<GlobalSettings>) {
-      if (!(await adminCheck())) return;
+      // if (!(await adminCheck())) return;
 
       // Update settings
       settings.value = { ...settings.value, ...updated };
@@ -43,8 +43,13 @@ export const useGlobalSettingsStore = defineStore(
 
     const synced = ref(true);
     async function setSynced(value: boolean) {
-      await adminCheck();
+      // await adminCheck();
       synced.value = value;
+    }
+
+    function $reset() {
+      settings.value = defaultSettings;
+      synced.value = true;
     }
 
     const updatedAt = ref<Date>(new Date());
@@ -54,6 +59,7 @@ export const useGlobalSettingsStore = defineStore(
       updateSettings,
       synced,
       setSynced,
+      $reset,
     };
   },
   {

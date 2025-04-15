@@ -99,7 +99,33 @@ export function useAuth() {
       session.value = null;
       user.value = null;
       loadTheme("guage");
+
+      // Reset all stores
+      const chatStore = useChatStore();
+      const userSettingsStore = useUserSettingsStore();
+      const globalSettingsStore = useGlobalSettingsStore();
+      const syncStore = useSyncStore();
+      const uiStore = useUiStore();
+      chatStore.$reset();
+      userSettingsStore.$reset();
+      globalSettingsStore.$reset();
+      syncStore.$reset();
+      uiStore.$reset();
+
+      // Clear the cookies
+      const storesToClear = [
+        "guage.sync",
+        "guage.userSettings",
+        "guage.globalSettings",
+        "guage.ui",
+      ];
+      for (const store of storesToClear) {
+        const cookie = useCookie(store);
+        cookie.value = null;
+      }
+
       await navigateTo("/login");
+
       return res;
     },
     options,

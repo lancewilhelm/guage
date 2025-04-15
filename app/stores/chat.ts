@@ -158,7 +158,7 @@ export const useChatStore = defineStore("chat", () => {
     chats.value = rest;
   }
 
-  function resetChatStore() {
+  function $reset() {
     chats.value = {};
     currentChatId.value = undefined;
   }
@@ -217,7 +217,7 @@ export const useChatStore = defineStore("chat", () => {
     changeBranch,
     updateChatMetadata,
     deleteChat,
-    resetChatStore,
+    $reset,
     upsertChatFromSync,
     upsertMessageFromSync,
   };

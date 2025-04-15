@@ -51,12 +51,19 @@ export const useUserSettingsStore = defineStore(
       synced.value = value;
     };
 
+    function $reset() {
+      settings.value = defaultSettings;
+      updatedAt.value = new Date();
+      synced.value = true;
+    }
+
     return {
       settings,
       updatedAt,
       updateSettings,
       synced,
       setSynced,
+      $reset,
     };
   },
   {

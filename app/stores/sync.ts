@@ -10,6 +10,40 @@ export const useSyncStore = defineStore(
     const lastSyncTime = ref<Date>(new Date(0));
     const syncError = ref<string | null>(null);
 
+    async function doSyncAtLogin() {
+      const { session } = useAuth();
+      if (!session.value) return;
+
+      isSyncing.value = true;
+      syncError.value = null;
+
+      try {
+        const body = await getSyncBody("login");
+        if (!body) {
+          console.error("No data to sync");
+          return;
+        }
+        logger.debug("Sync request body:", body);
+        const response = await $fetch<SyncResponse>("/api/sync", {
+          method: "POST",
+          body,
+        });
+
+        if (response.success) {
+          // Update synced status for messages, chats, and settings
+          await updateSyncStatus(body, response);
+          await processSyncResponse(response);
+
+          lastSyncTime.value = new Date();
+        }
+      } catch (err) {
+        syncError.value = "Sync failed. Try again.";
+        console.error("Login sync error:", err);
+      } finally {
+        isSyncing.value = false;
+      }
+    }
+
     async function sync() {
       const { session } = useAuth();
       if (!session.value) return;
@@ -18,32 +52,12 @@ export const useSyncStore = defineStore(
       syncError.value = null;
 
       try {
-        const chats = await localDb.chatsTable
-          .filter((chat) => !chat.synced)
-          .toArray();
-        const messages = await localDb.messagesTable
-          .filter((msg) => !msg.synced)
-          .toArray();
-        const userSettingsStore = useUserSettingsStore();
-        const globalSettingsStore = useGlobalSettingsStore();
+        const body = await getSyncBody("full", lastSyncTime.value);
+        if (!body) {
+          console.error("No data to sync");
+          return;
+        }
 
-        const body = {
-          lastSyncTime: lastSyncTime.value,
-          chats: chats,
-          messages: messages,
-          userSettings: !userSettingsStore.synced
-            ? {
-                settings: userSettingsStore.settings,
-                updatedAt: userSettingsStore.updatedAt,
-              }
-            : null,
-          globalSettings: !globalSettingsStore.synced
-            ? {
-                settings: globalSettingsStore.settings,
-                updatedAt: globalSettingsStore.updatedAt,
-              }
-            : null,
-        };
         logger.debug("Sync request body:", body);
 
         const response = await $fetch<SyncResponse>("/api/sync", {
@@ -53,16 +67,7 @@ export const useSyncStore = defineStore(
 
         if (response.success) {
           // Update synced status for messages, chats, and settings
-          for (const msg of messages) {
-            await localDb.messagesTable.update(msg.id, { synced: true });
-          }
-          for (const chat of chats) {
-            await localDb.chatsTable.update(chat.id, { synced: true });
-          }
-          const userSettingsStore = useUserSettingsStore();
-          const globalSettingsStore = useGlobalSettingsStore();
-          userSettingsStore.setSynced(true);
-          globalSettingsStore.setSynced(true);
+          await updateSyncStatus(body, response);
           await processSyncResponse(response);
 
           lastSyncTime.value = new Date();
@@ -80,12 +85,20 @@ export const useSyncStore = defineStore(
       sync();
     }
 
+    function $reset() {
+      isSyncing.value = false;
+      lastSyncTime.value = new Date(0);
+      syncError.value = null;
+    }
+
     return {
       isSyncing,
       lastSyncTime,
       syncError,
+      doSyncAtLogin,
       sync,
       pull,
+      $reset,
     };
   },
   {
@@ -95,10 +108,11 @@ export const useSyncStore = defineStore(
 
 export type SyncRequest = {
   lastSyncTime: Date | null;
+  type: string;
   chats: LocalChat[];
   messages: LocalMessage[];
-  userSettings: UserSettings | null;
-  globalSettings: GlobalSettings | null;
+  userSettings: { settings: UserSettings; updatedAt: Date } | null;
+  globalSettings: { settings: GlobalSettings; updatedAt: Date } | null;
 };
 
 export type SyncResponse = {
@@ -166,4 +180,77 @@ async function processSyncResponse(response: SyncResponse) {
       unsyncedGlobalSettings.settings as Partial<GlobalSettings>,
     );
   }
+}
+
+async function getSyncBody(type: string, lastSyncTime?: Date) {
+  if (type === "full" && lastSyncTime) {
+    const chats = await localDb.chatsTable
+      .filter((chat) => !chat.synced)
+      .toArray();
+    const messages = await localDb.messagesTable
+      .filter((msg) => !msg.synced)
+      .toArray();
+    const userSettingsStore = useUserSettingsStore();
+    const globalSettingsStore = useGlobalSettingsStore();
+
+    return {
+      lastSyncTime: lastSyncTime,
+      type: "full",
+      chats: chats,
+      messages: messages,
+      userSettings: !userSettingsStore.synced
+        ? {
+            settings: userSettingsStore.settings,
+            updatedAt: userSettingsStore.updatedAt,
+          }
+        : null,
+      globalSettings: !globalSettingsStore.synced
+        ? {
+            settings: globalSettingsStore.settings,
+            updatedAt: globalSettingsStore.updatedAt,
+          }
+        : null,
+    };
+  } else if (type === "login") {
+    const { user } = useAuth();
+    if (!user.value) return null;
+    const lastMsg = await localDb.messagesTable
+      .where({
+        userId: user.value.id,
+      })
+      .reverse()
+      .sortBy("updatedAt")
+      .then((messages) => messages[0]);
+    const lastSyncTime = lastMsg?.updatedAt || new Date(0);
+    return {
+      lastSyncTime,
+      type: "login",
+      chats: [],
+      messages: [],
+      userSettings: null,
+      globalSettings: null,
+    };
+  }
+}
+
+async function updateSyncStatus(body: SyncRequest, response: SyncResponse) {
+  const { chats, messages } = body;
+  const { unsyncedChats, unsyncedMessages } = response.data;
+
+  for (const chat of chats) {
+    if (!unsyncedChats.some((c) => c.id === chat.id)) {
+      await localDb.chatsTable.update(chat.id, { synced: true });
+    }
+  }
+
+  for (const message of messages) {
+    if (!unsyncedMessages.some((m) => m.id === message.id)) {
+      await localDb.messagesTable.update(message.id, { synced: true });
+    }
+  }
+
+  const userSettingsStore = useUserSettingsStore();
+  const globalSettingsStore = useGlobalSettingsStore();
+  userSettingsStore.setSynced(true);
+  globalSettingsStore.setSynced(true);
 }
