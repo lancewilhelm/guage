@@ -169,16 +169,28 @@ async function processSyncResponse(response: SyncResponse) {
   // --- Process settings ---
   if (unsyncedUserSettings) {
     const userSettingsStore = useUserSettingsStore();
-    userSettingsStore.updateSettings(
-      unsyncedUserSettings.settings as Partial<UserSettings>,
-    );
+    console.log(unsyncedUserSettings.updatedAt);
+    console.log(userSettingsStore.updatedAt);
+    if (
+      new Date(unsyncedUserSettings.updatedAt) >
+      new Date(userSettingsStore.updatedAt)
+    ) {
+      userSettingsStore.updateSettings(
+        unsyncedUserSettings.settings as Partial<UserSettings>,
+      );
+    }
   }
 
   if (unsyncedGlobalSettings) {
     const globalSettingsStore = useGlobalSettingsStore();
-    globalSettingsStore.updateSettings(
-      unsyncedGlobalSettings.settings as Partial<GlobalSettings>,
-    );
+    if (
+      new Date(unsyncedGlobalSettings.updatedAt) >
+      new Date(globalSettingsStore.updatedAt)
+    ) {
+      globalSettingsStore.updateSettings(
+        unsyncedGlobalSettings.settings as Partial<GlobalSettings>,
+      );
+    }
   }
 }
 

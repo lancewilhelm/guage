@@ -47,12 +47,13 @@ export const useGlobalSettingsStore = defineStore(
       synced.value = value;
     }
 
+    const updatedAt = ref<Date>(new Date(0));
+
     function $reset() {
       settings.value = defaultSettings;
+      updatedAt.value = new Date(0);
       synced.value = true;
     }
-
-    const updatedAt = ref<Date>(new Date());
     return {
       settings,
       updatedAt,

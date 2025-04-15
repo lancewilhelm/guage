@@ -45,7 +45,7 @@ export const useUserSettingsStore = defineStore(
       triggerDebouncedSync();
     }
 
-    const updatedAt = ref<Date>(new Date());
+    const updatedAt = ref<Date>(new Date(0));
     const synced = ref(true);
     const setSynced = (value: boolean) => {
       synced.value = value;
@@ -53,7 +53,7 @@ export const useUserSettingsStore = defineStore(
 
     function $reset() {
       settings.value = defaultSettings;
-      updatedAt.value = new Date();
+      updatedAt.value = new Date(0);
       synced.value = true;
     }
 
