@@ -19,7 +19,7 @@ async function handleSubmit() {
     return;
   }
 
-  const { signUp } = useAuth();
+  const { signUp, fetchSession } = useAuth();
   const { error } = await signUp.email({
     email: email.value,
     password: password.value,
@@ -31,6 +31,9 @@ async function handleSubmit() {
     alert(`Error signing up: ${error.message}. ${error.details.body.message}`);
     return;
   }
+
+  // Fetch the session
+  await fetchSession();
 
   return navigateTo("/chat");
 }

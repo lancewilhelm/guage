@@ -12,7 +12,7 @@ const email = ref("");
 const password = ref("");
 
 async function handleSubmit() {
-  const { signIn } = useAuth();
+  const { signIn, fetchSession } = useAuth();
   const { error } = await signIn.email({
     email: email.value,
     password: password.value,
@@ -22,6 +22,9 @@ async function handleSubmit() {
     alert("Login failed:");
     return;
   }
+
+  // Fetch the session
+  await fetchSession();
 
   // Sync with the server
   const syncStore = useSyncStore();
