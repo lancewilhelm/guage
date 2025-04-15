@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <div class="flex flex-col items-start w-full mb-5">
     <div
-      class="flex w-full items-center justify-between gap-1 text-(--main-color) text-xl"
+      class="flex w-full items-center justify-between gap-3 text-(--main-color) text-xl"
     >
       <div class="flex items-center gap-1">
         <Icon
@@ -23,7 +23,7 @@ defineProps<{
         />
         {{ title }}
       </div>
-      <div class="justify-self-end text-(--sub-color) text-sm">
+      <div class="justify-self-end text-right text-(--sub-color) text-sm">
         {{ description }}
       </div>
     </div>

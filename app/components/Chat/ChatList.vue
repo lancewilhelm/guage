@@ -107,11 +107,6 @@ const { width } = useWindowSize();
                 @mousedown="
                   async () => {
                     navigateTo('/chat/' + chat.id);
-                  }
-                "
-                @touchstart.passive="
-                  async () => {
-                    navigateTo('/chat/' + chat.id);
                     if (width < 448) uiStore.setChatListVisible(false);
                   }
                 "
