@@ -7,6 +7,7 @@ import { count } from "drizzle-orm";
 
 export const auth = betterAuth({
   baseURL: getBaseURL(),
+  trustedOrigins: getTrustedOrigins(),
   advanced: {
     cookiePrefix: "guage",
   },
@@ -76,4 +77,10 @@ function getBaseURL() {
     }
   }
   return baseURL;
+}
+
+function getTrustedOrigins() {
+  const origins = process.env.BETTER_AUTH_TRUSTED_ORIGINS;
+  if (!origins) return [];
+  return origins.split(",").map((origin) => origin.trim());
 }
