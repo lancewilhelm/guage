@@ -28,6 +28,7 @@ const routeId = computed(() => {
 
 // Watch for route changes
 const router = useRouter();
+const userSettingsStore = useUserSettingsStore();
 watch(
   routeId,
   async (newId) => {
@@ -40,6 +41,9 @@ watch(
     // If the chat ID is not provided, set the current chat ID to null
     if (!newId) {
       chatStore.setCurrentChatId();
+      userSettingsStore.updateSettings({
+        currentSystemPrompt: "default",
+      });
       focusInput();
       return;
     }
