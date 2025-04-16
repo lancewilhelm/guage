@@ -2,7 +2,10 @@ import pino, { type Logger } from "pino";
 
 let pinoConfig;
 
-if (process.env["NODE_ENV"] === "production") {
+if (
+  process.env["NODE_ENV"] === "production" &&
+  process.env["LOG_LEVEL"] !== "debug"
+) {
   pinoConfig = {
     level: "warn",
     browser: {

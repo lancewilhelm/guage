@@ -32,7 +32,7 @@ export const useSyncStore = defineStore(
         if (response.success) {
           // Update synced status for messages, chats, and settings
           await updateSyncStatus(body, response);
-          await processSyncResponse(response);
+          await processSyncResponse(response, "login");
 
           lastSyncTime.value = new Date();
         }
@@ -68,7 +68,7 @@ export const useSyncStore = defineStore(
         if (response.success) {
           // Update synced status for messages, chats, and settings
           await updateSyncStatus(body, response);
-          await processSyncResponse(response);
+          await processSyncResponse(response, "full");
 
           lastSyncTime.value = new Date();
         }
@@ -125,7 +125,7 @@ export type SyncResponse = {
   };
 };
 
-async function processSyncResponse(response: SyncResponse) {
+async function processSyncResponse(response: SyncResponse, type: string) {
   const {
     unsyncedChats,
     unsyncedMessages,
@@ -168,11 +168,14 @@ async function processSyncResponse(response: SyncResponse) {
 
   // --- Process settings ---
   const userSettingsStore = useUserSettingsStore();
+
   if (unsyncedUserSettings) {
     if (
       new Date(unsyncedUserSettings.updatedAt) >
-      new Date(userSettingsStore.updatedAt)
+        new Date(userSettingsStore.updatedAt) ||
+      type === "login"
     ) {
+      console.log("updating user settings");
       userSettingsStore.updateSettings(
         unsyncedUserSettings.settings as Partial<UserSettings>,
       );
@@ -183,7 +186,8 @@ async function processSyncResponse(response: SyncResponse) {
   if (unsyncedGlobalSettings) {
     if (
       new Date(unsyncedGlobalSettings.updatedAt) >
-      new Date(globalSettingsStore.updatedAt)
+        new Date(globalSettingsStore.updatedAt) ||
+      type === "login"
     ) {
       globalSettingsStore.updateSettings(
         unsyncedGlobalSettings.settings as Partial<GlobalSettings>,

@@ -186,6 +186,7 @@ export default defineEventHandler(async (event) => {
         : null,
     };
 
+    logger.debug(data, "POST /api/sync: Response data");
     return { success: true, data };
   } catch (error) {
     logger.error(error, "POST /api/sync: Error during sync");
