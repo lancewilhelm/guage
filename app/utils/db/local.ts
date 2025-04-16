@@ -51,7 +51,7 @@ class ChatDatabase extends Dexie {
     super("guage");
     this.version(1).stores({
       messagesTable: "++id, chatId, userId, updatedAt",
-      chatsTable: "++id, userId, updatedAt",
+      chatsTable: "++id, userId, [id+userId], updatedAt",
     });
   }
 }
@@ -203,7 +203,7 @@ export async function dbRetrieveChat(chatId: string) {
   if (!user.value) {
     throw new Error("User not authenticated");
   }
-  return await localDb.chatsTable.get({ id: chatId });
+  return await localDb.chatsTable.get({ id: chatId, userId: user.value.id });
 }
 
 /**
