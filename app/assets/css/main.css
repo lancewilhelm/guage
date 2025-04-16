@@ -89,6 +89,18 @@ hr {
   margin: 1rem 0;
 }
 
+input {
+  background-color: var(--sub-alt-color);
+  border-radius: var(--border-radius);
+  padding: 0.25em;
+}
+
+textarea {
+  background-color: var(--sub-alt-color);
+  border-radius: var(--border-radius);
+  padding: 0.25em;
+}
+
 input:focus,
 textarea:focus {
   outline: none;

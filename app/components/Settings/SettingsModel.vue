@@ -21,13 +21,36 @@ onMounted(() => {
   resizeTextarea();
 });
 
+const additionalPrompts = computed(
+  () => userSettingsStore.settings.systemPrompts || {},
+);
+const newPromptTitle = ref("");
+const newPromptValue = ref("");
+
+function addSystemPrompt() {
+  if (!newPromptTitle.value.trim() || !newPromptValue.value.trim()) return;
+  // avoid overwriting existing keys unless you want that
+  const updated = {
+    ...additionalPrompts.value,
+    [newPromptTitle.value.trim()]: newPromptValue.value,
+  };
+  userSettingsStore.updateSettings({ systemPrompts: updated });
+  newPromptTitle.value = "";
+  newPromptValue.value = "";
+}
+
+function deleteSystemPrompt(key: string) {
+  const { [key]: _, ...rest } = additionalPrompts.value;
+  userSettingsStore.updateSettings({ systemPrompts: rest });
+}
+
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 </script>
 <template>
   <div class="w-full">
     <SettingsGroup title="parameters" icon="lucide:braces">
       <SettingsSubGroup
-        title="system prompt"
+        title="default system prompt"
         icon="lucide:letter-text"
         description="saves automatically"
       >
@@ -38,6 +61,61 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
           class="w-full resize-y max-h-[500px] rounded-lg bg-(--sub-alt-color) p-2"
           @input="resizeTextarea"
         ></textarea>
+      </SettingsSubGroup>
+      <SettingsSubGroup
+        title="additional system prompts"
+        icon="lucide:list-plus"
+        description="add additional system prompts. they will be available in the chat input."
+      >
+        <div
+          class="w-full h-[300px] grid grid-rows-[min-content_1fr] grid-cols-[1fr_2fr_min-content] gap-4"
+        >
+          <div class="flex gap-2">
+            <input v-model="newPromptTitle" placeholder="title" class="grow" />
+          </div>
+          <textarea
+            v-model="newPromptValue"
+            placeholder="prompt"
+            class="col-start-2 row-start-1 row-span-2"
+          />
+          <div class="w-full flex flex-col gap-2 overflow-y-auto">
+            <div v-for="key in Object.keys(additionalPrompts)" :key="key">
+              <div class="w-full flex gap-2 justify-between items-center">
+                <div
+                  :class="[
+                    'font-semibold cursor-pointer',
+                    newPromptTitle === key
+                      ? 'text-(--main-color)'
+                      : 'text-(--sub-color)',
+                  ]"
+                  @click="
+                    () => {
+                      newPromptTitle = key;
+                      newPromptValue = additionalPrompts[key] || '';
+                    }
+                  "
+                >
+                  {{ key }}
+                </div>
+                <button
+                  class="bg-(--error-color) text-(--bg-color) rounded-lg"
+                  @click="deleteSystemPrompt(key)"
+                >
+                  <Icon
+                    name="lucide:trash-2"
+                    class="text-(--bg-color) scale-125"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+          <button
+            class="bg-(--main-color) text-(--bg-color) rounded-lg col-start-3 row-start-1 row-span-2"
+            @click="addSystemPrompt"
+          >
+            <Icon name="lucide:plus" class="text-(--bg-color) scale-125" />
+          </button>
+        </div>
       </SettingsSubGroup>
     </SettingsGroup>
   </div>

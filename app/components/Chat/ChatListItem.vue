@@ -76,7 +76,9 @@ const chatStore = useChatStore();
       </div>
     </div>
     <div v-if="isRenaming" class="flex gap-1.5 items-center">
-      <button class="flex items-center cursor-pointer">
+      <button
+        class="flex items-center cursor-pointer p-0! m-0! hover:bg-(--bg-color)!"
+      >
         <Icon
           name="lucide:check"
           class="text-(--yes-color) scale-125"
@@ -91,7 +93,9 @@ const chatStore = useChatStore();
           "
         />
       </button>
-      <button class="flex items-center cursor-pointer">
+      <button
+        class="flex items-center cursor-pointer p-0! m-0! hover:bg-(--bg-color)!"
+      >
         <Icon
           name="lucide:x"
           class="text-(--no-color) scale-125 cursor-pointer"

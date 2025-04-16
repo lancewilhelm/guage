@@ -50,7 +50,7 @@ const inputButtonRef = ref<HTMLButtonElement | null>(null);
       <textarea
         ref="chatInputRef"
         v-model="inputValue"
-        class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea"
+        class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea bg-inherit!"
         placeholder="Send a message..."
         @input="resizeTextarea"
         @keydown.enter="
@@ -70,8 +70,9 @@ const inputButtonRef = ref<HTMLButtonElement | null>(null);
           }
         "
       />
-      <div>
+      <div class="flex gap-2 items-center">
         <ChatInputModel />
+        <ChatInputSystemPrompt />
       </div>
     </div>
     <div class="flex items-center chat-input-right">

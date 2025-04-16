@@ -97,7 +97,6 @@ const ollamaIcon = resolveComponent("OllamaIcon");
         <input
           v-model="ollamaUrl"
           type="text"
-          class="border border-(--main-color) rounded px-3 py-1"
           placeholder="Ollama url"
           @keydown.enter="testOllamaUrl"
         />

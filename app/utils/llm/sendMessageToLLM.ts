@@ -28,7 +28,7 @@ export async function sendMessageToLLM({
       userMessage,
       history,
       model: { ...userSettingsStore.settings.model },
-      systemPrompt: userSettingsStore.settings.defaultSystemPrompt,
+      systemPrompt: getSystemPrompt(),
     }),
     signal,
   });
@@ -57,4 +57,17 @@ export async function sendMessageToLLM({
   }
 
   return accumulated;
+}
+
+function getSystemPrompt() {
+  const usersettingsStore = useUserSettingsStore();
+  if (!usersettingsStore.settings.currentSystemPrompt) return "";
+
+  if (usersettingsStore.settings.currentSystemPrompt === "default") {
+    return usersettingsStore.settings.defaultSystemPrompt;
+  } else {
+    return usersettingsStore.settings.systemPrompts[
+      usersettingsStore.settings.currentSystemPrompt
+    ];
+  }
 }

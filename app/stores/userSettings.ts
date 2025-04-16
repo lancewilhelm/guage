@@ -11,6 +11,10 @@ export interface UserSettings {
   };
   model?: Model;
   defaultSystemPrompt?: string;
+  systemPrompts: {
+    [key: string]: string;
+  };
+  currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
 }
 
 const defaultSettings: UserSettings = {
@@ -21,6 +25,8 @@ const defaultSettings: UserSettings = {
   },
   model: undefined,
   defaultSystemPrompt: "You are a helpful assistant.",
+  systemPrompts: {},
+  currentSystemPrompt: "default",
 };
 
 export const useUserSettingsStore = defineStore(
