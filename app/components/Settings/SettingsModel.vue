@@ -42,6 +42,10 @@ function addSystemPrompt() {
 function deleteSystemPrompt(key: string) {
   const { [key]: _, ...rest } = additionalPrompts.value;
   userSettingsStore.updateSettings({ systemPrompts: rest });
+
+  if (userSettingsStore.settings.currentSystemPrompt === key) {
+    userSettingsStore.updateSettings({ currentSystemPrompt: "default" });
+  }
 }
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);

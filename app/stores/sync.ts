@@ -167,8 +167,8 @@ async function processSyncResponse(response: SyncResponse) {
   }
 
   // --- Process settings ---
+  const userSettingsStore = useUserSettingsStore();
   if (unsyncedUserSettings) {
-    const userSettingsStore = useUserSettingsStore();
     if (
       new Date(unsyncedUserSettings.updatedAt) >
       new Date(userSettingsStore.updatedAt)
@@ -179,8 +179,8 @@ async function processSyncResponse(response: SyncResponse) {
     }
   }
 
+  const globalSettingsStore = useGlobalSettingsStore();
   if (unsyncedGlobalSettings) {
-    const globalSettingsStore = useGlobalSettingsStore();
     if (
       new Date(unsyncedGlobalSettings.updatedAt) >
       new Date(globalSettingsStore.updatedAt)
@@ -189,6 +189,19 @@ async function processSyncResponse(response: SyncResponse) {
         unsyncedGlobalSettings.settings as Partial<GlobalSettings>,
       );
     }
+  }
+
+  // Check if the user model is still in the available models
+  // If not, set it to the first available model
+  if (
+    userSettingsStore.settings.model &&
+    !globalSettingsStore.settings.availableModels.some(
+      (model) => model.name === userSettingsStore.settings.model?.name,
+    )
+  ) {
+    userSettingsStore.updateSettings({
+      model: globalSettingsStore.settings.availableModels[0],
+    });
   }
 }
 
