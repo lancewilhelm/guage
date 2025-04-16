@@ -24,7 +24,7 @@ const chatStore = useChatStore();
 <template>
   <div
     :class="[
-      'w-full flex gap-1.5 justify-between items-center rounded-lg p-1.5 cursor-pointer',
+      'w-full flex gap-1.5 justify-between items-center rounded-lg p-1.5 cursor-pointer chat-list-item',
       `${chatStore.currentChatId === chat.id && 'bg-(--bg-color)'}`,
     ]"
     @dblclick="
@@ -44,7 +44,7 @@ const chatStore = useChatStore();
         ref="inputRef"
         v-model="newTitle"
         type="text"
-        class="grow border border-(--sub-color) p-1 rounded w-full"
+        class="grow border border-(--sub-color) p-1 rounded w-full chat-list-item-input"
         @keydown.escape="
           () => {
             isRenaming = false;
@@ -61,7 +61,10 @@ const chatStore = useChatStore();
           }
         "
       />
-      <div v-else class="flex gap-1.5 items-center truncate">
+      <div
+        v-else
+        class="flex gap-1.5 items-center truncate chat-list-item-title"
+      >
         <div class="w-full truncate">
           {{ chat.title }}
         </div>
@@ -140,7 +143,6 @@ const chatStore = useChatStore();
           {{ chat.pinned ? "Unpin" : "Pin" }}
         </DropDownMenuItem>
         <DropDownMenuItem
-          class="flex gap-1.5 items-center"
           @click="
             () => {
               isRenaming = true;
@@ -154,7 +156,6 @@ const chatStore = useChatStore();
           Rename
         </DropDownMenuItem>
         <DropDownMenuItem
-          class="flex gap-1.5 items-center text-(--error-color)"
           @click="
             () => {
               chatStore.deleteChat(chat.id);

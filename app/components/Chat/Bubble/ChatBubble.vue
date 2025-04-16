@@ -32,14 +32,25 @@ const { copied, copy } = useClipboard({
   copiedDuring: 2000,
   legacy: true,
 });
+
+// Autorezize the textarea
+function resizeTextarea() {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = "auto";
+    const newHeight = Math.min(textareaRef.value.scrollHeight, 300);
+    textareaRef.value.style.height = `${newHeight}px`;
+  }
+}
 </script>
 
 <template>
   <div
     v-if="message"
     :class="[
-      'chat-bubble flex cursor-default w-full',
-      message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+      'flex cursor-default w-full',
+      message.role === 'user'
+        ? 'flex-row-reverse chat-bubble-user'
+        : 'flex-row chat-bubble-assistant',
     ]"
     @mouseover="isButtonRowVisible = true"
     @mouseleave="isButtonRowVisible = false"
@@ -54,7 +65,7 @@ const { copied, copy } = useClipboard({
       <div
         v-if="isEditing"
         :class="[
-          'flex flex-col w-full gap-2 rounded-lg p-2',
+          'flex flex-col w-full gap-2 rounded-lg p-2 chat-bubble-editing',
           message.role === 'user' && 'bg-(--sub-alt-color)',
         ]"
       >
@@ -62,7 +73,8 @@ const { copied, copy } = useClipboard({
           v-if="isEditing"
           ref="textareaRef"
           v-model="editedContent"
-          class="w-full p-1 focus:outline-none max-h-[600px] resize-y"
+          class="w-full p-1 focus:outline-none max-h-[800px] resize-y chat-bubble-textarea"
+          @input="resizeTextarea"
           @keydown.enter="
             (e) => {
               if (e.shiftKey || !editedContent) return;
@@ -102,8 +114,8 @@ const { copied, copy } = useClipboard({
         :class="[
           'rounded-lg',
           message.role === 'user'
-            ? 'max-w-full bg-(--sub-alt-color)'
-            : 'w-full',
+            ? 'max-w-full bg-(--sub-alt-color) chat-bubble-user-content'
+            : 'w-full chat-bubble-assistant-content',
         ]"
       >
         <div
@@ -117,6 +129,9 @@ const { copied, copy } = useClipboard({
             () => {
               if (isEditing || message?.role !== 'user') return;
               isEditing = true;
+              nextTick(() => {
+                resizeTextarea();
+              });
             }
           "
         >
@@ -139,7 +154,9 @@ const { copied, copy } = useClipboard({
         <div
           :class="[
             'flex gap-2 items-center',
-            message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+            message.role === 'user'
+              ? 'flex-row-reverse chat-bubble-buttons-user'
+              : 'flex-row chat-bubble-buttons-assistant',
           ]"
         >
           <ChatBubbleResponseInfo :model="message.model" />
@@ -174,6 +191,9 @@ const { copied, copy } = useClipboard({
             @click="
               () => {
                 isEditing = true;
+                nextTick(() => {
+                  resizeTextarea();
+                });
               }
             "
           />

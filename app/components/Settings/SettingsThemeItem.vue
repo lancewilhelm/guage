@@ -19,7 +19,7 @@ const userSettingsStore = useUserSettingsStore();
 <template>
   <div
     :class="[
-      'flex w-full justify-between items-center cursor-pointer rounded-full border-2 font-mono px-2 py-0.5 pl-3',
+      'flex w-full justify-between items-center cursor-pointer rounded-full border-2 font-mono px-2 py-0.5 pl-3 theme-item',
     ]"
     :style="{
       backgroundColor: theme.bgColor,
@@ -32,12 +32,12 @@ const userSettingsStore = useUserSettingsStore();
     @mouseover="isHovered = true"
     @mouseleave="isHovered = false"
   >
-    <div class="truncate">{{ theme.name }}</div>
-    <div class="flex gap-1 shrink-0">
+    <div class="truncate theme-name">{{ theme.name }}</div>
+    <div class="flex gap-1 shrink-0 theme-colors">
       <Icon
         v-if="!isFavorite && isHovered"
         name="lucide:star"
-        class="cursor-pointer"
+        class="cursor-pointer theme-star-off"
         :style="{ text: theme.textColor }"
         @click.stop="
           userSettingsStore.updateSettings({
@@ -51,7 +51,7 @@ const userSettingsStore = useUserSettingsStore();
       <Icon
         v-if="isFavorite && isHovered"
         name="lucide:star-off"
-        class="cursor-pointer"
+        class="cursor-pointer theme-star-on"
         :style="{ text: theme.textColor }"
         @click.stop="
           userSettingsStore.updateSettings({
@@ -62,15 +62,15 @@ const userSettingsStore = useUserSettingsStore();
         "
       />
       <div
-        class="w-4 h-4 rounded-full"
+        class="w-4 h-4 rounded-full theme-color-main"
         :style="{ backgroundColor: theme.mainColor }"
       />
       <div
-        class="w-4 h-4 rounded-full"
+        class="w-4 h-4 rounded-full theme-color-sub"
         :style="{ backgroundColor: theme.subColor }"
       />
       <div
-        class="w-4 h-4 rounded-full"
+        class="w-4 h-4 rounded-full theme-color-text"
         :style="{ backgroundColor: theme.textColor }"
       />
     </div>

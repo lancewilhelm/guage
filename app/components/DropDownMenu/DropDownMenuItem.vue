@@ -2,7 +2,7 @@
 
 <template>
   <button
-    class="text-left cursor-pointer bg-(--bg-color) rounded-lg p-2 hover:opacity-80 active:opacity-60"
+    class="flex justify-start! my-0! bg-(--bg-color)! rounded-lg w-full h-full text-left cursor-pointer hover:opacity-60! hover:text-(--text-color)! active:opacity-60! drop-down-menu-item"
   >
     <slot />
   </button>

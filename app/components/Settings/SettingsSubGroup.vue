@@ -6,12 +6,12 @@ defineProps<{
 }>();
 </script>
 <template>
-  <div class="flex flex-col items-start w-full mb-4">
+  <div class="flex flex-col items-start w-full mb-4 settings-sub-group">
     <div
-      class="flex w-full items-center justify-between gap-1 text-(--main-color) text-xl"
+      class="flex w-full items-center justify-between gap-1 text-(--main-color) text-xl settings-sub-group-header"
     >
       <div
-        class="flex gap-1 items-center text-(--main-color) text-lg border-b border-(--sub-color) mb-4 px-2"
+        class="flex gap-1 items-center text-(--main-color) text-lg border-b border-(--sub-color) mb-4 px-2 settings-sub-group-title"
       >
         <Icon
           v-if="typeof icon === 'string'"
@@ -25,7 +25,9 @@ defineProps<{
         />
         {{ title }}
       </div>
-      <div class="justify-self-end text-(--sub-color) text-sm">
+      <div
+        class="justify-self-end text-(--sub-color) text-sm settings-sub-group-description"
+      >
         {{ description }}
       </div>
     </div>

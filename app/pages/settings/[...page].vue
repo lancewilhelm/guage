@@ -84,7 +84,7 @@ const { user } = useAuth();
   <div class="flex flex-col items-center w-full h-full">
     <AppHeader class="w-full h-[40px] shrink-0" />
     <div
-      class="flex flex-wrap justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
+      class="flex flex-wrap justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full settings-tab-bar"
     >
       <SettingsTabBarItem
         v-for="tab in Object.values(tabs).filter(
@@ -98,7 +98,7 @@ const { user } = useAuth();
       />
     </div>
     <div
-      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
+      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden settings-tab-content"
     >
       <div class="flex justify-center w-full max-w-[900px] p-4">
         <component

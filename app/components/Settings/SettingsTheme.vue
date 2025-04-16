@@ -100,7 +100,7 @@ function hexToLuminance(hex: string) {
       <button
         :class="[
           'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
-          sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
+          sortedByName ? 'bg-(--main-color)!' : 'bg-(--sub-alt-color)!',
         ]"
         @click="handleSortChange('name')"
       >
@@ -109,7 +109,7 @@ function hexToLuminance(hex: string) {
           name="lucide:arrow-down-a-z"
           :class="[
             'scale-150',
-            sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+            sortedByName ? 'text-(--bg-color)!' : 'text-(--text-color)!',
           ]"
         />
         <Icon
@@ -117,14 +117,14 @@ function hexToLuminance(hex: string) {
           name="lucide:arrow-down-z-a"
           :class="[
             'scale-150',
-            sortedByName ? 'text-(--bg-color)' : 'text-(--text-color)',
+            sortedByName ? 'text-(--bg-color)!' : 'text-(--text-color)!',
           ]"
         />
       </button>
       <button
         :class="[
           'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
-          !sortedByName ? 'bg-(--main-color)' : 'bg-(--sub-alt-color)',
+          !sortedByName ? 'bg-(--main-color)!' : 'bg-(--sub-alt-color)!',
         ]"
         @click="handleSortChange('brightness')"
       >

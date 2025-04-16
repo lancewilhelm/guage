@@ -45,9 +45,9 @@ async function handleSubmit() {
   <div
     class="login-container w-full h-full flex flex-col items-center justify-center"
   >
-    <div class="logo text-7xl font-bold mb-6 text-(--main-color)">guage</div>
+    <div class="text-7xl font-bold mb-6 text-(--main-color) logo">guage</div>
     <form
-      class="flex flex-col gap-2 items-center"
+      class="flex flex-col gap-2 items-center login-form"
       @submit.prevent="handleSubmit"
     >
       <input

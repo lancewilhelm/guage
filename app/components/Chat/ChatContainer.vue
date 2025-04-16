@@ -69,7 +69,7 @@ watch(inputPadding, () => {
 <template>
   <div
     ref="containerRef"
-    class="h-full w-full overflow-x-hidden overflow-y-auto pt-2"
+    class="h-full w-full overflow-x-hidden overflow-y-auto pt-2 chat-container"
   >
     <div class="max-w-(--chat-max-width) mx-auto px-6 flex flex-col gap-4">
       <div v-for="message in activeMessages" :key="message?.id" v-measure>

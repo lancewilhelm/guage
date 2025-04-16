@@ -51,10 +51,10 @@ function getIconByProvider(provider?: string) {
 </script>
 
 <template>
-  <div class="relative">
+  <div class="relative chat-input-model">
     <div
       class="flex items-center gap-1 cursor-pointer"
-      @click.stop="popupVisible = !popupVisible"
+      @mousedown.stop="popupVisible = !popupVisible"
     >
       <component
         :is="getIconByProvider(currentModel?.provider)"
@@ -88,12 +88,12 @@ function getIconByProvider(provider?: string) {
     <div
       v-if="popupVisible && availableModels.length"
       ref="popupRef"
-      class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10"
+      class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-popup overflow-y-auto"
     >
       <div v-for="model in availableModels" :key="model.name">
         <div
           :class="[
-            'flex items-center gap-2 px-3 py-2 cursor-pointer ',
+            'flex items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
             currentModel?.name === model.name &&
             currentModel?.provider === model.provider
               ? 'bg-(--sub-color)/20'

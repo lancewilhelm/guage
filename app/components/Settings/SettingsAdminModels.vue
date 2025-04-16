@@ -3,7 +3,10 @@ interface ModelsResponse {
   openaiModels: string[];
   ollamaModels: string[];
 }
-const { data: models } = useFetch<ModelsResponse>("/api/models");
+const models = ref<ModelsResponse | null>(null);
+async function fetchModels() {
+  models.value = await $fetch<ModelsResponse>("/api/models");
+}
 const globalSettingsStore = useGlobalSettingsStore();
 const availableModels = computed(() => {
   return globalSettingsStore.settings.availableModels;
@@ -39,17 +42,20 @@ async function testOllamaUrl() {
 
   if (response.success) {
     ollamaTestStatus.value = true;
+    await fetchModels();
   } else {
     ollamaTestStatus.value = false;
   }
 }
 
 // Check the ollama endpoint on mount
-onMounted(() => {
+onMounted(async () => {
   // Check if the ollama url is set
   if (ollamaUrl.value) {
-    testOllamaUrl();
+    await testOllamaUrl();
   }
+  // Fetch the models
+  await fetchModels();
 });
 
 const openAiIcon = resolveComponent("OpenAiIcon");
@@ -93,6 +99,7 @@ const ollamaIcon = resolveComponent("OllamaIcon");
           type="text"
           class="border border-(--main-color) rounded px-3 py-1"
           placeholder="Ollama url"
+          @keydown.enter="testOllamaUrl"
         />
         <button
           class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer"

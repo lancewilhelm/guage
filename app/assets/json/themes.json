@@ -1,5 +1,12 @@
 [
   {
+    "name": "night_fairy",
+    "bgColor": "#1a1a1a",
+    "mainColor": "#fbf4b6",
+    "subColor": "#c1a7eb",
+    "textColor": "#b4e9ff"
+  },
+  {
     "name": "monochrome",
     "bgColor": "#ffffff",
     "mainColor": "#000000",

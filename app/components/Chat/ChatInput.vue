@@ -38,17 +38,19 @@ defineExpose({
     }
   },
 });
+
+const inputButtonRef = ref<HTMLButtonElement | null>(null);
 </script>
 
 <template>
   <div
-    class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md"
+    class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
   >
-    <div class="flex flex-col gap-2 grow items-start">
+    <div class="flex flex-col gap-2 grow items-start chat-input-left">
       <textarea
         ref="chatInputRef"
         v-model="inputValue"
-        class="input-box w-full p-1 resize-none focus:outline-none"
+        class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea"
         placeholder="Send a message..."
         @input="resizeTextarea"
         @keydown.enter="
@@ -59,6 +61,9 @@ defineExpose({
             if (inputValue.trim() === '') return;
             handleSubmitMessage(inputValue);
             inputValue = '';
+            if (chatInputRef) {
+              chatInputRef.focus();
+            }
             nextTick().then(() => {
               resizeTextarea();
             });
@@ -69,9 +74,20 @@ defineExpose({
         <ChatInputModel />
       </div>
     </div>
-    <div class="flex items-center">
+    <div class="flex items-center chat-input-right">
       <button
-        class="input-button flex flex-shrink-0 items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer"
+        ref="inputButtonRef"
+        class="input-button flex flex-shrink-0 items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) active:bg-(--sub-alt-color) cursor-pointer chat-input-button"
+        @mousedown.prevent="
+          () => {
+            if (inputButtonRef) {
+              inputButtonRef.blur();
+            }
+            if (chatInputRef) {
+              chatInputRef.focus();
+            }
+          }
+        "
         @click="
           () => {
             if (!isStreaming) {
@@ -83,6 +99,9 @@ defineExpose({
               chatStore.chats[
                 chatStore.currentChatId
               ]?.abortController?.abort();
+            }
+            if (chatInputRef) {
+              chatInputRef.focus();
             }
           }
         "

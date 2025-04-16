@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
     <div
       v-if="isOpen"
       ref="dropdownRef"
-      class="bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg mt-2"
+      class="bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg mt-2 drop-down-menu-list"
       :style="dropdownStyles"
     >
       <slot />

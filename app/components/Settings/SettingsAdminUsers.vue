@@ -134,7 +134,7 @@ const globalSettingsStore = useGlobalSettingsStore();
                 <td class="px-6 py-1 whitespace-nowrap text-sm">
                   <div v-if="u.id !== user?.id" class="flex gap-2">
                     <button
-                      class="flex items-center bg-(--sub-alt-color) p-2 rounded-lg text-(--text-color) cursor-pointer"
+                      class="flex items-center bg-(--sub-alt-color) p-2 rounded-lg text-(--text-color)"
                       @click="() => console.log('Edit user', u.id)"
                     >
                       <Icon
@@ -143,7 +143,7 @@ const globalSettingsStore = useGlobalSettingsStore();
                       />
                     </button>
                     <button
-                      class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
+                      class="flex items-center bg-(--error-color)! p-2 rounded-lg text-(--bg-color)"
                       @click="() => console.log('Disable user', u.id)"
                     >
                       <Icon
@@ -152,7 +152,7 @@ const globalSettingsStore = useGlobalSettingsStore();
                       />
                     </button>
                     <button
-                      class="flex items-center bg-(--error-color) p-2 rounded-lg text-(--bg-color) cursor-pointer"
+                      class="flex items-center bg-(--error-color)! p-2 rounded-lg text-(--bg-color)"
                       @click="
                         () => {
                           deleteUserModalVisible = true;
@@ -183,7 +183,7 @@ const globalSettingsStore = useGlobalSettingsStore();
       </div>
       <div class="w-full flex justify-center">
         <button
-          class="flex items-center gap-2 mt-4 bg-(--main-color) text-(--bg-color) p-2 rounded-lg px-4 cursor-pointer"
+          class="flex items-center gap-2 mt-4 bg-(--main-color)! text-(--bg-color)! p-2 rounded-lg px-4 cursor-pointer"
           @click="
             () => {
               createUserModalVisible = true;

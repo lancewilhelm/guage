@@ -6,11 +6,11 @@ defineProps<{
 }>();
 </script>
 <template>
-  <div class="flex flex-col items-start w-full mb-5">
+  <div class="flex flex-col items-start w-full mb-5 settings-group">
     <div
-      class="flex w-full items-center justify-between gap-3 text-(--main-color) text-xl"
+      class="flex w-full items-center justify-between gap-3 text-(--main-color) text-xl settings-group-header"
     >
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 settings-group-title">
         <Icon
           v-if="typeof icon === 'string'"
           :name="icon"
@@ -23,11 +23,13 @@ defineProps<{
         />
         {{ title }}
       </div>
-      <div class="justify-self-end text-right text-(--sub-color) text-sm">
+      <div
+        class="justify-self-end text-right text-(--sub-color) text-sm settings-group-description"
+      >
         {{ description }}
       </div>
     </div>
-    <div class="w-full h-[1px] bg-(--sub-color) my-2" />
+    <div class="w-full h-[1px] bg-(--sub-color) my-2 header-line" />
     <slot />
   </div>
 </template>

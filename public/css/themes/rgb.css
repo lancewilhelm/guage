@@ -115,43 +115,25 @@
   }
 }
 
-.button.discord::after,
-.pageSettings .section .buttons .button.active,
-.pageSettings .section.languages .buttons .language.active,
-.pageAccount .group.filterButtons .buttons .button.active {
+.chat-input-button {
   animation: rgb-bg 5s linear infinite;
 }
 
-#caret,
-.tooltip {
-  animation: rgb-bg 5s linear infinite !important;
-}
-
-header.focus .button.discord::after,
-header .button.discord.dotHidden::after {
-  animation-name: none !important;
-}
-
-#logo,
-header .config .group .buttons .textButton.active,
-#result .stats .group .bottom,
-nav .textButton:hover,
-header .config .group .buttons .textButton:hover,
 a:hover,
-button:hover,
-#words.flipped .word {
+.chat-list-item-title:hover,
+.chat-list-group-title,
+.header-icon,
+.chat-list-header,
+.chat-input-model-item:hover {
   animation: rgb 5s linear infinite;
 }
 
-header #logo .bg {
-  animation: rgb-fill 5s linear infinite;
-}
-
-.blog-card:hover {
+.chat-input {
   animation: rgb-border 5s linear infinite;
 }
 
-.copy-code-btn:hover {
+.copy-code-btn:hover,
+.header-line {
   animation: rgb-bg 5s linear infinite;
 }
 

@@ -3,7 +3,7 @@ import { dbNuke } from "~/utils/db/local";
 const chatStore = useChatStore();
 const showNukeConfirm = ref(false);
 async function nukeData() {
-  chatStore.resetChatStore();
+  chatStore.$reset();
   dbNuke();
   await $fetch("/api/nuke");
   showNukeConfirm.value = false;
@@ -48,7 +48,7 @@ const syncStore = useSyncStore();
       description="Delete all data from local and cloud storage. Settings will not be affected."
     >
       <button
-        class="bg-(--error-color) text-white font-bold py-2 px-4 rounded cursor-pointer"
+        class="bg-(--error-color)! text-(--bg-color)! font-bold py-2 px-4 rounded cursor-pointer"
         @click="showNukeConfirm = true"
       >
         Nuke Data

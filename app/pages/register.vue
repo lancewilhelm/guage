@@ -49,7 +49,7 @@ async function handleSubmit() {
       >guage</NuxtLink
     >
     <form
-      class="flex flex-col gap-2 items-center"
+      class="flex flex-col gap-2 items-center register-form"
       @submit.prevent="handleSubmit"
     >
       <input
@@ -79,7 +79,7 @@ async function handleSubmit() {
         ]"
       />
       <button
-        class="bg-(--main-color) text-(--bg-color) rounded px-2 py-1 cursor-pointer hover:opacity-80 active:opacity-60"
+        class="bg-(--main-color) text-(--bg-color) rounded px-2 py-1 hover:opacity-80 active:opacity-60"
       >
         login
       </button>

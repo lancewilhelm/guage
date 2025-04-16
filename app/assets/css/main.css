@@ -6,6 +6,7 @@
   --border-radius: 8px;
   --yes-color: #008800;
   --no-color: #880000;
+  --transition: all 0.3s;
 }
 
 body {
@@ -93,6 +94,51 @@ textarea:focus {
   outline: none;
 }
 
+button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin: 5px 0;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+button:hover {
+  background-color: var(--text-color);
+  color: var(--bg-color);
+}
+
+button:active {
+  background-color: var(--sub-color);
+  color: var(--bg-color);
+}
+
+button:active:focus {
+  outline: none;
+}
+
+button:focus {
+  outline: 3px solid var(--main-color);
+  outline-offset: 3px;
+}
+
+a {
+  border-radius: var(--border-radius);
+}
+
+a:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 3px;
+}
+
 .katex-html {
   display: none;
+}
+
+::selection {
+  background-color: var(--main-color);
+  color: var(--bg-color);
+  outline: 3px solid var(--sub-color);
 }

@@ -94,13 +94,13 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
       </div>
       <div
         :class="[
-          'absolute left-0 right-0 pt-4 pb-4',
+          'absolute left-0 right-0 pt-4 pb-4 chat-input-row',
           routeId ? 'bottom-0' : 'bottom-1/2 transform translate-y-1/2',
         ]"
       >
         <div
           v-if="!routeId"
-          class="absolute bottom-full left-0 right-0 mb-4 px-6 text-center"
+          class="absolute bottom-full left-0 right-0 mb-4 px-6 text-center chat-welcome"
         >
           <div class="text-3xl font-medium text-(--sub-color) mb-2">
             Start a new conversation
@@ -112,7 +112,7 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
         <div class="w-full max-w-(--chat-max-width) mx-auto relative">
           <button
             v-if="!chatContainerRef?.isNearBottom"
-            class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10"
+            class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10 stb-button"
             @mousedown="chatContainerRef?.scrollToBottom()"
           >
             <Icon

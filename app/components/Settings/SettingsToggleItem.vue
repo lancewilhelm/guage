@@ -18,10 +18,10 @@ const emit = defineEmits(["toggle"]);
     <div v-if="description" class="row-start-2 col-start-1 italic">
       {{ description }}
     </div>
-    <div
+    <button
       :class="[
-        'flex col-start-2 row-span-2 w-[60px] border-2 border-(--sub-alt-color) rounded-full cursor-pointer',
-        value ? 'justify-end bg-(--main-color)' : 'justify-start',
+        'flex col-start-2 row-span-2 w-[60px] border-2! border-(--sub-alt-color)! bg-(--bg-color)! rounded-full! p-0!',
+        value ? 'justify-end! bg-(--main-color)!' : 'justify-start!',
       ]"
       @click.stop="emit('toggle')"
     >
@@ -33,7 +33,7 @@ const emit = defineEmits(["toggle"]);
             : 'bg-(--main-color) border-(--bg-color)',
         ]"
       />
-    </div>
+    </button>
     <div class="row-span-2 italic">
       <div v-if="value" class="text-sm">
         {{ trueLabel }}

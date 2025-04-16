@@ -65,7 +65,7 @@ const { width } = useWindowSize();
 <template>
   <div
     ref="chatListRef"
-    class="chat-list h-full bg-(--sub-alt-color)"
+    class="h-full bg-(--sub-alt-color) chat-list"
     :style="{
       display: uiStore.chatListVisible ? 'flex' : 'none',
     }"
@@ -74,16 +74,18 @@ const { width } = useWindowSize();
       class="flex flex-col grow w-full"
       :style="{ width: uiStore.chatListWidth + 'px' }"
     >
-      <div class="flex w-full h-[40px] items-center px-4 shrink-0">
+      <div
+        class="flex w-full h-[40px] items-center px-4 shrink-0 chat-list-header"
+      >
         <Icon
           name="lucide:panel-left-close"
-          class="text-(--main-color) cursor-pointer scale-125"
+          class="text-(--main-color) cursor-pointer scale-125 header-icon"
           @click="uiStore.setChatListVisible(false)"
         />
         <div class="grow text-center">chats</div>
         <Icon
           name="lucide:plus"
-          class="text-(--main-color) cursor-pointer scale-125"
+          class="text-(--main-color) cursor-pointer scale-125 header-icon"
           @click="
             async () => {
               navigateTo('/chat');
@@ -91,7 +93,9 @@ const { width } = useWindowSize();
           "
         />
       </div>
-      <div class="flex flex-col p-2 overflow-y-auto overflow-x-hidden">
+      <div
+        class="flex flex-col p-2 overflow-y-auto overflow-x-hidden chat-list-list"
+      >
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
             <div

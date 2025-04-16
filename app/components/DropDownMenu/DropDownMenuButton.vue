@@ -13,7 +13,7 @@ const toggle = () => {
 
 <template>
   <div
-    class="flex items-center cursor-pointer"
+    class="flex items-center cursor-pointer drop-down-menu-button"
     @mousedown.prevent.stop="toggle"
   >
     <slot />
