@@ -88,7 +88,7 @@ function getIconByProvider(provider?: string) {
     <div
       v-if="popupVisible && availableModels.length"
       ref="popupRef"
-      class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-popup overflow-y-auto"
+      class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-model-popup overflow-y-auto"
     >
       <div v-for="model in availableModels" :key="model.name">
         <div

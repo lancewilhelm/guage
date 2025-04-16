@@ -109,9 +109,9 @@ const chatStore = useChatStore();
         <Icon
           name="lucide:more-horizontal"
           :class="[
-            'scale-125',
+            'scale-125 chat-list-item-menu-button',
             isHovered
-              ? 'text-(--main-color)'
+              ? 'text-(--main-color) chat-list-item-menu-button-hover'
               : chatStore.currentChatId === chat.id
                 ? 'text-(--bg-color)'
                 : 'text-(--sub-alt-color)',

@@ -6,6 +6,22 @@ const systemPrompt = computed({
     userSettingsStore.updateSettings({ defaultSystemPrompt: value });
   },
 });
+
+// Autorezize the textarea
+function resizeTextarea() {
+  if (textareaRef.value) {
+    textareaRef.value.style.height = "auto";
+
+    const newHeight = textareaRef.value.scrollHeight + 10;
+    textareaRef.value.style.height = `${newHeight}px`;
+  }
+}
+
+onMounted(() => {
+  resizeTextarea();
+});
+
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
 </script>
 <template>
   <div class="w-full">
@@ -16,10 +32,11 @@ const systemPrompt = computed({
         description="saves automatically"
       >
         <textarea
+          ref="textareaRef"
           v-model="systemPrompt"
           placeholder="Enter your system prompt here"
-          :rows="5"
-          class="w-full resize-y rounded-lg bg-(--sub-alt-color) p-2"
+          class="w-full resize-y max-h-[500px] rounded-lg bg-(--sub-alt-color) p-2"
+          @input="resizeTextarea"
         ></textarea>
       </SettingsSubGroup>
     </SettingsGroup>

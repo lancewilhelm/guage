@@ -65,13 +65,13 @@ const { width } = useWindowSize();
 <template>
   <div
     ref="chatListRef"
-    class="h-full bg-(--sub-alt-color) chat-list"
+    class="h-full bg-(--sub-alt-color)"
     :style="{
       display: uiStore.chatListVisible ? 'flex' : 'none',
     }"
   >
     <div
-      class="flex flex-col grow w-full"
+      class="flex flex-col grow w-full chat-list"
       :style="{ width: uiStore.chatListWidth + 'px' }"
     >
       <div
