@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import fuzzysort from "fuzzysort";
 import themesList from "~/assets/json/themes.json";
 
 interface Theme {
@@ -91,23 +92,17 @@ const query = ref("");
 const selectedOption = ref<Option>();
 
 const filteredOptions = computed(() => {
-  if (!selectedOption.value) {
-    return options.value.filter((s) =>
-      s.label.toLowerCase().includes(query.value.toLowerCase()),
-    );
-  } else if (selectedOption.value.options) {
-    return selectedOption.value.options.filter((s) =>
-      s.label.toLowerCase().includes(query.value.toLowerCase()),
-    );
-  }
-  return [];
+  const src = selectedOption.value?.options ?? options.value;
+  if (!query.value) return src;
+  return fuzzysort.go(query.value, src, { key: "label" }).map((r) => r.obj);
 });
 
-const filteredThemes = computed(() =>
-  allThemes.value.filter((s) =>
-    s.name.toLowerCase().includes(query.value.toLowerCase()),
-  ),
-);
+const filteredThemes = computed(() => {
+  if (!query.value) return allThemes.value;
+  return fuzzysort
+    .go(query.value, allThemes.value, { key: "name" })
+    .map((r) => r.obj);
+});
 
 function selectOption(option?: Option) {
   if (!option) return;
