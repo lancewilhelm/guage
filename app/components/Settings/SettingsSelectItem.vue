@@ -62,7 +62,7 @@ function selectOption(option: string) {
 
     <!-- Custom Select Trigger -->
     <div
-      class="row-span-2 flex items-center gap-2 cursor-pointer bg-(--sub-color) rounded-lg px-3 py-2 select-none min-w-[150px] settings-select-item-select"
+      class="row-span-2 flex items-center gap-2 cursor-pointer bg-(--sub-alt-color) rounded-lg px-3 py-2 select-none min-w-[150px] settings-select-item-select"
       tabindex="0"
       @mousedown.prevent.stop="popupVisible = !popupVisible"
       @keydown.enter.prevent.stop="popupVisible = !popupVisible"
