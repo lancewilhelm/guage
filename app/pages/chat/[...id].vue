@@ -98,7 +98,7 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
       </div>
       <div
         :class="[
-          'absolute left-0 right-0 pt-4 pb-4 chat-input-row',
+          'absolute left-0 right-0 pt-4 pb-4 chat-input-row pointer-events-none',
           routeId ? 'bottom-0' : 'bottom-1/2 transform translate-y-1/2',
         ]"
       >
@@ -116,7 +116,7 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
         <div class="w-full max-w-(--chat-max-width) mx-auto relative">
           <button
             v-if="!chatContainerRef?.isNearBottom"
-            class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10 stb-button"
+            class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10 stb-button pointer-events-auto"
             @mousedown="chatContainerRef?.scrollToBottom()"
           >
             <Icon
@@ -124,7 +124,7 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
               class="text-(--bg-color) scale-150"
             />
           </button>
-          <ChatInput ref="chatInputRef" />
+          <ChatInput ref="chatInputRef" class="pointer-events-auto" />
         </div>
       </div>
     </div>
