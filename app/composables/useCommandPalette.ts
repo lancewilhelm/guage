@@ -17,7 +17,6 @@ export interface Option {
 }
 
 export function useCommandPalette() {
-  const isOpen = ref(false);
   const query = ref("");
   const selectedOption = ref<Option>();
   const highlightedIndex = ref(0);
@@ -71,8 +70,21 @@ export function useCommandPalette() {
       .map((r) => r.obj);
   });
 
+  function togglePalette() {
+    const uiStore = useUiStore();
+    uiStore.setCommandPaletteVisible(!uiStore.commandPaletteVisible);
+    if (uiStore.commandPaletteVisible) {
+      nextTick(() => {
+        inputRef.value?.focus();
+        scrollToCurrentThemeIfOpen();
+      });
+    } else {
+      closePalette();
+    }
+  }
+
   function closePalette() {
-    isOpen.value = false;
+    useUiStore().setCommandPaletteVisible(false);
     selectedOption.value = undefined;
     query.value = "";
     highlightedIndex.value = 0;
@@ -152,7 +164,7 @@ export function useCommandPalette() {
           query.value = "";
           highlightedIndex.value = 0;
         } else {
-          isOpen.value = false;
+          useUiStore().setCommandPaletteVisible(false);
         }
       }
     }
@@ -191,9 +203,17 @@ export function useCommandPalette() {
   }
 
   // --- Listeners & Watchers
-  watch([filteredOptions, filteredThemes, isOpen, selectedOption], () => {
-    rowRefs.value = [];
-  });
+  watch(
+    [
+      filteredOptions,
+      filteredThemes,
+      () => useUiStore().commandPaletteVisible,
+      selectedOption,
+    ],
+    () => {
+      rowRefs.value = [];
+    },
+  );
 
   watch(highlightedIndex, () => nextTick(scrollToHighlighted));
 
@@ -204,18 +224,20 @@ export function useCommandPalette() {
     },
   );
 
-  watch([filteredOptions, isOpen, query], ([options, open, q]) => {
-    if (!open) highlightedIndex.value = 0;
-    else if (
-      q.length > 0 &&
-      (options.length > 0 || filteredThemes.value.length > 0)
-    )
-      highlightedIndex.value = 0;
-    else highlightedIndex.value = -1;
-  });
+  watch(
+    [filteredOptions, () => useUiStore().commandPaletteVisible, query],
+    ([options, open, q]) => {
+      if (!open) highlightedIndex.value = 0;
+      else if (
+        q.length > 0 &&
+        (options.length > 0 || filteredThemes.value.length > 0)
+      )
+        highlightedIndex.value = 0;
+      else highlightedIndex.value = -1;
+    },
+  );
 
   return {
-    isOpen,
     query,
     selectedOption,
     highlightedIndex,
@@ -225,6 +247,7 @@ export function useCommandPalette() {
     options,
     filteredOptions,
     filteredThemes,
+    togglePalette,
     closePalette,
     selectOption,
     selectTheme,

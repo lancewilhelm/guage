@@ -17,10 +17,13 @@ function highlight() {
     highlighted.value = props.code ?? "";
     return;
   }
-  // highlight.js automatically finds the language
-  highlighted.value = hljs.highlight(props.code, {
-    language: props.language,
-  }).value;
+  try {
+    highlighted.value = hljs.highlight(props.code, {
+      language: props.language,
+    }).value;
+  } catch {
+    highlighted.value = props.code;
+  }
 }
 
 onMounted(highlight);

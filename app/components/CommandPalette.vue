@@ -4,7 +4,6 @@ const uiStore = useUiStore();
 
 // --- Palette State
 const {
-  isOpen,
   query,
   selectedOption,
   highlightedIndex,
@@ -16,6 +15,7 @@ const {
   selectTheme,
   handleInputKeydown,
   setOptionRef,
+  closePalette,
 } = useCommandPalette();
 
 // --- Keybinding for palette open/close
@@ -26,7 +26,7 @@ function handleKeyDown(event: KeyboardEvent) {
   const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
   if (cmdOrCtrl && event.shiftKey && event.key.toLowerCase() === "p") {
     event.preventDefault();
-    isOpen.value = !isOpen.value;
+    uiStore.setCommandPaletteVisible(!uiStore.commandPaletteVisible);
     nextTick(() => inputRef.value?.focus());
   }
 }
@@ -40,15 +40,9 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
 
 <template>
   <div
-    v-if="isOpen"
+    v-if="uiStore.commandPaletteVisible"
     class="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50"
-    @click="
-      () => {
-        isOpen = false;
-        query = '';
-        selectedOption = undefined;
-      }
-    "
+    @click="closePalette"
   >
     <div
       class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] rounded-lg shadow-lg font-mono overflow-hidden command-palette"

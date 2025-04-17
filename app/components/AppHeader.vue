@@ -43,6 +43,13 @@ const chatStore = useChatStore();
     </div>
     <div class="flex gap-4 items-center app-header-right">
       <Icon
+        name="lucide:command"
+        class="text-(--main-color) cursor-pointer scale-125 header-icon"
+        @click="
+          uiStore.setCommandPaletteVisible(!uiStore.commandPaletteVisible)
+        "
+      />
+      <Icon
         v-if="route.path.startsWith('/chat')"
         name="lucide:settings"
         class="text-(--main-color) cursor-pointer scale-125 header-icon"
