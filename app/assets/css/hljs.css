@@ -1,51 +1,26 @@
 /*!
-  Theme: OneDark
-  Author: Lalit Magant (http://github.com/tilal6991)
-  License: ~ MIT (or more permissive) [via base16-schemes-source]
-  Maintainer: @highlightjs/core-team
-  Version: 2021.09.0
+  Theme: OneDark (Palette: Atom One Dark by Daniel Gamage)
+  Variables reflect: https://github.com/atom/one-dark-syntax
 */
 
-/* :root:not(.dark-code) { */
+/* -- Dark Mode -- */
 :root {
-  --hljs-bg0: #fafafa; /* Default Background */
-  --hljs-bg1: #eaeaeb; /* Lighter Background (Used for status bars, line number and folding marks) */
-  --hljs-bg2: #d6d6d6; /* Selection Background */
-  --hljs-bg3: #f0f0f1; /* Light Background (Not often used) */
-  --hljs-cmt: #a0a1a7; /* Comments, Invisibles, Line Highlighting */
-  --hljs-fg0: #383a42; /* Dark Foreground (Used for status bars) */
-  --hljs-fg1: #4f525e; /* Default Foreground, Caret, Delimiters, Operators */
-  --hljs-fg2: #6a6d7a; /* Light Foreground (Not often used) */
-  --hljs-red: #e45649; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
-  --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
-  --hljs-yel: #986801; /* Classes, Markup Bold, Search Text Background */
-  --hljs-grn: #50a14f; /* Strings, Inherited Class, Markup Code, Diff Inserted */
-  --hljs-blu: #4078f2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
-  --hljs-idg: #a626a4; /* Functions, Methods, Attribute IDs, Headings */
-  --hljs-vlt: #0184bc; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
-  --hljs-wng: #c18401; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
-}
-
-/* :root.dark-code { */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --hljs-bg0: #282c34; /* Default Background */
-    --hljs-bg1: #353b45; /* Lighter Background (Used for status bars, line number and folding marks) */
-    --hljs-bg2: #3e4451; /* Selection Background */
-    --hljs-bg3: #c8ccd4; /* Light Background (Not often used) */
-    --hljs-cmt: #545862; /* Comments, Invisibles, Line Highlighting */
-    --hljs-fg0: #565c64; /* Dark Foreground (Used for status bars) */
-    --hljs-fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
-    --hljs-fg2: #b6bdca; /* Light Foreground (Not often used) */
-    --hljs-red: #e06c75; /* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
-    --hljs-org: #d19a66; /* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
-    --hljs-yel: #e5c07b; /* Classes, Markup Bold, Search Text Background */
-    --hljs-grn: #98c379; /* Strings, Inherited Class, Markup Code, Diff Inserted */
-    --hljs-blu: #56b6c2; /* Support, Regular Expressions, Escape Characters, Markup Quotes */
-    --hljs-idg: #61afef; /* Functions, Methods, Attribute IDs, Headings */
-    --hljs-vlt: #c678dd; /* Keywords, Storage, Selector, Markup Italic, Diff Changed */
-    --hljs-wng: #be5046; /* Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
-  }
+  --hljs-bg0: #282c34; /* Default Background */
+  --hljs-bg1: #353b45;
+  --hljs-bg2: #3e4451;
+  --hljs-bg3: #c8ccd4;
+  --hljs-cmt: #5c6370; /* Comments, Invisibles, Line Highlighting */
+  --hljs-fg0: #565c64;
+  --hljs-fg1: #abb2bf; /* Default Foreground, Caret, Delimiters, Operators */
+  --hljs-fg2: #b6bdca;
+  --hljs-red: #e06c75; /* Variables, XML Tags, Deleted, etc */
+  --hljs-org: #d19a66; /* Numbers, Constants, etc */
+  --hljs-yel: #e6c07b; /* Class Names, Titles */
+  --hljs-grn: #98c379; /* Strings, Inserted, Attributes */
+  --hljs-blu: #56b6c2; /* Regex, Built-ins, Quotes (in Atom One Dark) */
+  --hljs-idg: #61afef; /* Functions, Headings, IDs */
+  --hljs-vlt: #c678dd; /* Keywords, Doctag, etc */
+  --hljs-wng: #be5046; /* Meta, Deprecated, etc */
 }
 
 pre {
@@ -59,8 +34,8 @@ pre {
 
 pre::after {
   content: "";
-  display: inline-block; /* This ensures the element takes up space */
-  width: 10px; /* Creates padding effect at the right */
+  display: inline-block;
+  width: 10px;
 }
 
 .hljs {
@@ -98,12 +73,11 @@ pre::after {
 .hljs-operator {
   color: var(--hljs-fg1);
 }
-
 .hljs-operator {
   opacity: 0.7;
 }
 
-/* base08 - Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+/* Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
 .hljs-bullet,
 .hljs-variable,
 .hljs-template-variable,
@@ -113,7 +87,7 @@ pre::after {
   color: var(--hljs-red);
 }
 
-/* base09 - Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+/* Integers, Boolean, Constants, XML Attributes, Markup Link Url */
 .hljs-symbol,
 .hljs-number,
 .hljs-link,
@@ -123,7 +97,7 @@ pre::after {
   color: var(--hljs-org);
 }
 
-/* base0A - Classes, Markup Bold, Search Text Background */
+/* Classes, Markup Bold, Search Text Background */
 .hljs-title,
 .hljs-class .hljs-title,
 .hljs-title.class_ {
@@ -135,7 +109,7 @@ pre::after {
   color: var(--hljs-yel);
 }
 
-/* base0B - Strings, Inherited Class, Markup Code, Diff Inserted */
+/* Strings, Inherited Class, Markup Code, Diff Inserted */
 .hljs-code,
 .hljs-addition,
 .hljs-title.class_.inherited__,
@@ -143,16 +117,16 @@ pre::after {
   color: var(--hljs-grn);
 }
 
-/* base0C - Support, Regular Expressions, Escape Characters, Markup Quotes */
+/* Regex, Built-ins, Quotes */
 .hljs-built_in,
-.hljs-doctag, /* guessing */
+.hljs-doctag,
 .hljs-quote,
 .hljs-keyword.hljs-atrule,
 .hljs-regexp {
   color: var(--hljs-blu);
 }
 
-/* base0D - Functions, Methods, Attribute IDs, Headings */
+/* Functions, Methods, Attribute IDs, Headings */
 .hljs-function .hljs-title,
 .hljs-attribute,
 .ruby .hljs-property,
@@ -161,12 +135,8 @@ pre::after {
   color: var(--hljs-idg);
 }
 
-/* base0E - Keywords, Storage, Selector, Markup Italic, Diff Changed */
+/* Keywords, Storage, Selector, Markup Italic, Diff Changed */
 .hljs-type,
-/* .hljs-selector-id, */
-/* .hljs-selector-class, */
-/* .hljs-selector-attr, */
-/* .hljs-selector-pseudo, */
 .hljs-template-tag,
 .diff .hljs-meta,
 .hljs-keyword {
@@ -177,19 +147,12 @@ pre::after {
   font-style: italic;
 }
 
-/* base0F - Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+/* Meta, Deprecated, Embedded Language Tags */
 .hljs-meta,
-/*
-  prevent top level .keyword and .string scopes
-  from leaking into meta by accident
-*/
 .hljs-meta .hljs-keyword,
 .hljs-meta .hljs-string {
   color: var(--hljs-wng);
 }
-
-.hljs-meta .hljs-keyword,
-/* for v10 compatible themes */
 .hljs-meta-keyword {
   font-weight: bold;
 }

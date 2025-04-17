@@ -58,27 +58,6 @@ export default defineNuxtConfig({
     rehypePlugins: {
       "rehype-katex": {},
     },
-    highlight: {
-      theme: "one-dark-pro",
-      langs: [
-        "python",
-        "html",
-        "js",
-        "ts",
-        "css",
-        "java",
-        "c",
-        "cpp",
-        "go",
-        "rust",
-        "bash",
-        "json",
-        "yaml",
-        "vue",
-        "md",
-        "mdc",
-      ],
-    },
   },
   icon: {
     provider: "server",

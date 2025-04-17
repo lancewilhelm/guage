@@ -1,13 +1,30 @@
 <script setup lang="ts">
-defineProps<{
+import hljs from "highlight.js";
+const props = defineProps<{
   language?: string;
   code?: string;
 }>();
+
+const highlighted = ref("");
 
 const { copy, copied } = useClipboard({
   copiedDuring: 2000,
   legacy: true,
 });
+
+function highlight() {
+  if (!props.code || !props.language) {
+    highlighted.value = props.code ?? "";
+    return;
+  }
+  // highlight.js automatically finds the language
+  highlighted.value = hljs.highlight(props.code, {
+    language: props.language,
+  }).value;
+}
+
+onMounted(highlight);
+watch(() => [props.code, props.language], highlight);
 </script>
 <template>
   <div class="flex flex-col my-[10px] sm:m-[10px]">
@@ -38,8 +55,13 @@ const { copy, copied } = useClipboard({
         </div>
       </div>
     </div>
-    <pre :class="['rounded-b shadow', language ? '' : 'rounded-tl']">
-      <slot />
+    <pre
+      :class="[
+        'rounded-b shadow',
+        language ? `language-${language}` : 'rounded-tl',
+      ]"
+    >
+    <code  class="hljs" v-html="highlighted"></code>
     </pre>
   </div>
 </template>
