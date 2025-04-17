@@ -29,6 +29,8 @@ function handleKeyDown(event: KeyboardEvent) {
     event.preventDefault();
     uiStore.setCommandPaletteVisible(!uiStore.commandPaletteVisible);
     nextTick(() => inputRef.value?.focus());
+  } else if (event.key === "Escape") {
+    closePalette();
   }
 }
 onMounted(() => {
@@ -44,7 +46,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
     v-if="uiStore.commandPaletteVisible"
     class="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 bg-black/20"
     @click="closePalette"
-    @mouseover="
+    @mouseenter="
       selectedOption?.label === 'theme' ||
       selectedOption?.label === 'favorite themes'
         ? debouncedPreviewTheme()
@@ -97,53 +99,35 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
           ref="optionsRef"
           class="h-full overflow-y-auto"
         >
-          <div
+          <CommandPaletteThemeItem
             v-for="(theme, i) in filteredThemes"
-            :key="i"
-            :ref="(el) => setOptionRef(el as HTMLElement, i)"
-            class="h-9 cursor-pointer px-3 py-1 hover:bg-(--sub-alt-color) flex items-center justify-between gap-2 command-palette-theme"
-            :class="[
-              highlightedIndex === i
-                ? 'bg-(--sub-color) text-(--text-color)'
-                : '',
-              userSettingsStore.settings.theme === theme.name
-                ? 'bg-(--main-color) text-(--bg-color)'
-                : '',
-            ]"
-            @click="selectTheme(theme)"
-            @mouseover.stop="debouncedPreviewTheme(theme.name)"
-            @keydown.delete.prevent="
+            :key="theme.name"
+            :theme="theme"
+            :highlighted="highlightedIndex === i"
+            :selected="userSettingsStore.settings.theme === theme.name"
+            @select="selectTheme"
+            @preview="debouncedPreviewTheme"
+            @add-favorite="
               () => {
-                if (selectedOption?.label === 'favorite themes') {
-                  userSettingsStore.updateSettings({
-                    favoriteThemes:
-                      userSettingsStore.settings.favoriteThemes.filter(
-                        (t: string) => t !== theme.name,
-                      ),
-                  });
-                }
+                userSettingsStore.updateSettings({
+                  favoriteThemes: [
+                    ...(userSettingsStore.settings.favoriteThemes || []),
+                    theme.name,
+                  ],
+                });
               }
             "
-          >
-            {{ theme.name }}
-            <div
-              class="rounded-full p-1.5 flex gap-1"
-              :style="{ backgroundColor: theme.bgColor }"
-            >
-              <div
-                class="w-4 h-4 rounded-full theme-color-main"
-                :style="{ backgroundColor: theme.mainColor }"
-              />
-              <div
-                class="w-4 h-4 rounded-full theme-color-sub"
-                :style="{ backgroundColor: theme.subColor }"
-              />
-              <div
-                class="w-4 h-4 rounded-full theme-color-text"
-                :style="{ backgroundColor: theme.textColor }"
-              />
-            </div>
-          </div>
+            @delete-favorite="
+              () => {
+                userSettingsStore.updateSettings({
+                  favoriteThemes:
+                    userSettingsStore.settings.favoriteThemes.filter(
+                      (t: string) => t !== theme.name,
+                    ),
+                });
+              }
+            "
+          />
         </div>
         <div v-else ref="optionsRef" class="overflow-y-auto">
           <div

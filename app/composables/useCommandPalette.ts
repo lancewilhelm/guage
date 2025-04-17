@@ -134,6 +134,7 @@ export function useCommandPalette() {
     }
   }
   const debouncedPreviewTheme = debounce((theme?: string) => {
+    console.log("debouncedPreviewTheme", theme);
     previewTheme(theme);
   }, 300);
 
@@ -173,6 +174,7 @@ export function useCommandPalette() {
         }
       } else if (event.key === "Escape") {
         event.preventDefault();
+        event.stopPropagation();
         selectedOption.value = undefined;
         query.value = "";
         highlightedIndex.value = 0;
@@ -200,6 +202,7 @@ export function useCommandPalette() {
         }
       } else if (event.key === "Escape") {
         event.preventDefault();
+        event.stopPropagation();
         if (selectedOption.value) {
           selectedOption.value = undefined;
           query.value = "";
