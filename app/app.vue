@@ -30,5 +30,6 @@ watch(
 <template>
   <div class="w-dvw h-dvh overflow-hidden">
     <NuxtPage />
+    <CommandPalette />
   </div>
 </template>

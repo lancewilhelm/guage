@@ -38,7 +38,8 @@ function handleSortChange(target: string) {
     },
   });
 }
-const nonFavoriteThemes = computed(() =>
+
+const allThemes = computed(() =>
   JSON.parse(JSON.stringify(themesList)).sort((a: Theme, b: Theme) => {
     if (sortedByName.value) {
       return reverseSort.value
@@ -183,7 +184,7 @@ function hexToLuminance(hex: string) {
       <SettingsSubGroup title="themes" icon="lucide:palette">
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2 w-full">
           <SettingsThemeItem
-            v-for="theme in nonFavoriteThemes"
+            v-for="theme in allThemes"
             :key="theme.name"
             :theme="theme"
             :is-favorite="
