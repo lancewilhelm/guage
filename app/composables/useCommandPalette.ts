@@ -65,6 +65,20 @@ export function useCommandPalette() {
   });
 
   const filteredThemes = computed<Theme[]>(() => {
+    if (selectedOption.value?.label === "favorite themes") {
+      const favoriteThemes = allThemes.value.filter((t) => {
+        const userSettingsStore = useUserSettingsStore();
+        const settings = userSettingsStore.settings;
+        return settings.favoriteThemes?.includes(t.name);
+      });
+      if (!query.value) {
+        return favoriteThemes;
+      } else {
+        return fuzzysort
+          .go(query.value, favoriteThemes, { key: "name" })
+          .map((r) => r.obj);
+      }
+    }
     if (!query.value) return allThemes.value;
     return fuzzysort
       .go(query.value, allThemes.value, { key: "name" })
@@ -100,7 +114,7 @@ export function useCommandPalette() {
     } else if (option.options) {
       selectedOption.value = option;
       query.value = "";
-    } else if (option.label === "theme") {
+    } else if (option.label === "theme" || option.label === "favorite themes") {
       selectedOption.value = option;
       query.value = "";
     }
@@ -124,7 +138,10 @@ export function useCommandPalette() {
   }, 300);
 
   function handleInputKeydown(event: KeyboardEvent) {
-    if (selectedOption.value?.label === "theme") {
+    if (
+      selectedOption.value?.label === "theme" ||
+      selectedOption.value?.label === "favorite themes"
+    ) {
       // This branch is for Theme selection
       const themes = filteredThemes.value;
       if (themes.length === 0) return;
@@ -144,6 +161,15 @@ export function useCommandPalette() {
           highlightedIndex.value < themes.length
         ) {
           selectTheme(themes[highlightedIndex.value]); // type: Theme
+        }
+      } else if (event.key === "Delete") {
+        if (selectedOption?.value.label === "favorite themes") {
+          useUserSettingsStore().updateSettings({
+            favoriteThemes:
+              useUserSettingsStore().settings.favoriteThemes.filter(
+                (t: string) => t !== themes[highlightedIndex.value]?.name,
+              ),
+          });
         }
       } else if (event.key === "Escape") {
         event.preventDefault();
@@ -169,6 +195,7 @@ export function useCommandPalette() {
           highlightedIndex.value >= 0 &&
           highlightedIndex.value < opts.length
         ) {
+          console.log("selectedOption.value", opts[highlightedIndex.value]);
           selectOption(opts[highlightedIndex.value]); // type: Option
         }
       } else if (event.key === "Escape") {

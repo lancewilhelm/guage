@@ -45,7 +45,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
     class="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 bg-black/20"
     @click="closePalette"
     @mouseover="
-      selectedOption?.label === 'theme' ? debouncedPreviewTheme() : null
+      selectedOption?.label === 'theme' ||
+      selectedOption?.label === 'favorite themes'
+        ? debouncedPreviewTheme()
+        : null
     "
   >
     <div
@@ -87,7 +90,10 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
       </div>
       <div class="h-full overflow-hidden command-palette-options">
         <div
-          v-if="selectedOption?.label === 'theme'"
+          v-if="
+            selectedOption?.label === 'theme' ||
+            selectedOption?.label === 'favorite themes'
+          "
           ref="optionsRef"
           class="h-full overflow-y-auto"
         >
@@ -106,6 +112,18 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
             ]"
             @click="selectTheme(theme)"
             @mouseover.stop="debouncedPreviewTheme(theme.name)"
+            @keydown.delete.prevent="
+              () => {
+                if (selectedOption?.label === 'favorite themes') {
+                  userSettingsStore.updateSettings({
+                    favoriteThemes:
+                      userSettingsStore.settings.favoriteThemes.filter(
+                        (t: string) => t !== theme.name,
+                      ),
+                  });
+                }
+              }
+            "
           >
             {{ theme.name }}
             <div
