@@ -79,6 +79,13 @@ const options = ref<Option[]>([
     ],
   },
   {
+    label: "new chat",
+    icon: "lucide:message-square-plus",
+    action: () => {
+      navigateTo("/chat");
+    },
+  },
+  {
     label: "log out",
     icon: "lucide:log-out",
     action: () => {
@@ -164,7 +171,7 @@ watch([filteredOptions, cpOpen, query], ([options, open, q]) => {
 });
 
 function handleInputKeydown(event: KeyboardEvent) {
-  if (filteredOptions.value.length) {
+  if (selectedOption.value?.label !== "theme") {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       highlightedIndex.value =
@@ -190,7 +197,7 @@ function handleInputKeydown(event: KeyboardEvent) {
         cpOpen.value = false;
       }
     }
-  } else if (filteredThemes.value.length) {
+  } else {
     if (event.key === "ArrowDown") {
       event.preventDefault();
       highlightedIndex.value =
