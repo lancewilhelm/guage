@@ -11,7 +11,7 @@ defineProps<{
       class="flex w-full items-center justify-between gap-1 text-(--main-color) text-xl settings-sub-group-header"
     >
       <div
-        class="flex gap-1 items-center text-(--main-color) text-lg border-b border-(--sub-color) mb-4 px-2 settings-sub-group-title"
+        class="flex gap-1 items-center text-(--main-color) text-lg border-b border-(--sub-color) mb-4 p-2 settings-sub-group-title"
       >
         <Icon
           v-if="typeof icon === 'string'"

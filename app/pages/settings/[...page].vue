@@ -54,11 +54,11 @@ const tabs: Record<string, Tab> = {
     path: "/settings/model",
     admin: false,
   },
-  theme: {
-    name: "theme",
-    component: resolveComponent("SettingsTheme"),
+  appearance: {
+    name: "appearance",
+    component: resolveComponent("SettingsAppearance"),
     icon: "lucide:palette",
-    path: "/settings/theme",
+    path: "/settings/appearance",
     admin: false,
   },
   cloud: {

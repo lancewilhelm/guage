@@ -145,6 +145,11 @@ a:focus {
   outline-offset: 3px;
 }
 
+.settings-select-item-select:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 3px;
+}
+
 .katex-html {
   display: none;
 }

@@ -1,6 +1,12 @@
 import { defineStore } from "pinia";
 import type { Model } from "~/utils/db/local";
 import { triggerDebouncedSync } from "~/utils/sync/debounce";
+export const messageDisplayModeOptions = [
+  "markdown",
+  "plaintext",
+  "monospace",
+] as const;
+export type MessageDisplayMode = (typeof messageDisplayModeOptions)[number];
 
 export interface UserSettings {
   theme?: string;
@@ -15,6 +21,7 @@ export interface UserSettings {
     [key: string]: string;
   };
   currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
+  messageDisplayMode: MessageDisplayMode;
 }
 
 const defaultSettings: UserSettings = {
@@ -27,6 +34,7 @@ const defaultSettings: UserSettings = {
   defaultSystemPrompt: "You are a helpful assistant.",
   systemPrompts: {},
   currentSystemPrompt: "default",
+  messageDisplayMode: "markdown",
 };
 
 export const useUserSettingsStore = defineStore(

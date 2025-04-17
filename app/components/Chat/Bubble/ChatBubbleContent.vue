@@ -52,6 +52,7 @@ function parseThinkingContent(content: string) {
 }
 
 const showThinking = ref(false);
+const userSettingsStore = useUserSettingsStore();
 </script>
 
 <template>
@@ -91,7 +92,12 @@ const showThinking = ref(false);
     </div>
 
     <!-- Assistant message -->
-    <Suspense v-if="role === 'assistant'">
+    <Suspense
+      v-if="
+        role === 'assistant' &&
+        userSettingsStore.settings.messageDisplayMode === 'markdown'
+      "
+    >
       <template #default>
         <MDC
           v-if="role === 'assistant'"
@@ -105,7 +111,17 @@ const showThinking = ref(false);
       </template>
     </Suspense>
 
-    <!-- User message -->
-    <div v-else class="whitespace-pre-wrap">{{ content }}</div>
+    <!-- User message and Assistant raw mode -->
+    <div
+      v-else
+      :class="[
+        'whitespace-pre-wrap',
+        userSettingsStore.settings.messageDisplayMode === 'monospace'
+          ? 'font-mono'
+          : '',
+      ]"
+    >
+      {{ content }}
+    </div>
   </div>
 </template>
