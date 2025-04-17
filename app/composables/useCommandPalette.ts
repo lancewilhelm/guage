@@ -31,9 +31,10 @@ export function useCommandPalette() {
 
   const options = ref<Option[]>([
     { label: "theme", icon: "lucide:palette" },
+    { label: "favorite themes", icon: "lucide:star" },
     {
       label: "add current theme to favorites",
-      icon: "fa6-solid:star",
+      icon: "lucide:heart",
       action: addCurrentThemeToFavorites,
     },
     {
@@ -106,11 +107,21 @@ export function useCommandPalette() {
   }
 
   function selectTheme(theme?: Theme) {
-    const userSettingsStore = useUserSettingsStore();
     if (!theme) return;
-    userSettingsStore.updateSettings({ theme: theme.name });
+    useUserSettingsStore().updateSettings({ theme: theme.name });
     closePalette();
   }
+
+  function previewTheme(theme?: string) {
+    if (!theme) {
+      loadTheme(useUserSettingsStore().settings.theme);
+    } else {
+      loadTheme(theme);
+    }
+  }
+  const debouncedPreviewTheme = debounce((theme?: string) => {
+    previewTheme(theme);
+  }, 300);
 
   function handleInputKeydown(event: KeyboardEvent) {
     if (selectedOption.value?.label === "theme") {
@@ -120,10 +131,12 @@ export function useCommandPalette() {
       if (event.key === "ArrowDown") {
         event.preventDefault();
         highlightedIndex.value = (highlightedIndex.value + 1) % themes.length;
+        debouncedPreviewTheme(themes[highlightedIndex.value]?.name);
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
         highlightedIndex.value =
           (highlightedIndex.value - 1 + themes.length) % themes.length;
+        debouncedPreviewTheme(themes[highlightedIndex.value]?.name);
       } else if (event.key === "Enter") {
         event.preventDefault();
         if (
@@ -137,6 +150,7 @@ export function useCommandPalette() {
         selectedOption.value = undefined;
         query.value = "";
         highlightedIndex.value = 0;
+        previewTheme(useUserSettingsStore().settings.theme);
       }
     } else {
       // This branch is for Option selection
@@ -179,7 +193,7 @@ export function useCommandPalette() {
     const el = rowRefs.value[highlightedIndex.value];
     if (!container || !el) return;
 
-    const headerHeight = 48; // px (from h-12 utility)
+    const headerHeight = 84; // px (from h-12 utility)
     const elTop = el.offsetTop;
     const elBottom = elTop + el.offsetHeight;
 
@@ -255,9 +269,11 @@ export function useCommandPalette() {
     setOptionRef,
     scrollToHighlighted,
     scrollToCurrentThemeIfOpen,
+    debouncedPreviewTheme,
   };
 }
 
+// --- Helper Functions
 function setDisplayMode(mode: "markdown" | "plaintext" | "monospace") {
   const userSettingsStore = useUserSettingsStore();
   userSettingsStore.updateSettings({ messageDisplayMode: mode });

@@ -2,7 +2,16 @@
  * Loads the CSS file for the specified theme.
  * @param themeName - The name of the theme to load.
  */
-export function loadTheme(themeName: string): Promise<void> {
+export function loadTheme(themeName?: string): Promise<void> {
+  if (!themeName) {
+    return new Promise((resolve) => {
+      const existing = document.querySelector<HTMLLinkElement>("#currentTheme");
+      if (existing) {
+        existing.remove();
+      }
+      resolve();
+    });
+  }
   return new Promise((resolve, reject) => {
     document.body.classList.add("theme-transitioning");
     const existing = document.querySelector<HTMLLinkElement>("#currentTheme");

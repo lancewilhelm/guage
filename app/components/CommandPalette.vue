@@ -16,6 +16,7 @@ const {
   handleInputKeydown,
   setOptionRef,
   closePalette,
+  debouncedPreviewTheme,
 } = useCommandPalette();
 
 // --- Keybinding for palette open/close
@@ -41,11 +42,14 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
 <template>
   <div
     v-if="uiStore.commandPaletteVisible"
-    class="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50"
+    class="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50 bg-black/20"
     @click="closePalette"
+    @mouseover="
+      selectedOption?.label === 'theme' ? debouncedPreviewTheme() : null
+    "
   >
     <div
-      class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] rounded-lg shadow-lg font-mono overflow-hidden command-palette"
+      class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] rounded-lg shadow-lg font-mono command-palette border border-(--sub-color)"
       :style="{
         translate: uiStore.chatListVisible
           ? uiStore.chatListWidth / 2 + 'px'
@@ -65,6 +69,21 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
           class="w-full bg-transparent! px-2! rounded-t-lg! rounded-b-none! focus:outline-none command-palette-input"
           @keydown="handleInputKeydown"
         />
+      </div>
+      <div
+        v-if="selectedOption"
+        class="flex items-center gap-2 px-3 cursor-pointer hover:bg-(--sub-alt-color) command-palette-back h-9 border-b border-(--sub-color)"
+        @click="
+          () => {
+            selectedOption = undefined;
+          }
+        "
+      >
+        <Icon
+          name="lucide:arrow-left"
+          class="text-(--main-color) scale-125 header-icon"
+        />
+        back
       </div>
       <div class="h-full overflow-hidden command-palette-options">
         <div
@@ -86,6 +105,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
                 : '',
             ]"
             @click="selectTheme(theme)"
+            @mouseover.stop="debouncedPreviewTheme(theme.name)"
           >
             {{ theme.name }}
             <div
