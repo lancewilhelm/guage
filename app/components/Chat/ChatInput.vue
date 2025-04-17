@@ -40,6 +40,7 @@ defineExpose({
 });
 
 const inputButtonRef = ref<HTMLButtonElement | null>(null);
+const emit = defineEmits(["chatContainerFocus"]);
 </script>
 
 <template>
@@ -67,6 +68,17 @@ const inputButtonRef = ref<HTMLButtonElement | null>(null);
             nextTick().then(() => {
               resizeTextarea();
             });
+          }
+        "
+        @keydown.esc="
+          () => {
+            if (inputButtonRef) {
+              inputButtonRef.blur();
+            }
+            if (chatInputRef) {
+              chatInputRef.blur();
+            }
+            emit('chatContainerFocus');
           }
         "
       />

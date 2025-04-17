@@ -53,6 +53,11 @@ const { containerRef, scrollToBottom, isNearBottom, vMeasure } =
 defineExpose({
   scrollToBottom,
   isNearBottom,
+  focus: () => {
+    if (containerRef.value) {
+      containerRef.value.focus();
+    }
+  },
 });
 
 // uiStore

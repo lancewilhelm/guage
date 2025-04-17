@@ -74,6 +74,7 @@ watch(
 const uiStore = useUiStore();
 const { width } = useWindowSize();
 const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
+const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
 </script>
 
 <template>
@@ -93,7 +94,7 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
         }
       "
     >
-      <div class="flex flex-grow overflow-hidden chat-container">
+      <div ref="chatContainerScrollRef" class="flex flex-grow overflow-hidden">
         <ChatContainer ref="chatContainerRef" />
       </div>
       <div
@@ -118,13 +119,29 @@ const chatContainerRef = ref<InstanceType<typeof ChatContainer> | null>(null);
             v-if="!chatContainerRef?.isNearBottom"
             class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10 stb-button pointer-events-auto"
             @mousedown="chatContainerRef?.scrollToBottom()"
+            @keydown.enter="
+              () => {
+                chatContainerRef?.scrollToBottom();
+                chatInputRef?.focus();
+              }
+            "
+            @keydown.space="
+              () => {
+                chatContainerRef?.scrollToBottom();
+                chatInputRef?.focus();
+              }
+            "
           >
             <Icon
               name="lucide:chevron-down"
               class="text-(--bg-color) scale-150"
             />
           </button>
-          <ChatInput ref="chatInputRef" class="pointer-events-auto" />
+          <ChatInput
+            ref="chatInputRef"
+            class="pointer-events-auto"
+            @chat-container-focus="chatContainerRef?.focus()"
+          />
         </div>
       </div>
     </div>
