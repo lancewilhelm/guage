@@ -37,7 +37,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative chat-input-model">
+  <div
+    v-if="Object.keys(availablePrompts).length"
+    class="relative chat-input-model"
+  >
     <div
       class="flex items-center gap-1 cursor-pointer"
       @mousedown.stop="popupVisible = !popupVisible"
@@ -56,7 +59,7 @@ onBeforeUnmount(() => {
     </div>
     <!-- popup -->
     <div
-      v-if="popupVisible && Object.keys(availablePrompts).length"
+      v-if="popupVisible"
       ref="popupRef"
       class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-model-popup overflow-y-auto"
     >

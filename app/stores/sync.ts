@@ -175,7 +175,6 @@ async function processSyncResponse(response: SyncResponse, type: string) {
         new Date(userSettingsStore.updatedAt) ||
       type === "login"
     ) {
-      console.log("updating user settings");
       userSettingsStore.updateSettings(
         unsyncedUserSettings.settings as Partial<UserSettings>,
       );
