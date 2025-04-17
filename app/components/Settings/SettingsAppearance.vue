@@ -39,22 +39,17 @@ function handleSortChange(target: string) {
   });
 }
 const nonFavoriteThemes = computed(() =>
-  JSON.parse(JSON.stringify(themesList))
-    .filter((theme: Theme) => {
-      if (!userSettingsStore.settings.favoriteThemes) return true;
-      return !userSettingsStore.settings.favoriteThemes.includes(theme.name);
-    })
-    .sort((a: Theme, b: Theme) => {
-      if (sortedByName.value) {
-        return reverseSort.value
-          ? b.name.localeCompare(a.name)
-          : a.name.localeCompare(b.name);
-      }
-      if (reverseSort.value) {
-        return hexToLuminance(b.bgColor) - hexToLuminance(a.bgColor);
-      }
-      return hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor);
-    }),
+  JSON.parse(JSON.stringify(themesList)).sort((a: Theme, b: Theme) => {
+    if (sortedByName.value) {
+      return reverseSort.value
+        ? b.name.localeCompare(a.name)
+        : a.name.localeCompare(b.name);
+    }
+    if (reverseSort.value) {
+      return hexToLuminance(b.bgColor) - hexToLuminance(a.bgColor);
+    }
+    return hexToLuminance(a.bgColor) - hexToLuminance(b.bgColor);
+  }),
 );
 
 const favoriteThemes = computed(() =>
@@ -191,7 +186,9 @@ function hexToLuminance(hex: string) {
             v-for="theme in nonFavoriteThemes"
             :key="theme.name"
             :theme="theme"
-            :is-favorite="false"
+            :is-favorite="
+              userSettingsStore.settings.favoriteThemes?.includes(theme.name)
+            "
             @click="
               () => {
                 userSettingsStore.updateSettings({ theme: theme.name });

@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  --gutter: 32px;
   --chat-max-width: 1000px;
   --border-radius: 8px;
   --yes-color: #008800;
@@ -12,7 +11,7 @@
 body {
   background: var(--bg-color);
   color: var(--text-color);
-  font-family: "geist", sans-serif;
+  font-family: "Geist", sans-serif;
   overflow: hidden;
   scrollbar-color: var(--main-color) transparent;
   scrollbar-width: auto;
