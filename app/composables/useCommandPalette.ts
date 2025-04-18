@@ -14,7 +14,7 @@ export interface Option {
   icon?: string;
   action?: () => void;
   options?: Option[];
-  active?: boolean;
+  active?: boolean | Ref<boolean>;
 }
 
 export function useCommandPalette() {
@@ -64,6 +64,11 @@ export function useCommandPalette() {
       label: "model",
       icon: "lucide:cpu",
       options: getModelOptions(),
+    },
+    {
+      label: "prompt",
+      icon: "lucide:message-square",
+      options: getPromptOptions(),
     },
     {
       label: "new chat",
@@ -370,4 +375,35 @@ function getModelOptions() {
     ),
   }));
   return models;
+}
+
+function getPromptOptions() {
+  const userSettingsStore = useUserSettingsStore();
+  const prompts = [
+    {
+      label: "default",
+      action: () => {
+        userSettingsStore.updateSettings({ currentSystemPrompt: "default" });
+        useUiStore().setCommandPaletteVisible(false);
+      },
+      active: computed(
+        () => userSettingsStore.settings.currentSystemPrompt === "default",
+      ),
+    },
+  ];
+  Object.entries(userSettingsStore.settings.systemPrompts).forEach(
+    ([key, _]) => {
+      prompts.push({
+        label: key,
+        action: () => {
+          userSettingsStore.updateSettings({ currentSystemPrompt: key });
+          useUiStore().setCommandPaletteVisible(false);
+        },
+        active: computed(
+          () => userSettingsStore.settings.currentSystemPrompt === key,
+        ),
+      });
+    },
+  );
+  return prompts;
 }
