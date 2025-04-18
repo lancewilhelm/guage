@@ -18,9 +18,7 @@ function highlight() {
     return;
   }
   try {
-    highlighted.value = hljs.highlight(props.code, {
-      language: props.language,
-    }).value;
+    highlighted.value = hljs.highlightAuto(props.code).value;
   } catch {
     highlighted.value = props.code;
   }
