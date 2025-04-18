@@ -42,10 +42,13 @@ function handleAddFavorite() {
 }
 
 const isHovered = ref(false);
+const root = ref(null);
+defineExpose({ el: root });
 </script>
 
 <template>
   <div
+    ref="root"
     class="h-9 cursor-pointer px-3 py-1 flex items-center justify-between gap-2 hover:bg-(--sub-alt-color) command-palette-theme-item"
     :class="[
       highlighted ? 'bg-(--sub-color) text-(--text-color)' : '',
@@ -53,6 +56,7 @@ const isHovered = ref(false);
     ]"
     @click="handleClick"
     @mouseenter.stop="handleMouseOver"
+    @mouseover.stop
     @mouseleave="isHovered = false"
   >
     {{ theme.name }}

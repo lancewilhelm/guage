@@ -23,6 +23,7 @@ export function useCommandPalette() {
   const rowRefs = ref<HTMLElement[]>([]);
   const inputRef = ref<HTMLInputElement | null>(null);
   const optionsRef = ref<HTMLDivElement | null>(null);
+  const hoveredTheme = ref<string | null>(null);
 
   const sortedThemesList = [...themesList].sort((a: Theme, b: Theme) =>
     a.name.localeCompare(b.name),
@@ -114,9 +115,11 @@ export function useCommandPalette() {
     } else if (option.options) {
       selectedOption.value = option;
       query.value = "";
+      highlightedIndex.value = 0;
     } else if (option.label === "theme" || option.label === "favorite themes") {
       selectedOption.value = option;
       query.value = "";
+      highlightedIndex.value = 0;
     }
   }
 
@@ -128,13 +131,14 @@ export function useCommandPalette() {
 
   function previewTheme(theme?: string) {
     if (!theme) {
+      hoveredTheme.value = null;
       loadTheme(useUserSettingsStore().settings.theme);
     } else {
+      hoveredTheme.value = theme;
       loadTheme(theme);
     }
   }
   const debouncedPreviewTheme = debounce((theme?: string) => {
-    console.log("debouncedPreviewTheme", theme);
     previewTheme(theme);
   }, 300);
 
@@ -197,7 +201,6 @@ export function useCommandPalette() {
           highlightedIndex.value >= 0 &&
           highlightedIndex.value < opts.length
         ) {
-          console.log("selectedOption.value", opts[highlightedIndex.value]);
           selectOption(opts[highlightedIndex.value]); // type: Option
         }
       } else if (event.key === "Escape") {
@@ -221,6 +224,7 @@ export function useCommandPalette() {
   function scrollToHighlighted() {
     const container = optionsRef.value;
     const el = rowRefs.value[highlightedIndex.value];
+    console.log("el", el, typeof el);
     if (!container || !el) return;
 
     const headerHeight = 84; // px (from h-12 utility)
@@ -237,7 +241,11 @@ export function useCommandPalette() {
 
   function scrollToCurrentThemeIfOpen() {
     const userSettingsStore = useUserSettingsStore();
-    if (selectedOption.value?.label !== "theme") return;
+    if (
+      selectedOption.value?.label !== "theme" &&
+      selectedOption.value?.label !== "favorite themes"
+    )
+      return;
     const currentTheme = userSettingsStore.settings.theme;
     const idx = filteredThemes.value.findIndex((t) => t.name === currentTheme);
     if (idx !== -1) {
@@ -291,6 +299,7 @@ export function useCommandPalette() {
     options,
     filteredOptions,
     filteredThemes,
+    hoveredTheme,
     togglePalette,
     closePalette,
     selectOption,
