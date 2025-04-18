@@ -61,6 +61,11 @@ export function useCommandPalette() {
       ],
     },
     {
+      label: "model",
+      icon: "lucide:cpu",
+      options: getModelOptions(),
+    },
+    {
       label: "new chat",
       icon: "lucide:message-square-plus",
       action: goToNewChat,
@@ -331,8 +336,9 @@ function setDisplayMode(mode: "markdown" | "plaintext" | "monospace") {
 }
 
 function isDisplayModeActive(mode: "markdown" | "plaintext" | "monospace") {
-  const userSettingsStore = useUserSettingsStore();
-  return userSettingsStore.settings.messageDisplayMode === mode;
+  return computed(
+    () => useUserSettingsStore().settings.messageDisplayMode === mode,
+  );
 }
 
 function addCurrentThemeToFavorites() {
@@ -348,4 +354,20 @@ function addCurrentThemeToFavorites() {
 
 function goToNewChat() {
   navigateTo("/chat");
+}
+
+function getModelOptions() {
+  const globalSettingsStore = useGlobalSettingsStore();
+  const userSettingsStore = useUserSettingsStore();
+  const models = globalSettingsStore.settings.availableModels.map((model) => ({
+    label: model.name,
+    action: () => {
+      userSettingsStore.updateSettings({ model });
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(
+      () => userSettingsStore.settings.model?.name === model.name,
+    ),
+  }));
+  return models;
 }
