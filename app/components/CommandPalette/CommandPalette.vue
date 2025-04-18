@@ -150,6 +150,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
           >
             <Icon v-if="option.icon" :name="option.icon" class="scale-125" />
             {{ option.label }}
+            <Icon v-if="option.active" name="lucide:check" class="scale-125" />
           </div>
           <div v-if="filteredOptions.length === 0" class="p-3">no results</div>
         </div>

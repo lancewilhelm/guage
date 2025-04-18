@@ -14,6 +14,7 @@ export interface Option {
   icon?: string;
   action?: () => void;
   options?: Option[];
+  active?: boolean;
 }
 
 export function useCommandPalette() {
@@ -42,9 +43,21 @@ export function useCommandPalette() {
       label: "message display mode",
       icon: "lucide:message-square-text",
       options: [
-        { label: "markdown", action: () => setDisplayMode("markdown") },
-        { label: "plaintext", action: () => setDisplayMode("plaintext") },
-        { label: "monospace", action: () => setDisplayMode("monospace") },
+        {
+          label: "markdown",
+          action: () => setDisplayMode("markdown"),
+          active: isDisplayModeActive("markdown"),
+        },
+        {
+          label: "plaintext",
+          action: () => setDisplayMode("plaintext"),
+          active: isDisplayModeActive("plaintext"),
+        },
+        {
+          label: "monospace",
+          action: () => setDisplayMode("monospace"),
+          active: isDisplayModeActive("monospace"),
+        },
       ],
     },
     {
@@ -224,7 +237,6 @@ export function useCommandPalette() {
   function scrollToHighlighted() {
     const container = optionsRef.value;
     const el = rowRefs.value[highlightedIndex.value];
-    console.log("el", el, typeof el);
     if (!container || !el) return;
 
     const headerHeight = 84; // px (from h-12 utility)
@@ -316,6 +328,11 @@ export function useCommandPalette() {
 function setDisplayMode(mode: "markdown" | "plaintext" | "monospace") {
   const userSettingsStore = useUserSettingsStore();
   userSettingsStore.updateSettings({ messageDisplayMode: mode });
+}
+
+function isDisplayModeActive(mode: "markdown" | "plaintext" | "monospace") {
+  const userSettingsStore = useUserSettingsStore();
+  return userSettingsStore.settings.messageDisplayMode === mode;
 }
 
 function addCurrentThemeToFavorites() {
