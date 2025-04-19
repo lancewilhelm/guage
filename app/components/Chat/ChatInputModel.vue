@@ -4,9 +4,6 @@ import { onMounted, onBeforeUnmount, ref, computed } from "vue";
 const userSettingsStore = useUserSettingsStore();
 const globalSettingsStore = useGlobalSettingsStore();
 
-const openAiIcon = resolveComponent("OpenAiIcon");
-const ollamaIcon = resolveComponent("OllamaIcon");
-
 const currentModel = computed(() => userSettingsStore.settings.model);
 const availableModels = computed(
   () => globalSettingsStore.settings.availableModels,
@@ -37,52 +34,44 @@ onBeforeUnmount(() => {
   document.removeEventListener("mousedown", handleClickOutside);
   document.removeEventListener("keydown", handleEscapeKey);
 });
-
-function getIconByProvider(provider?: string) {
-  switch (provider) {
-    case "openai":
-      return openAiIcon;
-    case "ollama":
-      return ollamaIcon;
-    default:
-      return undefined;
-  }
-}
 </script>
 
 <template>
   <div class="relative chat-input-model">
     <div
-      class="flex items-center gap-1 cursor-pointer"
-      @mousedown.stop="popupVisible = !popupVisible"
+      class="flex items-center gap-2 cursor-pointer"
+      @mousedown.stop.prevent="popupVisible = !popupVisible"
     >
-      <component
-        :is="getIconByProvider(currentModel?.provider)"
-        class="fill-(--main-color)"
-      />
-      <div v-if="currentModel" class="text-sm text-(--main-color) font-mono">
-        {{ currentModel.name }}
-      </div>
-      <div
-        v-if="!currentModel && availableModels.length"
-        class="flex items-center gap-1"
-      >
-        <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
-        <div class="text-(--error-color)">no model selected</div>
-      </div>
-      <div v-if="!availableModels.length" class="flex items-center gap-1">
-        <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
-        <div class="text-(--error-color)">no models available</div>
-      </div>
       <Icon
-        v-if="availableModels.length"
-        name="lucide:chevron-up"
-        :class="[
-          'cursor-pointer hover:opacity-80 transition-transform ',
-          currentModel ? 'text-(--main-color)' : 'text-(--error-color)',
-          popupVisible ? 'rotate-180' : 'rotate-0 duration-200',
-        ]"
+        v-if="currentModel"
+        :name="`simple-icons:${currentModel?.provider}`"
+        class="text-(--main-color) scale-125"
       />
+      <div class="flex items-center gap-1">
+        <div v-if="currentModel" class="text-sm text-(--main-color) font-mono">
+          {{ currentModel.name }}
+        </div>
+        <div
+          v-if="!currentModel && availableModels.length"
+          class="flex items-center gap-1"
+        >
+          <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
+          <div class="text-(--error-color)">no model selected</div>
+        </div>
+        <div v-if="!availableModels.length" class="flex items-center gap-1">
+          <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
+          <div class="text-(--error-color)">no models available</div>
+        </div>
+        <Icon
+          v-if="availableModels.length"
+          name="lucide:chevron-up"
+          :class="[
+            'cursor-pointer hover:opacity-80 transition-transform ',
+            currentModel ? 'text-(--main-color)' : 'text-(--error-color)',
+            popupVisible ? 'rotate-180' : 'rotate-0 duration-200',
+          ]"
+        />
+      </div>
     </div>
     <!-- popup -->
     <div
@@ -108,9 +97,9 @@ function getIconByProvider(provider?: string) {
             }
           "
         >
-          <component
-            :is="model.provider === 'openai' ? openAiIcon : ollamaIcon"
-            class="fill-(--main-color)"
+          <Icon
+            :name="`simple-icons:${model.provider}`"
+            class="text-(--main-color) scale-125"
           />
           <div>{{ model.name }}</div>
         </div>
