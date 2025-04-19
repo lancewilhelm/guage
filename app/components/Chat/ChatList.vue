@@ -75,14 +75,23 @@ const { width } = useWindowSize();
       :style="{ width: uiStore.chatListWidth + 'px' }"
     >
       <div
-        class="flex w-full h-[40px] items-center px-4 shrink-0 chat-list-header"
+        class="flex w-full h-[40px] items-center gap-3 px-4 shrink-0 chat-list-header"
       >
         <Icon
           name="lucide:panel-left-close"
           class="text-(--main-color) cursor-pointer scale-125 header-icon"
           @click="uiStore.setChatListVisible(false)"
         />
-        <div class="grow text-center">chats</div>
+        <div class="grow text-center translate-x-2">chats</div>
+        <Icon
+          name="lucide:search"
+          class="text-(--main-color) cursor-pointer scale-125 header-icon"
+          @click="
+            async () => {
+              uiStore.setChatSearchVisible(true);
+            }
+          "
+        />
         <Icon
           name="lucide:plus"
           class="text-(--main-color) cursor-pointer scale-125 header-icon"

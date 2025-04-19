@@ -31,5 +31,6 @@ watch(
   <div class="w-dvw h-dvh overflow-hidden">
     <NuxtPage />
     <CommandPalette />
+    <ChatSearch />
   </div>
 </template>

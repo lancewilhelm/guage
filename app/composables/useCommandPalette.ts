@@ -76,6 +76,14 @@ export function useCommandPalette() {
       action: goToNewChat,
     },
     {
+      label: "search chats",
+      icon: "lucide:search",
+      action: () => {
+        useUiStore().setChatSearchVisible(true);
+        useUiStore().setCommandPaletteVisible(false);
+      },
+    },
+    {
       label: "settings",
       icon: "lucide:settings",
       action: () => {

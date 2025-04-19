@@ -20,8 +20,8 @@ const {
 } = useCommandPalette();
 
 // --- Keybinding for palette open/close
+const route = useRoute();
 function handleKeyDown(event: KeyboardEvent) {
-  const route = useRoute();
   if (["/login", "/register"].includes(route.path)) return;
   const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
   const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
