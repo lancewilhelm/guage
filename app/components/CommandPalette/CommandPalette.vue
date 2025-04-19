@@ -39,6 +39,17 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
+
+watch(
+  () => uiStore.commandPaletteVisible,
+  (newVal) => {
+    if (newVal) {
+      nextTick(() => {
+        inputRef.value?.focus();
+      });
+    }
+  },
+);
 </script>
 
 <template>
