@@ -76,6 +76,14 @@ export function useCommandPalette() {
       action: goToNewChat,
     },
     {
+      label: "settings",
+      icon: "lucide:settings",
+      action: () => {
+        useUiStore().setCommandPaletteVisible(false);
+        navigateTo("/settings");
+      },
+    },
+    {
       label: "log out",
       icon: "lucide:log-out",
       action: () => useAuth().signOut(),
