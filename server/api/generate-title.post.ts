@@ -1,12 +1,11 @@
 import { logger } from "~/utils/logger";
 import { auth } from "~/utils/auth";
-import type { LocalMessage } from "~/utils/db/local";
-import { getOpenAIClient } from "~/utils/llm/server/streamOpenAi";
-import type { OpenAI } from "openai";
+import type { LocalMessage, Model } from "~/utils/db/local";
+import { completionOpenAI } from "../utils/llm/completionOpenAi";
+import { completionOllama } from "../utils/llm/completionOllama";
 
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/generate-title");
-  const openai = getOpenAIClient();
   // Check for authorized user
   const session = await auth.api.getSession({
     headers: event.headers,
@@ -21,7 +20,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // Parse the request body
-  const { userMessage }: { userMessage: LocalMessage } = await readBody(event);
+  const { userMessage, model }: { userMessage: LocalMessage; model: Model } =
+    await readBody(event);
   if (!userMessage) {
     logger.error(
       "POST /api/generate-title: Invalid request, meessage required",
@@ -30,20 +30,29 @@ export default defineEventHandler(async (event) => {
     return { message: "Invalid request: meessage required" };
   }
 
-  const systemPrompt: OpenAI.Chat.ChatCompletionMessageParam = {
-    role: "system",
-    content:
-      "Generate a short title for a chat based on the users first message. Please do not put quotes around the title.",
-  };
+  const systemPrompt =
+    "Generate a short title for a chat based on the user's first message. Do not put quotes around the title.";
+
+  const history = [] as LocalMessage[];
 
   try {
-    // Start the OpenAI completion
-    const params: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
-      messages: [systemPrompt, userMessage],
-      model: "gpt-4o-mini",
-    };
-    const completion = await openai.chat.completions.create(params);
-    const title = completion.choices[0].message.content;
+    let title;
+    if (model.provider === "openai") {
+      title = await completionOpenAI({
+        history,
+        userMessage,
+        model: model.name,
+        systemPrompt: systemPrompt,
+      });
+    } else if (model.provider === "ollama") {
+      title = await completionOllama({
+        history,
+        userMessage,
+        model: model.name,
+        url: model.url,
+        systemPrompt: systemPrompt,
+      });
+    }
     return title;
   } catch (error) {
     logger.error(error, "POST /api/generate-title: Error generating title:");

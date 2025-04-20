@@ -16,6 +16,7 @@ export interface UserSettings {
     reverseSort: boolean;
   };
   model?: Model;
+  titleModel?: Model;
   defaultSystemPrompt?: string;
   systemPrompts: Record<string, string>;
   currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
@@ -30,6 +31,7 @@ const defaultSettings: UserSettings = {
     reverseSort: false,
   },
   model: undefined,
+  titleModel: undefined,
   defaultSystemPrompt: "You are a helpful assistant.",
   systemPrompts: {},
   currentSystemPrompt: "default",

@@ -49,6 +49,7 @@ function deleteSystemPrompt(key: string) {
 }
 
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
+const globalSettingsStore = useGlobalSettingsStore();
 </script>
 <template>
   <div class="w-full">
@@ -120,6 +121,36 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null);
             <Icon name="lucide:plus" class="text-(--bg-color) scale-125" />
           </button>
         </div>
+      </SettingsSubGroup>
+      <SettingsSubGroup
+        title="title model"
+        icon="lucide:tag"
+        description="choose the model to generate titles for your chats. 'Same' will use the same model as the chat."
+      >
+        <SettingsSelectItem
+          :value="
+            !userSettingsStore.settings.titleModel
+              ? 'same'
+              : userSettingsStore.settings.titleModel.name
+          "
+          :options="[
+            'same',
+            ...globalSettingsStore.settings.availableModels.map((m) => m.name),
+          ]"
+          class="w-full"
+          @select="
+            (value) => {
+              if (value === 'same') {
+                userSettingsStore.updateSettings({ titleModel: undefined });
+                return;
+              }
+              const model = globalSettingsStore.settings.availableModels.find(
+                (m) => m.name === value,
+              );
+              userSettingsStore.updateSettings({ titleModel: model });
+            }
+          "
+        />
       </SettingsSubGroup>
     </SettingsGroup>
   </div>

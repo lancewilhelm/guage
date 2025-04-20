@@ -66,7 +66,12 @@ export function useCommandPalette() {
       options: getModelOptions(),
     },
     {
-      label: "prompt",
+      label: "title generator model",
+      icon: "lucide:book-a",
+      options: getTitleModelOptions(),
+    },
+    {
+      label: "system prompt",
       icon: "lucide:message-square",
       options: getPromptOptions(),
     },
@@ -422,4 +427,28 @@ function getPromptOptions() {
     },
   );
   return prompts;
+}
+
+function getTitleModelOptions() {
+  const globalSettingsStore = useGlobalSettingsStore();
+  const userSettingsStore = useUserSettingsStore();
+  const models = globalSettingsStore.settings.availableModels.map((model) => ({
+    label: model.name,
+    action: () => {
+      userSettingsStore.updateSettings({ titleModel: model });
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(
+      () => userSettingsStore.settings.titleModel?.name === model.name,
+    ),
+  }));
+  models.unshift({
+    label: "same",
+    action: () => {
+      userSettingsStore.updateSettings({ titleModel: undefined });
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(() => !userSettingsStore.settings.titleModel),
+  });
+  return models;
 }

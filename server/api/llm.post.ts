@@ -1,7 +1,7 @@
 import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
-import { streamOpenAI } from "~/utils/llm/server/streamOpenAi";
-import { streamOllama } from "~/utils/llm/server/streamOllama";
+import { streamOpenAI } from "~~/server/utils/llm/streamOpenAi";
+import { streamOllama } from "~~/server/utils/llm/streamOllama";
 import type { LocalMessage, Model } from "~/utils/db/local";
 
 export interface LLMRequest {

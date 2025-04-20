@@ -106,7 +106,7 @@ const { user } = useAuth();
             ? tabs[currentPageName]?.component
             : tabs.general?.component
         "
-        class="justify-center w-full max-w-[900px] p-4 overflow-y-auto"
+        class="justify-center w-full h-full max-w-[900px] p-4 overflow-y-auto"
       />
     </div>
   </div>

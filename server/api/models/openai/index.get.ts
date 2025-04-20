@@ -1,5 +1,5 @@
 import { logger } from "@/utils/logger";
-import { getOpenAIClient } from "@/utils/llm/server/streamOpenAi";
+import { getOpenAIClient } from "~~/server/utils/llm/streamOpenAi";
 import { auth } from "@/utils/auth";
 
 export default defineEventHandler(async (event) => {

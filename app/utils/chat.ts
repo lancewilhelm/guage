@@ -27,6 +27,9 @@ export async function generateChatTitle(userMessage: LocalMessage) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userMessage,
+        model: !useUserSettingsStore().settings.titleModel
+          ? useUserSettingsStore().settings.model
+          : useUserSettingsStore().settings.titleModel,
       }),
     });
 
