@@ -35,9 +35,11 @@ const tabs: Record<string, Tab> = {
 </script>
 
 <template>
-  <div class="flex flex-col items-center w-full h-full">
+  <div
+    class="flex flex-col items-center h-full overflow-hidden w-screen max-w-screen"
+  >
     <div
-      class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full"
+      class="flex justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-screen"
     >
       <SettingsTabBarItem
         v-for="tab in Object.values(tabs)"
@@ -48,18 +50,15 @@ const tabs: Record<string, Tab> = {
         :label="tab.name"
       />
     </div>
-    <div
-      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden"
-    >
-      <div class="flex justify-center w-full max-w-[900px] p-4">
-        <component
-          :is="
-            currentPageName
-              ? tabs[currentPageName]?.component
-              : tabs.model?.component
-          "
-        />
-      </div>
+    <div class="flex flex-col items-center w-full h-full overflow-hidden mb-4">
+      <component
+        :is="
+          currentPageName
+            ? tabs[currentPageName]?.component
+            : tabs.model?.component
+        "
+        class="justify-center w-full max-w-[900px] p-4 overflow-y-auto"
+      />
     </div>
   </div>
 </template>

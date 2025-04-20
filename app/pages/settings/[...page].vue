@@ -98,17 +98,16 @@ const { user } = useAuth();
       />
     </div>
     <div
-      class="flex flex-col items-center w-full h-full overflow-y-auto overflow-x-hidden settings-tab-content"
+      class="flex flex-col items-center w-full h-full overflow-hidden settings-tab-content"
     >
-      <div class="flex justify-center w-full max-w-[900px] p-4">
-        <component
-          :is="
-            currentPageName
-              ? tabs[currentPageName]?.component
-              : tabs.general?.component
-          "
-        />
-      </div>
+      <component
+        :is="
+          currentPageName
+            ? tabs[currentPageName]?.component
+            : tabs.general?.component
+        "
+        class="justify-center w-full max-w-[900px] p-4 overflow-y-auto"
+      />
     </div>
   </div>
 </template>
