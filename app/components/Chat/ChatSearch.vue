@@ -13,34 +13,29 @@ const highlightedIndex = ref(0);
 const searchResults = ref<LocalChat[]>([]);
 const messages = ref<LocalMessage[]>([]);
 
-// async function searchChatsByMessageContent(searchString: string) {
-//   const { user } = useAuth();
-//   if (!user.value) {
-//     throw new Error("User not authenticated");
-//   }
-//
-//   // Fetch all non-deleted messages for user
-//   const messages = await localDb.messagesTable
-//     .where({ userId: user.value.id })
-//     .and(
-//       (msg) =>
-//         !msg.deleted &&
-//         msg.content.toLowerCase().includes(searchString.toLowerCase()),
-//     )
-//     .toArray();
-//
-//   // Extract unique chat IDs
-//   const chatIds = Array.from(new Set(messages.map((m) => m.chatId)));
-//
-//   // Fetch the chats (and filter out deleted if needed)
-//   const chats = await localDb.chatsTable
-//     .where("id")
-//     .anyOf(chatIds)
-//     .and((chat) => !chat.deleted)
-//     .toArray();
-//
-//   return chats;
-// }
+async function exactSearchChatsByMessageContent(searchString: string) {
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User not authenticated");
+  }
+
+  // Filter messages by content
+  const filteredMessages = messages.value.filter((message) =>
+    message.content.toLowerCase().includes(searchString.toLowerCase()),
+  );
+
+  // Extract unique chat IDs
+  const chatIds = Array.from(new Set(filteredMessages.map((m) => m.chatId)));
+
+  // Fetch the chats (and filter out deleted if needed)
+  const chats = await localDb.chatsTable
+    .where("id")
+    .anyOf(chatIds)
+    .and((chat) => !chat.deleted)
+    .toArray();
+
+  return chats;
+}
 
 async function fuzzySearchChatsByMessageContent(query: string) {
   const { user } = useAuth();
@@ -73,8 +68,15 @@ async function searchChats() {
     searchResults.value = [];
     return;
   }
-  const results = await fuzzySearchChatsByMessageContent(query.value);
-  searchResults.value = results;
+  if (userSettingsStore.settings.chatSearchMode === "exact") {
+    const results = await exactSearchChatsByMessageContent(query.value);
+    searchResults.value = results;
+    return;
+  } else if (userSettingsStore.settings.chatSearchMode === "fuzzy") {
+    const results = await fuzzySearchChatsByMessageContent(query.value);
+    searchResults.value = results;
+    return;
+  }
 }
 
 function handleInputKeydown(event: KeyboardEvent) {
@@ -170,6 +172,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
+
+const userSettingsStore = useUserSettingsStore();
 </script>
 
 <template>

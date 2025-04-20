@@ -8,6 +8,7 @@ import { triggerDebouncedSync } from "../sync/debounce";
 export interface Model {
   name: string;
   provider: string;
+  url?: string;
 }
 
 export interface LocalMessage {
@@ -21,6 +22,7 @@ export interface LocalMessage {
   createdAt: Date;
   updatedAt: Date;
   synced: boolean;
+  error?: string;
   model?: Model;
   deleted?: boolean;
 }

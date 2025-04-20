@@ -20,6 +20,7 @@ export interface UserSettings {
   systemPrompts: Record<string, string>;
   currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
   messageDisplayMode: MessageDisplayMode;
+  chatSearchMode: "exact" | "fuzzy";
 }
 
 const defaultSettings: UserSettings = {
@@ -33,6 +34,7 @@ const defaultSettings: UserSettings = {
   systemPrompts: {},
   currentSystemPrompt: "default",
   messageDisplayMode: "markdown",
+  chatSearchMode: "fuzzy",
 };
 
 export const useUserSettingsStore = defineStore(

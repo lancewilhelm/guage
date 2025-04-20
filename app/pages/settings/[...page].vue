@@ -9,7 +9,7 @@ definePageMeta({
   middleware: [
     function (to) {
       if (!to.params.page) {
-        return navigateTo("/settings/profile");
+        return navigateTo("/settings/general");
       } else if (
         Array.isArray(to.params.page) &&
         to.params.page.length === 1 &&
@@ -40,11 +40,11 @@ interface Tab {
 }
 
 const tabs: Record<string, Tab> = {
-  profile: {
-    name: "profile",
-    component: resolveComponent("SettingsProfile"),
-    icon: "lucide:circle-user",
-    path: "/settings/profile",
+  general: {
+    name: "general",
+    component: resolveComponent("SettingsGeneral"),
+    icon: "lucide:settings",
+    path: "/settings/general",
     admin: false,
   },
   model: {
@@ -105,7 +105,7 @@ const { user } = useAuth();
           :is="
             currentPageName
               ? tabs[currentPageName]?.component
-              : tabs.profile?.component
+              : tabs.general?.component
           "
         />
       </div>

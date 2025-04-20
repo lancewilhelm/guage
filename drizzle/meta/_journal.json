@@ -15,6 +15,13 @@
       "when": 1743476007488,
       "tag": "0001_daily_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1745173850205,
+      "tag": "0002_unique_baron_strucker",
+      "breakpoints": true
     }
   ]
 }

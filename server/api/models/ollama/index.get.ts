@@ -1,8 +1,4 @@
 import { logger } from "@/utils/logger";
-import { cloudDb } from "@/utils/db/cloud";
-import { globalSettings } from "@/utils/db/schema";
-import { eq } from "drizzle-orm";
-import type { GlobalSettings } from "@/stores/globalSettings";
 import { auth } from "@/utils/auth";
 
 interface OllamaModel {
@@ -39,26 +35,13 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Fetch Ollama models
-    const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";
-    const settings = await cloudDb
-      .select()
-      .from(globalSettings)
-      .where(eq(globalSettings.id, GLOBAL_SETTINGS_ID))
-      .execute();
-    if (!settings || !settings[0]) {
-      logger.error(
-        "GET /api/models/ollama: Global settings not found. Skipping Ollama models.",
-      );
-      return {
-        models: [],
-      };
-    }
-    const parsedSettings = settings[0].settings as GlobalSettings;
     let ollamaModels = { models: [] };
+    const url = getQuery(event).url as string | undefined;
     try {
-      ollamaModels = parsedSettings.ollamaUrl
-        ? await (await fetch(`${parsedSettings.ollamaUrl}/api/tags`)).json()
-        : { models: [] };
+      ollamaModels =
+        url && url.length > 0
+          ? await (await fetch(`${url}/api/tags`)).json()
+          : { models: [] };
     } catch (error) {
       logger.error(
         error,

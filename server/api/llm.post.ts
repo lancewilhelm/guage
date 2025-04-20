@@ -2,15 +2,12 @@ import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
 import { streamOpenAI } from "~/utils/llm/server/streamOpenAi";
 import { streamOllama } from "~/utils/llm/server/streamOllama";
-import type { LocalMessage } from "~/utils/db/local";
+import type { LocalMessage, Model } from "~/utils/db/local";
 
 export interface LLMRequest {
   history: LocalMessage[];
   userMessage: LocalMessage;
-  model: {
-    name: string;
-    provider: string;
-  };
+  model: Model;
   systemPrompt: string;
 }
 
@@ -63,10 +60,18 @@ export default defineEventHandler(async (event) => {
         });
         break;
       case "ollama":
+        if (!model.url) {
+          logger.error("POST /api/llm: Invalid request: No URL specified");
+          setResponseStatus(event, 400);
+          return {
+            message: "Invalid request: No URL specified",
+          };
+        }
         stream = await streamOllama({
           history,
           userMessage,
           model: model.name,
+          url: model.url,
           systemPrompt,
         });
         break;

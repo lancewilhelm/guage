@@ -1,43 +1,74 @@
 <script setup lang="ts">
 interface Models {
   openai: string[];
-  ollama: string[];
+  ollama: Record<string, string[]>;
 }
 const models = ref<Models>({
   openai: [],
-  ollama: [],
+  ollama: {},
 });
-async function fetchModels(provider: keyof Models) {
-  const response = await $fetch<{ models: string[] }>(
-    `/api/models/${provider}`,
-  );
-  models.value[provider] = response.models;
+async function fetchModels(provider: keyof Models, url?: string) {
+  if (provider === "ollama" && url) {
+    const response = await $fetch<{ models: string[] }>(
+      `/api/models/ollama?url=${encodeURIComponent(url)}`,
+    );
+    models.value.ollama[url] = response.models;
+  } else if (provider === "openai") {
+    const response = await $fetch<{ models: string[] }>(
+      `/api/models/${provider}`,
+    );
+    models.value[provider] = response.models;
+  }
 }
 const globalSettingsStore = useGlobalSettingsStore();
 const availableModels = computed(() => {
   return globalSettingsStore.settings.availableModels;
 });
-const availableModelNames = computed(() => {
-  return globalSettingsStore.settings.availableModels.map((model) => {
-    return model.name;
-  });
-});
-const ollamaUrl = computed({
-  get: () => {
-    return globalSettingsStore.settings.ollamaUrl;
-  },
-  set: (value) => {
-    globalSettingsStore.updateSettings({ ollamaUrl: value });
-    ollamaTestStatus.value = null;
-  },
-});
+function checkAvailableModel(model: string, url?: string) {
+  if (url) {
+    return availableModels.value.some(
+      (m) => m.name === model && m.provider === "ollama" && m.url === url,
+    );
+  }
+  return availableModels.value.some((m) => m.name === model);
+}
 
-const ollamaTestStatus = ref<"available" | "testing" | "unavailable" | null>(
-  null,
-);
-async function testOllamaUrl() {
-  const url = ollamaUrl.value;
-  ollamaTestStatus.value = "testing";
+function addModelToAvailableModels(
+  model: string,
+  provider: string,
+  url?: string,
+) {
+  globalSettingsStore.updateSettings({
+    availableModels: [...availableModels.value, { name: model, provider, url }],
+  });
+}
+function removeModelFromAvailableModels(
+  model: string,
+  provider: string,
+  url?: string,
+) {
+  globalSettingsStore.updateSettings({
+    availableModels: availableModels.value.filter(
+      (m) =>
+        (m.name !== model && m.url === url) ||
+        m.name !== model ||
+        m.provider !== provider ||
+        m.url !== url,
+    ),
+  });
+}
+function updateAvailableModels(model: string, provider: string, url?: string) {
+  if (checkAvailableModel(model, url)) {
+    removeModelFromAvailableModels(model, provider, url);
+  } else {
+    addModelToAvailableModels(model, provider, url);
+  }
+}
+
+const ollamaUrlToAdd = ref("");
+const ollamaUrls = ref<{ [key: string]: boolean }>({});
+async function addOllamaUrl() {
+  const url = ollamaUrlToAdd.value;
   if (!url) {
     return;
   }
@@ -50,68 +81,81 @@ async function testOllamaUrl() {
   );
 
   if (response.success) {
-    ollamaTestStatus.value = "available";
-    await fetchModels("ollama");
-  } else {
-    ollamaTestStatus.value = "unavailable";
+    globalSettingsStore.updateSettings({
+      ollamaUrls: [...globalSettingsStore.settings.ollamaUrls, url],
+    });
+    ollamaUrlToAdd.value = "";
+    await fetchModels("ollama", url);
+  }
+}
+
+async function testOllamaUrl(url: string) {
+  if (!url) {
+    return;
+  }
+  const response = await $fetch<{ success: boolean; message: string }>(
+    "/api/ollama/version",
+    {
+      method: "POST",
+      body: { url },
+    },
+  );
+
+  if (response.success) {
+    ollamaUrls.value[url] = true;
+    await fetchModels("ollama", url);
   }
 }
 
 // Check the ollama endpoint on mount
-onMounted(async () => {
+onMounted(() => {
   // Check if the ollama url is set
-  if (ollamaUrl.value) {
-    testOllamaUrl();
+  if (globalSettingsStore.settings.ollamaUrls) {
+    for (const url of globalSettingsStore.settings.ollamaUrls) {
+      testOllamaUrl(url);
+    }
+    // Fetch the models
+    fetchModels("openai");
   }
-  // Fetch the models
-  fetchModels("openai");
 });
 
 const deleteOllamaModelModalVisible = ref(false);
-const ollamaModelToDelete = ref("");
+const ollamaModelToDelete = ref<{ name: string; url: string } | null>(null);
 async function deleteOllamaModel() {
   const model = ollamaModelToDelete.value;
-  const url = ollamaUrl.value;
-  if (!url) {
+  if (!model?.url || !model.name) {
     return;
   }
   const response = await $fetch<{ success: boolean; message: string }>(
     "/api/models/ollama",
     {
       method: "DELETE",
-      body: { url, model },
+      body: { url: model.url, model: model.name },
     },
   );
 
   if (response.success) {
-    ollamaTestStatus.value = "available";
-    await fetchModels("ollama");
+    await fetchModels("ollama", model.url);
     deleteOllamaModelModalVisible.value = false;
   }
 }
 
 // Pull model from ollama
-const isPulling = ref(false);
-const modelToPull = ref("");
-const pullStatus = ref("");
-const pullTotal = ref(0);
-const pullCompleted = ref(0);
-const pullPercent = computed(() => {
-  if (pullTotal.value === 0) {
-    return 0;
-  }
-  return Math.round((pullCompleted.value / pullTotal.value) * 100);
-});
-async function pullOllamaModel() {
-  const url = ollamaUrl.value;
+const isPulling = ref<Record<string, boolean>>({});
+const modelToPull = ref<Record<string, string>>({});
+const pullStatus = ref<Record<string, string>>({});
+const pullTotal = ref<Record<string, number>>({});
+const pullCompleted = ref<Record<string, number>>({});
+const pullPercent = ref<Record<string, number>>({});
+async function pullOllamaModel(url: string) {
   if (!url) {
     return;
   }
-  const model = modelToPull.value;
+  const model = modelToPull.value[url];
   if (!model) {
     return;
   }
-  pullStatus.value = "";
+  pullStatus.value[url] = "";
 
   const response = await fetch("/api/models/ollama/pull", {
     method: "POST",
@@ -129,7 +173,7 @@ async function pullOllamaModel() {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
 
-  isPulling.value = true;
+  isPulling.value[url] = true;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -139,14 +183,17 @@ async function pullOllamaModel() {
     for (const event of events) {
       if (event.eventType === "statusChunk") {
         const status = JSON.parse(event.data);
-        pullStatus.value = status.status;
-        pullTotal.value = status.total;
-        pullCompleted.value = status.completed;
+        pullStatus.value[url] = status.status;
+        pullTotal.value[url] = status.total;
+        pullCompleted.value[url] = status.completed;
+        pullPercent.value[url] = status.total
+          ? Math.round((status.completed / status.total) * 100)
+          : 0;
       }
     }
   }
-  modelToPull.value = "";
-  isPulling.value = false;
+  modelToPull.value = {};
+  isPulling.value[url] = false;
   fetchModels("ollama");
 }
 </script>
@@ -160,18 +207,11 @@ async function pullOllamaModel() {
           :key="model"
           :class="[
             ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
-            availableModelNames.includes(model)
+            checkAvailableModel(model)
               ? 'bg-(--main-color) text-(--bg-color)'
               : 'text-(--text-color)',
           ]"
-          @click="
-            () =>
-              globalSettingsStore.updateSettings({
-                availableModels: availableModelNames.includes(model)
-                  ? availableModels.filter((m) => m.name !== model)
-                  : [...availableModels, { name: model, provider: 'openai' }],
-              })
-          "
+          @click="updateAvailableModels(model, 'openai')"
         >
           {{ model }}
         </div>
@@ -180,110 +220,113 @@ async function pullOllamaModel() {
 
     <SettingsGroup title="ollama" icon="simple-icons:ollama">
       <div class="flex items-center gap-2 mb-4">
-        <div class="text-(--main-color)">url</div>
+        <div class="text-(--main-color)">add url</div>
         <input
-          v-model="ollamaUrl"
+          v-model="ollamaUrlToAdd"
           type="text"
           placeholder="Ollama url"
-          @keydown.enter="testOllamaUrl"
+          @keydown.enter="addOllamaUrl"
         />
         <button
-          class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer"
-          @click="testOllamaUrl"
+          class="bg-(--sub-color) rounded px-2! py-1! cursor-pointer"
+          @click="addOllamaUrl"
         >
-          test
+          add
         </button>
-        <div
-          v-if="ollamaTestStatus === 'testing'"
-          class="flex items-end gap-1 italic"
-        >
-          testing
-          <Icon name="svg-spinners:3-dots-bounce" class="text-(--main-color)" />
-        </div>
-        <Icon
-          v-if="ollamaTestStatus === 'available'"
-          name="lucide:smile"
-          class="text-(--yes-color) scale-125"
-        />
-        <Icon
-          v-if="ollamaTestStatus === 'unavailable'"
-          name="lucide:frown"
-          class="text-(--no-color) scale-125"
-        />
       </div>
       <div
-        class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+        v-for="url in globalSettingsStore.settings.ollamaUrls"
+        :key="url"
+        class="w-full flex flex-col gap-2 mb-4"
       >
-        <div
-          v-for="model in models?.ollama.sort((a, b) => a.localeCompare(b))"
-          :key="model"
-          :class="[
-            'flex items-center justify-center gap-2 border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
-            availableModelNames.includes(model)
-              ? 'bg-(--main-color) text-(--bg-color)'
-              : 'text-(--text-color)',
-          ]"
-          @click="
-            () =>
-              globalSettingsStore.updateSettings({
-                availableModels: availableModelNames.includes(model)
-                  ? availableModels.filter((m) => m.name !== model)
-                  : [...availableModels, { name: model, provider: 'ollama' }],
-              })
-          "
-        >
-          {{ model }}
-          <Icon
-            name="lucide:trash-2"
-            class="text-(--text-color) ml-1"
-            @click.stop.prevent="
+        <div class="h-[1px] bg-(--main-color) rounded-full" />
+        <div class="flex gap-2 text-(--main-color) items-center mb-2">
+          <div class="border-b">{{ url }}</div>
+          <button
+            class="bg-(--bg-color) text-(--error-color) rounded px-1! py-1! cursor-pointer"
+            @click.prevent.stop="
               () => {
-                ollamaModelToDelete = model;
-                deleteOllamaModelModalVisible = true;
+                globalSettingsStore.updateSettings({
+                  ollamaUrls: globalSettingsStore.settings.ollamaUrls.filter(
+                    (u) => u !== url,
+                  ),
+                });
               }
             "
+          >
+            <Icon name="lucide:trash-2" />
+          </button>
+          <Icon
+            v-if="ollamaUrls[url]"
+            name="lucide:check"
+            class="text-(--yes-color) text-xl"
           />
+          <Icon v-else name="lucide:x" class="text-(--no-color) text-xl" />
         </div>
-      </div>
-      <SettingsSubGroup
-        title="Pull model"
-        icon="lucide:cloud-download"
-        description="Pull a model from the Ollama server"
-      >
-        <div class="flex items-center gap-2 mb-4">
-          <div class="text-(--main-color)">model tag</div>
+        <div v-if="ollamaUrls[url]" class="flex items-center gap-2 mb-4">
+          <div class="text-(--main-color)">pull model</div>
           <input
-            v-model="modelToPull"
+            v-model="modelToPull[url]"
             type="text"
             placeholder="model tag"
             class="disabled:opacity-50"
-            :disabled="isPulling"
-            @keydown.enter="pullOllamaModel"
+            :disabled="isPulling[url]"
+            @keydown.enter="() => pullOllamaModel(url)"
           />
           <button
-            class="bg-(--sub-color) rounded px-3 py-1 cursor-pointer disabled:opacity-50"
-            :disabled="isPulling"
-            @click="pullOllamaModel"
+            class="bg-(--sub-color) rounded px-2! py-1! cursor-pointer disabled:opacity-50"
+            :disabled="isPulling[url]"
+            @click="() => pullOllamaModel(url)"
           >
             pull
           </button>
           <div class="flex gap-3 items-center">
-            <div>{{ pullStatus }}</div>
+            <div>{{ pullStatus[url] }}</div>
             <div
-              v-if="pullTotal"
+              v-if="pullTotal[url]"
               class="w-[200px] h-2 bg-(--sub-color) rounded-full"
             >
               <div
                 class="h-full bg-(--main-color) rounded-full"
                 :style="{
-                  width: pullPercent + '%',
+                  width: (pullPercent[url] || 0) + '%',
                 }"
               />
             </div>
-            <div v-if="pullTotal">{{ pullPercent }}%</div>
+            <div v-if="pullTotal[url]">{{ pullPercent[url] || 0 }}%</div>
           </div>
         </div>
-      </SettingsSubGroup>
+        <div
+          v-if="ollamaUrls[url]"
+          class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+        >
+          <div
+            v-for="model in (models?.ollama[url] || []).sort((a, b) =>
+              a.localeCompare(b),
+            )"
+            :key="model"
+            :class="[
+              'flex items-center justify-center gap-2 border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
+              checkAvailableModel(model, url)
+                ? 'bg-(--main-color) text-(--bg-color)'
+                : 'text-(--text-color)',
+            ]"
+            @click="updateAvailableModels(model, 'ollama', url)"
+          >
+            {{ model }}
+            <Icon
+              name="lucide:trash-2"
+              class="text-(--text-color) ml-1"
+              @click.stop.prevent="
+                () => {
+                  ollamaModelToDelete = { name: model, url };
+                  deleteOllamaModelModalVisible = true;
+                }
+              "
+            />
+          </div>
+        </div>
+      </div>
     </SettingsGroup>
 
     <!-- Delete Ollama Model Modal -->
@@ -292,14 +335,14 @@ async function pullOllamaModel() {
       @close="
         () => {
           deleteOllamaModelModalVisible = false;
-          ollamaModelToDelete = '';
+          ollamaModelToDelete = null;
         }
       "
     >
       <div class="flex flex-col items-center justify-center gap-2">
         <div class="text-(--text-color) text-lg text-center">
-          Are you sure you want to delete {{ ollamaModelToDelete }}? This action
-          cannot be undone.
+          Are you sure you want to delete {{ ollamaModelToDelete?.name }}? This
+          action cannot be undone.
         </div>
         <div class="flex gap-2 items-center">
           <button
@@ -317,7 +360,7 @@ async function pullOllamaModel() {
             @click="
               () => {
                 deleteOllamaModelModalVisible = false;
-                ollamaModelToDelete = '';
+                ollamaModelToDelete = null;
               }
             "
           >

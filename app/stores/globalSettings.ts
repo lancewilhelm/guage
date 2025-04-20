@@ -1,18 +1,17 @@
 import { defineStore } from "pinia";
+import type { Model } from "~/utils/db/local";
 import { triggerDebouncedSync } from "~/utils/sync/debounce";
 
 export interface GlobalSettings {
-  availableModels: {
-    name: string;
-    provider: string;
-  }[];
+  availableModels: Model[];
   allowRegistration: boolean;
-  ollamaUrl?: string;
+  ollamaUrls: string[];
 }
 
 const defaultSettings: GlobalSettings = {
   availableModels: [],
   allowRegistration: false,
+  ollamaUrls: [],
 };
 
 // async function adminCheck() {

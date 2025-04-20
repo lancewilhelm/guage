@@ -34,8 +34,15 @@ export async function streamAndUpdateAssistantMessage({
       history,
       signal: abortController.signal,
       onChunk: (partialText) => {
-        chatStore.updateMessage(chatId, assistantMessageId, partialText);
+        chatStore.updateMessage(chatId, assistantMessageId, {
+          content: partialText,
+        });
         dbUpdateMessage(assistantMessageId, { content: partialText });
+      },
+      onError: (error) => {
+        chatStore.updateMessage(chatId, assistantMessageId, { error });
+        dbUpdateMessage(assistantMessageId, { error });
+        chatStore.setChatStreaming(chatId, false);
       },
     });
   } catch (err) {

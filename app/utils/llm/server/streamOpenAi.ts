@@ -53,7 +53,9 @@ export async function streamOpenAI({
       } catch (error) {
         logger.error(error, "Error streaming OpenAI");
         controller.enqueue(
-          encoder.encode("event: error\ndata: Error streaming OpenAI\n\n"),
+          encoder.encode(
+            `event: error\ndata: Error streaming OpenAI: ${error}\n\n`,
+          ),
         );
       } finally {
         controller.close();

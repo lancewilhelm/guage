@@ -143,11 +143,20 @@ function resizeTextarea() {
             :updated-at="message.updatedAt"
           />
         </div>
-        <div v-else class="flex flex-col gap-2 rounded-lg p-3">
+        <div
+          v-if="!message.content && !message.error"
+          class="flex flex-col gap-2 rounded-lg p-3"
+        >
           <Icon
             name="svg-spinners:3-dots-bounce"
             class="text-(--main-color) scale-125"
           />
+        </div>
+        <div
+          v-if="message.error"
+          class="flex flex-col gap-2 rounded-lg p-3 text-(--error-color) bg-(--error-color)/10 border border-(--error-color)/20"
+        >
+          {{ message.error }}
         </div>
       </div>
       <div class="flex">

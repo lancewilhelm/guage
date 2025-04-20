@@ -33,9 +33,26 @@ async function handleUpdatePassword() {
     changePasswordSuccess.value = false;
   }, 3000);
 }
+
+const userSettingsStore = useUserSettingsStore();
 </script>
 <template>
   <div class="w-full">
+    <SettingsGroup title="chat search" icon="lucide:search">
+      <SettingsSelectItem
+        title="search mode"
+        description="fuzzy: search for similar matches, exact: search for exact matches"
+        :options="['fuzzy', 'exact']"
+        :value="userSettingsStore.settings.chatSearchMode"
+        @select="
+          (value) => {
+            userSettingsStore.updateSettings({
+              chatSearchMode: value,
+            });
+          }
+        "
+      />
+    </SettingsGroup>
     <SettingsGroup title="credentials" icon="lucide:lock">
       <div class="flex items-center gap-2">
         <button

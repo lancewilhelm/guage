@@ -102,6 +102,7 @@ export const messages = sqliteTable("messages", {
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),
+  error: text("error"),
   deleted: integer("deleted", { mode: "boolean" }),
   model: text("model", { mode: "json" }),
 });

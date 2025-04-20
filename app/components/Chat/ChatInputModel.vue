@@ -79,29 +79,41 @@ onBeforeUnmount(() => {
       ref="popupRef"
       class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-model-popup overflow-y-auto"
     >
-      <div v-for="model in availableModels" :key="model.name">
-        <div
-          :class="[
-            'flex items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
-            currentModel?.name === model.name &&
-            currentModel?.provider === model.provider
-              ? 'bg-(--sub-color)/20'
-              : 'hover:bg-(--sub-color)/10',
-          ]"
-          @click="
-            () => {
-              userSettingsStore.updateSettings({
-                model: { name: model.name, provider: model.provider },
-              });
-              popupVisible = false;
-            }
-          "
-        >
-          <Icon
-            :name="`simple-icons:${model.provider}`"
-            class="text-(--main-color) scale-125"
-          />
+      <div
+        v-for="model in availableModels.sort((a, b) =>
+          a.name.localeCompare(b.name),
+        )"
+        :key="model.name"
+        :class="[
+          'flex items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
+          currentModel?.name === model.name &&
+          currentModel?.provider === model.provider &&
+          currentModel.url === model.url
+            ? 'bg-(--sub-color)/20'
+            : 'hover:bg-(--sub-color)/10',
+        ]"
+        @click="
+          () => {
+            userSettingsStore.updateSettings({
+              model: {
+                name: model.name,
+                provider: model.provider,
+                url: model.url,
+              },
+            });
+            popupVisible = false;
+          }
+        "
+      >
+        <Icon
+          :name="`simple-icons:${model.provider}`"
+          class="text-(--main-color) scale-125"
+        />
+        <div class="flex flex-col">
           <div>{{ model.name }}</div>
+          <div class="text-xs italic text-(--sub-color)">
+            {{ model.url }}
+          </div>
         </div>
       </div>
     </div>

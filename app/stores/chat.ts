@@ -66,7 +66,11 @@ export const useChatStore = defineStore("chat", () => {
     }
   }
 
-  function updateMessage(chatId: string, id: string, content: string) {
+  function updateMessage(
+    chatId: string,
+    id: string,
+    update: Partial<LocalMessage>,
+  ) {
     const chat = chats.value[chatId];
     if (!chat?.messages[id]) return;
 
@@ -74,7 +78,7 @@ export const useChatStore = defineStore("chat", () => {
     const existing = chat.messages[id];
     chat.messages[id] = {
       ...existing,
-      content,
+      ...update,
     };
   }
 

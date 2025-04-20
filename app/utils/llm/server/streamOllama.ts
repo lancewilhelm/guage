@@ -1,8 +1,5 @@
 import { logger } from "~/utils/logger";
 import type { LocalMessage } from "~/utils/db/local";
-import { cloudDb } from "~/utils/db/cloud";
-import { globalSettings } from "~/utils/db/schema";
-import { eq } from "drizzle-orm";
 
 interface OllamaMesageParam {
   role: "user" | "assistant" | "system";
@@ -28,11 +25,13 @@ export async function streamOllama({
   history,
   userMessage,
   model,
+  url,
   systemPrompt,
 }: {
   history: LocalMessage[];
   userMessage: LocalMessage;
   model: string;
+  url: string;
   systemPrompt: string;
 }): Promise<ReadableStream> {
   const encoder = new TextEncoder();
@@ -48,23 +47,7 @@ export async function streamOllama({
           }));
         formattedMessages.unshift({ role: "system", content: systemPrompt });
 
-        // Fetch the base URL from the global settings
-        const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";
-        const settings = await cloudDb
-          .select()
-          .from(globalSettings)
-          .where(eq(globalSettings.id, GLOBAL_SETTINGS_ID))
-          .execute();
-        if (!settings || !settings[0]) {
-          logger.error("GET /api/models: Global settings not found");
-        }
-        if (!settings[0]?.settings) {
-          logger.error("GET /api/models: Global settings are empty");
-          throw new Error("Global settings are empty");
-        }
-        const parsedSettings = settings[0].settings as GlobalSettings;
-
-        const response = await fetch(`${parsedSettings.ollamaUrl}/api/chat`, {
+        const response = await fetch(`${url}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -118,7 +101,9 @@ export async function streamOllama({
       } catch (error) {
         logger.error(error, "Error streaming from Ollama:");
         controller.enqueue(
-          encoder.encode("event: error\ndata: Error streaming Ollama\n\n"),
+          encoder.encode(
+            `event: error\ndata: Error streaming Ollama: ${error}\n\n`,
+          ),
         );
       } finally {
         controller.close();

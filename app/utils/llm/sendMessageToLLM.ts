@@ -6,6 +6,7 @@ type SendMessageOptions = {
   history: LocalMessage[];
   provider?: "openai" | "ollama"; // extendable
   onChunk?: (text: string) => void;
+  onError?: (error: string) => void;
   signal?: AbortSignal;
 };
 
@@ -13,6 +14,7 @@ export async function sendMessageToLLM({
   userMessage,
   history,
   onChunk,
+  onError,
   signal,
 }: SendMessageOptions): Promise<string> {
   const userSettingsStore = useUserSettingsStore();
@@ -52,6 +54,8 @@ export async function sendMessageToLLM({
         const piece = JSON.parse(event.data);
         accumulated += piece;
         onChunk?.(accumulated); // live update
+      } else if (event.eventType === "error") {
+        onError?.(event.data);
       }
     }
   }
