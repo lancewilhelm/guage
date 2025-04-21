@@ -98,7 +98,7 @@ const { user } = useAuth();
       />
     </div>
     <div
-      class="flex flex-col items-center w-full h-full overflow-hidden settings-tab-content"
+      class="flex flex-col items-center w-full h-full overflow-y-auto settings-tab-content"
     >
       <component
         :is="
@@ -106,7 +106,7 @@ const { user } = useAuth();
             ? tabs[currentPageName]?.component
             : tabs.general?.component
         "
-        class="justify-center w-full h-full max-w-[900px] p-4 overflow-y-auto"
+        class="justify-center w-full h-full max-w-[900px] p-4 pb-0"
       />
     </div>
   </div>
