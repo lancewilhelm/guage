@@ -19,14 +19,8 @@ fi
 # Set DATABASE_URL for Drizzle
 export DATABASE_URL="file:$DB_PATH"
 
-echo "Checking for existing SQLite DB..."
-
-if [ ! -f "$DB_PATH" ]; then
-  echo "No database found — pushing schema to create it..."
-  NODE_ENV=production npx --yes drizzle-kit push --config=drizzle.config.ts
-else
-  echo "Database exists — skipping schema push."
-fi
+echo "Pushing database schema..."
+NODE_ENV=production npx --yes drizzle-kit push --config=drizzle.config.ts
 
 echo "Starting Nuxt app..."
 exec "$@"
