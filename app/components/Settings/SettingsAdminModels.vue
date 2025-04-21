@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const config = useRuntimeConfig();
-
 interface Models {
   openai: string[];
   ollama: Record<string, string[]>;
@@ -194,15 +192,20 @@ async function pullOllamaModel(url: string) {
   fetchModels("ollama");
 }
 
+const openaiAvailable = ref(false);
 // Check the ollama endpoint on mount
-onMounted(() => {
+onMounted(async () => {
   // Check if the ollama url is set
   if (globalSettingsStore.settings.ollamaUrls) {
     for (const url of globalSettingsStore.settings.ollamaUrls) {
       testOllamaUrl(url);
     }
     // Fetch the models
-    if (config.openaiApiKey) {
+    const response = await $fetch<{ success: boolean; message: string }>(
+      "/api/openai",
+    );
+    if (response.success) {
+      openaiAvailable.value = true;
       fetchModels("openai");
     }
   }
@@ -212,7 +215,7 @@ onMounted(() => {
 <template>
   <div class="w-full">
     <SettingsGroup
-      v-if="config.openaiApiKey"
+      v-if="openaiAvailable"
       title="openai"
       icon="simple-icons:openai"
     >
