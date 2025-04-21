@@ -53,6 +53,15 @@ function parseThinkingContent(content: string) {
 
 const showThinking = ref(false);
 const userSettingsStore = useUserSettingsStore();
+
+function simpleHash(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
 </script>
 
 <template>
@@ -84,7 +93,7 @@ const userSettingsStore = useUserSettingsStore();
       >
         <MDC
           v-if="parsed.thinking"
-          :key="id + updatedAt.getTime().toString() + 'thoughts'"
+          :key="id + '-' + simpleHash(parsed.thinking)"
           :value="parsed.thinking"
           class="flex flex-col gap-4"
         />
@@ -101,7 +110,7 @@ const userSettingsStore = useUserSettingsStore();
       <template #default>
         <MDC
           v-if="role === 'assistant'"
-          :key="id + updatedAt.getTime().toString()"
+          :key="id + '-' + simpleHash(parsed.body)"
           :value="parsed.body"
           class="flex flex-col gap-4"
         />

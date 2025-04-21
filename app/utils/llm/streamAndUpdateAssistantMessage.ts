@@ -54,8 +54,6 @@ export async function streamAndUpdateAssistantMessage({
       dbUpdateMessage(assistantMessageId, {
         error: `Error streaming response: ${err}`,
       });
-
-      console.error("LLM streaming error:", err);
     }
   } finally {
     chatStore.setChatStreaming(chatId, false);
