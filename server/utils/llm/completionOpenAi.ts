@@ -1,15 +1,6 @@
 import { logger } from "~/utils/logger";
-import { OpenAI } from "openai";
+import type { OpenAI } from "openai";
 import type { LocalMessage } from "~/utils/db/local";
-
-export function getOpenAIClient() {
-  const config = useRuntimeConfig();
-  const apiKey = config.openaiApiKey;
-  if (!apiKey) {
-    throw new Error("Missing OPENAI_API_KEY");
-  }
-  return new OpenAI({ apiKey });
-}
 
 export async function completionOpenAI({
   history,

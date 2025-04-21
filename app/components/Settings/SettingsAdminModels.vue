@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const config = useRuntimeConfig();
+
 interface Models {
   openai: string[];
   ollama: Record<string, string[]>;
@@ -114,18 +116,6 @@ async function testOllamaUrl(url: string) {
   }
 }
 
-// Check the ollama endpoint on mount
-onMounted(() => {
-  // Check if the ollama url is set
-  if (globalSettingsStore.settings.ollamaUrls) {
-    for (const url of globalSettingsStore.settings.ollamaUrls) {
-      testOllamaUrl(url);
-    }
-    // Fetch the models
-    fetchModels("openai");
-  }
-});
-
 const deleteOllamaModelModalVisible = ref(false);
 const ollamaModelToDelete = ref<{ name: string; url: string } | null>(null);
 async function deleteOllamaModel() {
@@ -203,11 +193,29 @@ async function pullOllamaModel(url: string) {
   isPulling.value[url] = false;
   fetchModels("ollama");
 }
+
+// Check the ollama endpoint on mount
+onMounted(() => {
+  // Check if the ollama url is set
+  if (globalSettingsStore.settings.ollamaUrls) {
+    for (const url of globalSettingsStore.settings.ollamaUrls) {
+      testOllamaUrl(url);
+    }
+    // Fetch the models
+    if (config.openaiApiKey) {
+      fetchModels("openai");
+    }
+  }
+});
 </script>
 
 <template>
   <div class="w-full">
-    <SettingsGroup title="openai" icon="simple-icons:openai">
+    <SettingsGroup
+      v-if="config.openaiApiKey"
+      title="openai"
+      icon="simple-icons:openai"
+    >
       <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
         <div
           v-for="model in models?.openai.sort((a, b) => a.localeCompare(b))"
