@@ -93,6 +93,13 @@ function hexToLuminance(hex: string) {
 <template>
   <div class="w-full">
     <SettingsGroup
+      title="font"
+      icon="ri:font-family"
+      description="Customize the font style."
+    >
+      <SettingsAppearanceFonts />
+    </SettingsGroup>
+    <SettingsGroup
       title="message"
       icon="lucide:message-square"
       description="Customize the appearance of your chat messages."
@@ -111,7 +118,7 @@ function hexToLuminance(hex: string) {
       />
     </SettingsGroup>
     <SettingsGroup title="themes" icon="lucide:palette">
-      <div class="w-full flex gap-2 mb-4">
+      <div class="w-full flex gap- mb-4">
         <button
           :class="[
             'flex w-full items-center justify-center p-2 rounded-lg cursor-pointer hover:opacity-80',
@@ -202,3 +209,13 @@ function hexToLuminance(hex: string) {
     </SettingsGroup>
   </div>
 </template>
+
+<style scoped>
+.geist {
+  font-family: "Geist", sans-serif;
+}
+
+.roboto-mono {
+  font-family: "Roboto Mono", monospace;
+}
+</style>

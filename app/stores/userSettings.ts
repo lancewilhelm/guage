@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import type { Model } from "~/utils/db/local";
 import { triggerDebouncedSync } from "~/utils/sync/debounce";
+
 export const messageDisplayModeOptions = [
   "markdown",
   "plaintext",
@@ -8,8 +9,22 @@ export const messageDisplayModeOptions = [
 ] as const;
 export type MessageDisplayMode = (typeof messageDisplayModeOptions)[number];
 
+export const fontFamilyOptions = [
+  "Fira Code",
+  "Geist",
+  "Georgia",
+  "IBM Plex Mono",
+  "Inter",
+  "Montserrat",
+  "Nunito",
+  "Poppins",
+  "Roboto Mono",
+] as const;
+export type FontFamily = (typeof fontFamilyOptions)[number];
+
 export interface UserSettings {
   theme?: string;
+  fontFamily: FontFamily;
   favoriteThemes: string[];
   themeSorting: {
     sortedByName: boolean;
@@ -25,6 +40,7 @@ export interface UserSettings {
 }
 
 const defaultSettings: UserSettings = {
+  fontFamily: "Geist",
   favoriteThemes: [],
   themeSorting: {
     sortedByName: false,

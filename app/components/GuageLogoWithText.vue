@@ -7,7 +7,7 @@ defineProps<{
 <template>
   <div class="flex items-center gap-1">
     <svg
-      width="60"
+      width="53"
       viewBox="0 0 249 174"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -28,11 +28,17 @@ defineProps<{
         </g>
       </g>
     </svg>
-    <div
-      class="text-3xl font-bold logo -translate-y-0.5"
-      :style="{ color: fill }"
-    >
-      guage
-    </div>
+    <div class="logo" :style="{ color: fill }">guage</div>
   </div>
 </template>
+
+<style scoped>
+.logo {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 2.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  transform: translateY(-7px);
+}
+</style>

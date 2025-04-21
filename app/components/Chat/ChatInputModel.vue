@@ -48,7 +48,7 @@ onBeforeUnmount(() => {
         class="text-(--main-color) scale-125"
       />
       <div class="flex items-center gap-1">
-        <div v-if="currentModel" class="text-sm text-(--main-color) font-mono">
+        <div v-if="currentModel" class="text-sm text-(--main-color)">
           {{ currentModel.name }}
         </div>
         <div

@@ -45,7 +45,7 @@ onBeforeUnmount(() => {
       class="flex items-center gap-1 cursor-pointer"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
     >
-      <div class="text-sm text-(--main-color) font-mono">
+      <div class="text-sm text-(--main-color)">
         {{ currentPrompt }}
       </div>
       <Icon

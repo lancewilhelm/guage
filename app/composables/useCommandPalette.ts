@@ -40,25 +40,14 @@ export function useCommandPalette() {
       action: addCurrentThemeToFavorites,
     },
     {
+      label: "font family",
+      icon: "ri:font-family",
+      options: getFontFamilyOptions(),
+    },
+    {
       label: "message display mode",
       icon: "lucide:message-square-text",
-      options: [
-        {
-          label: "markdown",
-          action: () => setDisplayMode("markdown"),
-          active: isDisplayModeActive("markdown"),
-        },
-        {
-          label: "plaintext",
-          action: () => setDisplayMode("plaintext"),
-          active: isDisplayModeActive("plaintext"),
-        },
-        {
-          label: "monospace",
-          action: () => setDisplayMode("monospace"),
-          active: isDisplayModeActive("monospace"),
-        },
-      ],
+      options: getMessageDisplayModeOptions(),
     },
     {
       label: "model",
@@ -356,17 +345,6 @@ export function useCommandPalette() {
 }
 
 // --- Helper Functions
-function setDisplayMode(mode: "markdown" | "plaintext" | "monospace") {
-  const userSettingsStore = useUserSettingsStore();
-  userSettingsStore.updateSettings({ messageDisplayMode: mode });
-}
-
-function isDisplayModeActive(mode: "markdown" | "plaintext" | "monospace") {
-  return computed(
-    () => useUserSettingsStore().settings.messageDisplayMode === mode,
-  );
-}
-
 function addCurrentThemeToFavorites() {
   const userSettingsStore = useUserSettingsStore();
   const settings = userSettingsStore.settings;
@@ -451,4 +429,30 @@ function getTitleModelOptions() {
     active: computed(() => !userSettingsStore.settings.titleModel),
   });
   return models;
+}
+
+function getFontFamilyOptions() {
+  const userSettingsStore = useUserSettingsStore();
+  return fontFamilyOptions.map((font) => ({
+    label: font,
+    action: () => {
+      userSettingsStore.updateSettings({ fontFamily: font });
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(() => userSettingsStore.settings.fontFamily === font),
+  }));
+}
+
+function getMessageDisplayModeOptions() {
+  const userSettingsStore = useUserSettingsStore();
+  return messageDisplayModeOptions.map((mode) => ({
+    label: mode,
+    action: () => {
+      userSettingsStore.updateSettings({ messageDisplayMode: mode });
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(
+      () => userSettingsStore.settings.messageDisplayMode === mode,
+    ),
+  }));
 }
