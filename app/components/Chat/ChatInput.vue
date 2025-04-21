@@ -52,7 +52,7 @@ const emit = defineEmits(["chatContainerFocus"]);
         ref="chatInputRef"
         v-model="inputValue"
         class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea bg-inherit!"
-        placeholder="Send a message..."
+        placeholder="send a message..."
         @input="resizeTextarea"
         @keydown.enter="
           (e) => {
@@ -82,7 +82,7 @@ const emit = defineEmits(["chatContainerFocus"]);
           }
         "
       />
-      <div class="flex gap-2 items-center">
+      <div class="flex gap-2 items-center chat-input-bottom-row">
         <ChatInputModel />
         <ChatInputSystemPrompt />
       </div>

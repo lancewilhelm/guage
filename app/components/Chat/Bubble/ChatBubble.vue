@@ -59,7 +59,9 @@ function resizeTextarea() {
       :class="[
         'flex flex-col gap-1 w-full',
         isEditing && 'w-full',
-        message.role === 'user' ? 'items-end' : 'items-start',
+        message.role === 'user'
+          ? 'items-end chat-bubble-user-align'
+          : 'items-start chat-bubble-assistant-align',
       ]"
     >
       <div
@@ -123,7 +125,9 @@ function resizeTextarea() {
           ref="contentRef"
           :class="[
             'flex flex-col gap-2 rounded-lg',
-            message.role === 'user' ? 'max-w-full p-3' : 'w-full',
+            message.role === 'user'
+              ? 'max-w-full p-3 chat-bubble-user-content-inner'
+              : 'w-full chat-bubble-assistant-content-inner',
           ]"
           @dblclick="
             () => {

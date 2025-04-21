@@ -76,7 +76,9 @@ watch(inputPadding, () => {
     ref="containerRef"
     class="h-full w-full overflow-x-hidden overflow-y-auto pt-2 chat-container focus:outline-none"
   >
-    <div class="max-w-(--chat-max-width) mx-auto px-6 flex flex-col gap-4">
+    <div
+      class="max-w-(--chat-max-width) mx-auto px-6 flex flex-col gap-4 chat-container-content"
+    >
       <div v-for="message in activeMessages" :key="message?.id" v-measure>
         <ChatBubble
           :message="message"

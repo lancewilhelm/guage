@@ -114,7 +114,9 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
             Type your message below to begin chatting
           </div>
         </div>
-        <div class="w-full max-w-(--chat-max-width) mx-auto relative">
+        <div
+          class="w-full max-w-(--chat-max-width) mx-auto relative chat-input-container"
+        >
           <button
             v-if="!chatContainerRef?.isNearBottom"
             class="input-button absolute -top-16 right-6 flex items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) cursor-pointer z-10 stb-button pointer-events-auto"

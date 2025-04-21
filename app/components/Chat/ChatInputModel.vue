@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="relative chat-input-model">
     <div
-      class="flex items-center gap-2 cursor-pointer"
+      class="flex items-center gap-2 cursor-pointer chat-input-model-button"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
     >
       <Icon
