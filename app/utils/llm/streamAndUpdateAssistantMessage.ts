@@ -42,13 +42,19 @@ export async function streamAndUpdateAssistantMessage({
       onError: (error) => {
         chatStore.updateMessage(chatId, assistantMessageId, { error });
         dbUpdateMessage(assistantMessageId, { error });
-        chatStore.setChatStreaming(chatId, false);
       },
     });
   } catch (err) {
     if (err instanceof Error && err.name === "AbortError") {
       console.debug("LLM streaming aborted");
     } else {
+      chatStore.updateMessage(chatId, assistantMessageId, {
+        error: `Error streaming response: ${err}`,
+      });
+      dbUpdateMessage(assistantMessageId, {
+        error: `Error streaming response: ${err}`,
+      });
+
       console.error("LLM streaming error:", err);
     }
   } finally {
