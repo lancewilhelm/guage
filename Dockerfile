@@ -35,10 +35,13 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
+
 # Default secrets can be overridden at runtime
 ENV OPENAI_API_KEY=""
 ENV BETTER_AUTH_SECRET=""
 ENV BETTER_AUTH_TRUSTED_ORIGINS=""
+ARG NUXT_PUBLIC_APP_VERSION=manual
+ENV NUXT_PUBLIC_APP_VERSION=${NUXT_PUBLIC_APP_VERSION}
 
 # Create a system user for security
 RUN addgroup --system --gid 1001 nodejs && \

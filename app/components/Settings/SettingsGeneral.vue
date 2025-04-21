@@ -35,6 +35,7 @@ async function handleUpdatePassword() {
 }
 
 const userSettingsStore = useUserSettingsStore();
+const config = useRuntimeConfig();
 </script>
 <template>
   <div class="w-full">
@@ -69,6 +70,19 @@ const userSettingsStore = useUserSettingsStore();
           password updated
         </div>
       </div>
+    </SettingsGroup>
+    <SettingsGroup title="about" icon="lucide:info" class="flex flex-col gap-2">
+      <GuageLogoWithText fill="var(--main-color)" />
+      <div class="text-(--sub-color) italic">
+        version: {{ config.public.appVersion || "manual" }}
+      </div>
+      <NuxtLink
+        to="https://github.com/lancewilhelm/guage"
+        class="flex items-center gap-1"
+      >
+        <Icon name="simple-icons:github" class="w-4 h-4 text-(--main-color)" />
+        <span class="text-(--main-color)">github</span>
+      </NuxtLink>
     </SettingsGroup>
 
     <!-- Change Password Modal -->
