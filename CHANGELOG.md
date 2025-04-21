@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.2](https://github.com/lancewilhelm/guage/compare/v0.1.1...v0.1.2) (2025-04-21)
+
+
+### Bug Fixes
+
+* fixing pnpm shenanigans ([27426ad](https://github.com/lancewilhelm/guage/commits/27426adb11be1f6ba670e62db762253e9c2d9689))
+* openai key checking ([4c74587](https://github.com/lancewilhelm/guage/commits/4c7458781a0b4f2750d33ac78e19a085eeb71f2a))
+
 ### [0.1.1](https://github.com/lancewilhelm/guage/compare/v0.1.0...v0.1.1) (2025-04-21)
 
 ## 0.1.0 (2025-04-21)
