@@ -101,9 +101,6 @@ importers:
       shiki:
         specifier: ^3.2.2
         version: 3.2.2
-      standard-version:
-        specifier: ^9.5.0
-        version: 9.5.0
       tailwindcss:
         specifier: ^4.1.4
         version: 4.1.4
@@ -132,6 +129,9 @@ importers:
       pino-pretty:
         specifier: ^13.0.0
         version: 13.0.0
+      standard-version:
+        specifier: ^9.5.0
+        version: 9.5.0
       tsx:
         specifier: ^4.19.3
         version: 4.19.3
