@@ -65,6 +65,13 @@ function updateAvailableModels(model: string, provider: string, url?: string) {
   }
 }
 
+function checkModelAgainstEndpoint(model: string, url?: string) {
+  if (url) {
+    return models.value.ollama[url]?.some((m) => m === model);
+  }
+  return models.value.openai.some((m) => m === model);
+}
+
 const ollamaUrlToAdd = ref("");
 const ollamaUrls = ref<{ [key: string]: boolean }>({});
 async function addOllamaUrl() {
@@ -326,6 +333,37 @@ async function pullOllamaModel(url: string) {
             />
           </div>
         </div>
+      </div>
+    </SettingsGroup>
+    <SettingsGroup
+      title="leftover models"
+      icon="lucide:alert-triangle"
+      description="These models are currently not available via an api endpoint, but are still present in the system."
+    >
+      <div
+        v-for="model in availableModels.filter(
+          (m) => !checkModelAgainstEndpoint(m.name, m.url),
+        )"
+        :key="model.name"
+        class="flex items-center gap-2 mb-4"
+      >
+        <div class="text-(--main-color)">{{ model.name }}</div>
+        <div class="text-(--sub-color)">{{ model.provider }}</div>
+        <div v-if="model.url" class="text-(--sub-color)">{{ model.url }}</div>
+        <button
+          class="bg-(--bg-color) text-(--error-color) rounded px-1! py-1! cursor-pointer"
+          @click.prevent.stop="
+            () => {
+              removeModelFromAvailableModels(
+                model.name,
+                model.provider,
+                model.url,
+              );
+            }
+          "
+        >
+          <Icon name="lucide:trash-2" />
+        </button>
       </div>
     </SettingsGroup>
 
