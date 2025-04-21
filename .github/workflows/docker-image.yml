@@ -33,7 +33,7 @@ jobs:
           IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/guage
           TAGS="${IMAGE_NAME}:twilight"
           if [ "${{ github.event_name }}" = "release" ]; then
-            TAGS="${TAGS},${IMAGE_NAME}:latest"
+            TAGS="${TAGS},${IMAGE_NAME}:stable"
             # Optionally tag with release version (e.g. v1.2.3)
             TAGS="${TAGS},${IMAGE_NAME}:${GITHUB_REF##*/}"
           fi
