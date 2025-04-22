@@ -79,7 +79,7 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
 
 <template>
   <div class="w-full h-full grid grid-cols-[auto_1fr]">
-    <ChatList class="col-start-1" />
+    <ChatList class="col-start-1 h-full overflow-hidden" />
     <div
       :class="[
         'flex h-full md:w-full col-start-2 overflow-hidden relative',
