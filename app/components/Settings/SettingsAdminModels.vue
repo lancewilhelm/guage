@@ -347,6 +347,10 @@ onMounted(async () => {
       </div>
     </SettingsGroup>
     <SettingsGroup
+      v-if="
+        availableModels.filter((m) => !checkModelAgainstEndpoint(m.name, m.url))
+          .length
+      "
       title="leftover models"
       icon="lucide:alert-triangle"
       description="these models are currently not available via an api endpoint, but are still present in the system."
