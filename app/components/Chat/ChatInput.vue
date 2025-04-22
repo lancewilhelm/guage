@@ -61,6 +61,11 @@ const emit = defineEmits(["chatContainerFocus"]);
             e.preventDefault();
             if (inputValue.trim() === '') return;
             handleSubmitMessage(inputValue);
+            if (
+              useUserSettingsStore().settings.funboxModes.includes('confetti')
+            ) {
+              fireConfetti();
+            }
             inputValue = '';
             if (chatInputRef) {
               chatInputRef.focus();
@@ -106,6 +111,11 @@ const emit = defineEmits(["chatContainerFocus"]);
             if (!isStreaming) {
               if (inputValue.trim() === '') return;
               handleSubmitMessage(inputValue);
+              if (
+                useUserSettingsStore().settings.funboxModes.includes('confetti')
+              ) {
+                fireConfetti();
+              }
               inputValue = '';
             } else {
               if (!chatStore.currentChatId) return;

@@ -78,6 +78,11 @@ export function useCommandPalette() {
       },
     },
     {
+      label: "funbox",
+      icon: "lucide:party-popper",
+      options: getFunboxModes(),
+    },
+    {
       label: "settings",
       icon: "lucide:settings",
       action: () => {
@@ -453,6 +458,29 @@ function getMessageDisplayModeOptions() {
     },
     active: computed(
       () => userSettingsStore.settings.messageDisplayMode === mode,
+    ),
+  }));
+}
+
+function getFunboxModes() {
+  const userSettingsStore = useUserSettingsStore();
+  return funboxModes.map((mode) => ({
+    label: mode,
+    action: () => {
+      const funboxModes = userSettingsStore.settings.funboxModes;
+      if (funboxModes.includes(mode)) {
+        userSettingsStore.updateSettings({
+          funboxModes: funboxModes.filter((m) => m !== mode),
+        });
+      } else {
+        userSettingsStore.updateSettings({
+          funboxModes: [...funboxModes, mode],
+        });
+      }
+      useUiStore().setCommandPaletteVisible(false);
+    },
+    active: computed(() =>
+      userSettingsStore.settings.funboxModes.includes(mode),
     ),
   }));
 }

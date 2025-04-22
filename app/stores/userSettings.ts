@@ -22,6 +22,9 @@ export const fontFamilyOptions = [
 ] as const;
 export type FontFamily = (typeof fontFamilyOptions)[number];
 
+export const funboxModes = ["confetti", "snow"];
+export type FunboxMode = (typeof funboxModes)[number];
+
 export interface UserSettings {
   theme?: string;
   fontFamily: FontFamily;
@@ -37,6 +40,7 @@ export interface UserSettings {
   currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
   messageDisplayMode: MessageDisplayMode;
   chatSearchMode: "exact" | "fuzzy";
+  funboxModes: FunboxMode[];
 }
 
 const defaultSettings: UserSettings = {
@@ -53,6 +57,7 @@ const defaultSettings: UserSettings = {
   currentSystemPrompt: "default",
   messageDisplayMode: "markdown",
   chatSearchMode: "fuzzy",
+  funboxModes: [],
 };
 
 export const useUserSettingsStore = defineStore(
