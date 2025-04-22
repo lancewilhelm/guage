@@ -224,14 +224,14 @@ onMounted(async () => {
           v-for="model in models?.openai.sort((a, b) => a.localeCompare(b))"
           :key="model"
           :class="[
-            ' border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
+            'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
             checkAvailableModel(model)
               ? 'bg-(--main-color) text-(--bg-color)'
               : 'text-(--text-color)',
           ]"
           @click="updateAvailableModels(model, 'openai')"
         >
-          {{ model }}
+          <div class="truncate">{{ model }}</div>
         </div>
       </div>
     </SettingsGroup>
@@ -324,14 +324,14 @@ onMounted(async () => {
             )"
             :key="model"
             :class="[
-              'flex items-center justify-center gap-2 border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer ',
+              'flex items-center justify-between gap-2 border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer',
               checkAvailableModel(model, url)
                 ? 'bg-(--main-color) text-(--bg-color)'
                 : 'text-(--text-color)',
             ]"
             @click="updateAvailableModels(model, 'ollama', url)"
           >
-            {{ model }}
+            <div class="truncate">{{ model }}</div>
             <Icon
               name="lucide:trash-2"
               class="text-(--text-color) ml-1"

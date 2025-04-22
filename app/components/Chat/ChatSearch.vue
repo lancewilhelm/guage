@@ -244,7 +244,7 @@ const userSettingsStore = useUserSettingsStore();
             }
           "
         >
-          <div class="text-nowrap overflow-hidden overflow-ellipsis">
+          <div class="text-nowrap truncate">
             {{ result.title }}
           </div>
           <div
