@@ -231,8 +231,14 @@ export async function dbMarkChatDeleted(chatId: string) {
  * @returns Promise that resolves when the operation is complete.
  */
 export async function dbNuke() {
-  await localDb.messagesTable.clear();
-  await localDb.chatsTable.clear();
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User not authenticated");
+  }
+
+  // Delete all messages and chats for the user
+  await localDb.messagesTable.where({ userId: user.value.id }).delete();
+  await localDb.chatsTable.where({ userId: user.value.id }).delete();
 }
 
 /**
