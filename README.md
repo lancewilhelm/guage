@@ -1,5 +1,12 @@
 # Guage
 
+![Nuxt](https://img.shields.io/badge/Nuxt%204-%23000000?style=for-the-badge&logo=nuxt)
+![Vue](https://img.shields.io/badge/Vue%203-%23191A22?style=for-the-badge&logo=vuedotjs)
+![Tailwind](https://img.shields.io/badge/Tailwind%20v4-%231a202c?style=for-the-badge&logo=tailwind-css)
+![SQLite](https://img.shields.io/badge/SQLite-%231a202c?style=for-the-badge&logo=sqlite)
+![Drizzle](https://img.shields.io/badge/Drizzle%20ORM-%231a202c?style=for-the-badge&logo=drizzle)
+
+
 A clean and simple front-end for large-language models.
 
 ## Notable Features
@@ -16,13 +23,47 @@ A clean and simple front-end for large-language models.
 
 ### Docker (recommended)
 
-Run with docker
+#### Easiest
+
+Easiest way with minimal setup, but the least secure or capable.
 
 ```bash
-docker run -p 3000:3000 -e NUXT_OPENAI_API_KEY=sk-xxx -v guage:/app/data ghcr.io/lancewilhelm/guage:latest
+docker run -p 3000:3000 -v guage:/app/data ghcr.io/lancewilhelm/guage:stable
 ```
 
-If you want to use a different local directory for the volume data (so that you can more easily access the SQLite database), you can do so by changing "guage" in the volume to the path you want to use.
+This will run the app on port 3000 and create a persistent volume called "guage" to store the SQLite database. You can access the app at `http://localhost:3000`.
+
+#### With OpenAI API Key
+
+If you want to use OpenAI's API, you can set the `NUXT_OPENAI_API_KEY` environment variable. This is required for the app to work with OpenAI.
+
+```bash
+docker run -p 3000:3000 -e NUXT_OPENAI_API_KEY=sk-xxx -v guage:/app/data ghcr.io/lancewilhelm/guage:stable
+```
+
+#### NODE_ENV=production
+
+If you want to run the app in production mode, you can set the `NODE_ENV` environment variable to `production`. This currently only affects the logging level and auth. You will need to generate a secret key for the app to work in production mode. You can do this by running the following command:
+
+```bash
+openssl rand -base64 32
+```
+
+Replace `xxx` with the generated key.
+
+```bash
+docker run -p 3000:3000 -e NODE_ENV=production -e AUTH_SECRET=xxx -v guage:/app/data ghcr.io/lancewilhelm/guage:stable
+```
+
+#### Customizing the volume
+
+If you want to use a local directory for the volume data (so that you can more easily access the SQLite database), you can do so by changing "guage" in the volume to the path you want to use. Example:
+
+```bash
+docker run -p 3000:3000 -v /path/to/local/dir:/app/data ghcr.io/lancewilhelm/guage:stable
+```
+
+You can mix and match these options as you like.
 
 ### Manual (for development)
 
@@ -33,26 +74,22 @@ git clone https://github.com/lancewilhelm/guage.git
 cd guage
 ```
 
-2. Install dependencies
+2. Run setup script. This will install the dependencies with pnpm and create the SQLite database. If you would like to use a different package manager, please manually do so. npm should work.
 
 ```bash
-pnpm install
+./init.sh
 ```
 
-3. Create a `.env` file in the root directory and add your OpenAI API key, and a secret for the auth middleware. This is typically a random string of 32 characters. You can use openSSL to generate a random string:
-
-```bash
-openssl rand -base64 32
-```
+3. (Optional) Add your OpenAI API key (optional) to the `.env` file:
 
 ```bash
 # .env
-BETTER_AUTH_SECRET=
+AUTH_SECRET=
 OPENAI_API_KEY=
 ```
 
 4. Run the app
 
 ```bash
-pnpm run dev
+pnpm dev
 ```
