@@ -78,20 +78,11 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
 </script>
 
 <template>
-  <div class="w-full h-full grid grid-cols-[auto_1fr]">
+  <div class="w-full h-full grid grid-cols-[auto_1fr] overflow-hidden">
     <ChatList class="col-start-1 h-full overflow-hidden" />
     <div
-      :class="[
-        'flex h-full md:w-full col-start-2 overflow-hidden relative',
-        uiStore.chatListVisible ? 'w-screen' : '',
-      ]"
-      @touchstart.passive="
-        () => {
-          if (uiStore.chatListVisible && width < 448) {
-            uiStore.setChatListVisible(false);
-          }
-        }
-      "
+      v-if="(!uiStore.chatListVisible && width < 448) || width >= 448"
+      class="flex h-full w-full col-start-2 overflow-hidden relative"
     >
       <ChatHeader class="absolute top-0 w-full" />
       <div ref="chatContainerScrollRef" class="flex flex-grow overflow-hidden">
