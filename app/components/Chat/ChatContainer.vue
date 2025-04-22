@@ -62,9 +62,10 @@ defineExpose({
 
 // uiStore
 const uiStore = useUiStore();
-const inputPadding = computed(() => uiStore.inputHeight + 110);
+const topPadding = 40;
+const bottomPadding = computed(() => uiStore.inputHeight + 110);
 
-watch(inputPadding, () => {
+watch(bottomPadding, () => {
   if (containerRef.value && isNearBottom.value) {
     scrollToBottom();
   }
@@ -79,13 +80,14 @@ watch(inputPadding, () => {
     <div
       class="max-w-(--chat-max-width) mx-auto px-6 flex flex-col gap-4 chat-container-content"
     >
+      <div :style="{ height: topPadding + 'px' }" />
       <div v-for="message in activeMessages" :key="message?.id" v-measure>
         <ChatBubble
           :message="message"
           :version-info="computeVersionInfo(message)"
         />
       </div>
-      <div :style="{ height: inputPadding + 'px' }" />
+      <div :style="{ height: bottomPadding + 'px' }" />
     </div>
   </div>
 </template>

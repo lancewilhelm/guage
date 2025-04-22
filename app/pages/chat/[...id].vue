@@ -78,12 +78,11 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
 </script>
 
 <template>
-  <div class="w-full h-full grid grid-rows-[40px_1fr] grid-cols-[auto_1fr]">
-    <ChatList class="col-start-1 row-span-2" />
-    <AppHeader class="col-start-2" />
+  <div class="w-full h-full grid grid-cols-[auto_1fr]">
+    <ChatList class="col-start-1" />
     <div
       :class="[
-        'flex h-full md:w-full col-start-2 row-start-2 overflow-hidden relative',
+        'flex h-full md:w-full col-start-2 overflow-hidden relative',
         uiStore.chatListVisible ? 'w-screen' : '',
       ]"
       @touchstart.passive="
@@ -94,6 +93,7 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
         }
       "
     >
+      <ChatHeader class="absolute top-0 w-full" />
       <div ref="chatContainerScrollRef" class="flex flex-grow overflow-hidden">
         <ChatContainer ref="chatContainerRef" />
       </div>

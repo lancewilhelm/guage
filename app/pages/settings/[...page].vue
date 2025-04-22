@@ -82,7 +82,7 @@ const { user } = useAuth();
 
 <template>
   <div class="flex flex-col items-center w-full h-full">
-    <AppHeader class="w-full h-[40px] shrink-0" />
+    <SettingsHeader class="w-full h-[40px] shrink-0" />
     <div
       class="flex flex-wrap justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full settings-tab-bar"
     >
