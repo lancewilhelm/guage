@@ -76,7 +76,6 @@ export default defineNuxtConfig({
     families: [
       { name: "Fira Code", provider: "google", global: true },
       { name: "Geist", provider: "google", global: true },
-      { name: "Georgia", provider: "google", global: true },
       { name: "IBM Plex Mono", provider: "google", global: true },
       { name: "Inter", provider: "google", global: true },
       { name: "Montserrat", provider: "google", global: true },

@@ -12,7 +12,6 @@ export type MessageDisplayMode = (typeof messageDisplayModeOptions)[number];
 export const fontFamilyOptions = [
   "Fira Code",
   "Geist",
-  "Georgia",
   "IBM Plex Mono",
   "Inter",
   "Montserrat",

@@ -3,7 +3,7 @@ const userSettingsStore = useUserSettingsStore();
 </script>
 
 <template>
-  <div class="w-full grid grid-cols-3 gap-2">
+  <div class="w-full grid grid-cols-4 gap-2">
     <button
       class="rounded-lg fira-code"
       :class="
@@ -37,23 +37,6 @@ const userSettingsStore = useUserSettingsStore();
       "
     >
       Geist
-    </button>
-    <button
-      class="rounded-lg georgia"
-      :class="
-        userSettingsStore.settings.fontFamily === 'Georgia'
-          ? 'bg-(--main-color) text-(--bg-color)'
-          : 'bg-(--sub-color)'
-      "
-      @click="
-        () => {
-          userSettingsStore.updateSettings({
-            fontFamily: 'Georgia',
-          });
-        }
-      "
-    >
-      Georgia
     </button>
     <button
       class="rounded-lg ibm-plex-mono"
