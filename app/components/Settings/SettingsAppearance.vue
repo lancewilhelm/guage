@@ -95,14 +95,14 @@ function hexToLuminance(hex: string) {
     <SettingsGroup
       title="font"
       icon="ri:font-family"
-      description="Customize the font style."
+      description="customize the font style"
     >
       <SettingsAppearanceFonts />
     </SettingsGroup>
     <SettingsGroup
       title="message"
       icon="lucide:message-square"
-      description="Customize the appearance of your chat messages."
+      description="customize the appearance of your chat messages"
     >
       <SettingsSelectItem
         title="message bubble content style"

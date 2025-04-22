@@ -18,7 +18,7 @@ const syncStore = useSyncStore();
     <SettingsGroup
       title="Status"
       icon="lucide:cloud"
-      description="Status of the your cloud database"
+      description="status of the your cloud database"
     >
       <SettingsSubGroup title="Last Sync" icon="lucide:clock">
         <p class="text-sm text-(--text-color) mt-2">
@@ -33,7 +33,7 @@ const syncStore = useSyncStore();
     <SettingsGroup
       title="Pull"
       icon="lucide:git-pull-request"
-      description="Pull all data from the cloud"
+      description="pull all data from the cloud"
     >
       <button
         class="bg-(--sub-alt-color) text-white font-bold py-2 px-4 rounded cursor-pointer"
@@ -45,7 +45,7 @@ const syncStore = useSyncStore();
     <SettingsGroup
       title="Nuke"
       icon="lucide:bomb"
-      description="Delete all data from local and cloud storage. Settings will not be affected."
+      description="delete all data from local and cloud storage. settings will not be affected."
     >
       <button
         class="bg-(--error-color)! text-(--bg-color)! font-bold py-2 px-4 rounded cursor-pointer"

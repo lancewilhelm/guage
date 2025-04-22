@@ -349,7 +349,7 @@ onMounted(async () => {
     <SettingsGroup
       title="leftover models"
       icon="lucide:alert-triangle"
-      description="These models are currently not available via an api endpoint, but are still present in the system."
+      description="these models are currently not available via an api endpoint, but are still present in the system."
     >
       <div
         v-for="model in availableModels.filter(

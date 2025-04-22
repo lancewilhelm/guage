@@ -125,7 +125,7 @@ const globalSettingsStore = useGlobalSettingsStore();
       <SettingsSubGroup
         title="title model"
         icon="lucide:tag"
-        description="choose the model to generate titles for your chats. 'Same' will use the same model as the chat."
+        description="choose the model to generate titles for your chats. 'same' will use the same model as the chat."
       >
         <SettingsSelectItem
           :value="
