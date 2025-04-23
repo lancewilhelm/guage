@@ -28,6 +28,10 @@ export default defineEventHandler(async (event) => {
   if (config.geminiApiKey) {
     providers.push("gemini");
   }
+  // Anthropic
+  if (config.anthropicApiKey) {
+    providers.push("anthropic");
+  }
 
   return { providers };
 });

@@ -2,11 +2,13 @@
 interface Models {
   openai: string[];
   gemini: string[];
+  anthropic: string[];
   ollama: Record<string, string[]>;
 }
 const models = ref<Models>({
   openai: [],
   gemini: [],
+  anthropic: [],
   ollama: {},
 });
 async function fetchModels(provider: keyof Models, url?: string) {
@@ -15,7 +17,11 @@ async function fetchModels(provider: keyof Models, url?: string) {
       `/api/models/ollama?url=${encodeURIComponent(url)}`,
     );
     models.value.ollama[url] = response.models;
-  } else if (provider === "openai" || provider === "gemini") {
+  } else if (
+    provider === "openai" ||
+    provider === "gemini" ||
+    provider === "anthropic"
+  ) {
     const response = await $fetch<{ models: string[] }>(
       `/api/models/${provider}`,
     );
@@ -200,6 +206,7 @@ async function pullOllamaModel(url: string) {
 
 const openaiAvailable = ref(false);
 const geminiAvailable = ref(false);
+const anthropicAvailable = ref(false);
 // Check the ollama endpoint on mount
 onMounted(async () => {
   // Check if the ollama url is set
@@ -217,6 +224,10 @@ onMounted(async () => {
       geminiAvailable.value = true;
       fetchModels("gemini");
     }
+    if (response.providers.includes("anthropic")) {
+      anthropicAvailable.value = true;
+      fetchModels("anthropic");
+    }
   }
 });
 </script>
@@ -229,7 +240,9 @@ onMounted(async () => {
       title="openai"
       icon="simple-icons:openai"
     >
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
+      <div
+        class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+      >
         <div
           v-for="model in models?.openai.sort((a, b) => a.localeCompare(b))"
           :key="model"
@@ -252,7 +265,9 @@ onMounted(async () => {
       title="gemini"
       icon="simple-icons:googlegemini"
     >
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
+      <div
+        class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+      >
         <div
           v-for="model in models?.gemini.sort((a, b) => a.localeCompare(b))"
           :key="model"
@@ -263,6 +278,31 @@ onMounted(async () => {
               : 'text-(--text-color)',
           ]"
           @click="updateAvailableModels(model, 'gemini')"
+        >
+          <HoverScrollText>{{ model }}</HoverScrollText>
+        </div>
+      </div>
+    </SettingsGroup>
+
+    <!-- Anthropic -->
+    <SettingsGroup
+      v-if="anthropicAvailable"
+      title="anthropic"
+      icon="simple-icons:anthropic"
+    >
+      <div
+        class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+      >
+        <div
+          v-for="model in models?.anthropic.sort((a, b) => a.localeCompare(b))"
+          :key="model"
+          :class="[
+            'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
+            checkAvailableModel(model)
+              ? 'bg-(--main-color) text-(--bg-color)'
+              : 'text-(--text-color)',
+          ]"
+          @click="updateAvailableModels(model, 'anthropic')"
         >
           <HoverScrollText>{{ model }}</HoverScrollText>
         </div>

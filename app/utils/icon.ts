@@ -6,6 +6,7 @@ export function getModelProviderIcon(provider?: string) {
     claude: "simple-icons:claude",
     gemini: "simple-icons:googlegemini",
     openai: "simple-icons:openai",
+    anthropic: "simple-icons:anthropic",
   };
   console.log(modelIcons[provider]);
   return modelIcons[provider] || "";

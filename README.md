@@ -19,6 +19,7 @@ A clean and simple front-end for large-language models.
   - Ollama
   - OpenAI
   - Gemini
+  - Anthropic
 - Themes and fun things
 
 ## Usage
@@ -41,6 +42,7 @@ To use a remote provider api for llm inference, you can set an environmental var
 
 - `NUXT_OPENAI_API_KEY` for OpenAI
 - `NUXT_GEMINI_API_KEY` for Gemini
+- `NUXT_ANTHROPIC_API_KEY` for Anthropic
 
 ##### Example
 
@@ -96,6 +98,7 @@ cd guage
 AUTH_SECRET=
 OPENAI_API_KEY=
 GEMINI_API_KEY=
+ANTHROPIC_API_KEY=
 ```
 
 4. Run the app

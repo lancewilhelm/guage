@@ -23,24 +23,20 @@ interface OllamaResponse {
 
 export async function completionOllama({
   history,
-  userMessage,
   model,
   url,
   systemPrompt,
 }: {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: string;
   url?: string;
   systemPrompt: string;
 }) {
   try {
-    const formattedMessages: OllamaMesageParam[] = history
-      .concat([userMessage])
-      .map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+    const formattedMessages: OllamaMesageParam[] = history.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
     formattedMessages.unshift({ role: "system", content: systemPrompt });
 
     const completion = await $fetch<OllamaResponse>(`${url}/api/chat`, {

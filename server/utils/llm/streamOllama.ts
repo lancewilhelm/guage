@@ -23,13 +23,11 @@ interface OllamaResponse {
 
 export async function streamOllama({
   history,
-  userMessage,
   model,
   url,
   systemPrompt,
 }: {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: string;
   url: string;
   systemPrompt: string;
@@ -39,12 +37,10 @@ export async function streamOllama({
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const formattedMessages: OllamaMesageParam[] = history
-          .concat([userMessage])
-          .map((msg) => ({
-            role: msg.role,
-            content: msg.content,
-          }));
+        const formattedMessages: OllamaMesageParam[] = history.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
         formattedMessages.unshift({ role: "system", content: systemPrompt });
 
         const response = await fetch(`${url}/api/chat`, {

@@ -4,21 +4,18 @@ import type { LocalMessage } from "~/utils/db/local";
 
 export async function completionOpenAI({
   history,
-  userMessage,
   model,
   systemPrompt,
 }: {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: string;
   systemPrompt: string;
 }) {
   const openai = getOpenAIClient();
 
   try {
-    const messages = history.concat([userMessage]);
     const formattedMessages: OpenAI.Chat.ChatCompletionMessageParam[] =
-      messages.map((msg) => ({
+      history.map((msg) => ({
         role: msg.role,
         content: msg.content,
       }));

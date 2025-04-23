@@ -13,12 +13,10 @@ export function getGeminiClient() {
 
 export async function streamGemini({
   history,
-  userMessage,
   model,
   systemPrompt,
 }: {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: string;
   systemPrompt: string;
 }): Promise<ReadableStream> {
@@ -35,14 +33,14 @@ export async function streamGemini({
 
         const chat = gemini.chats.create({
           model,
-          history: formattedHistory,
+          history: formattedHistory.slice(0, -1),
           config: {
             systemInstruction: systemPrompt,
           },
         });
 
         const completion = await chat.sendMessageStream({
-          message: userMessage.content,
+          message: history[history.length - 1].content,
         });
 
         for await (const chunk of completion) {

@@ -3,6 +3,8 @@ import { auth } from "~/utils/auth";
 import type { LocalMessage, Model } from "~/utils/db/local";
 import { completionOpenAI } from "../utils/llm/completionOpenAi";
 import { completionOllama } from "../utils/llm/completionOllama";
+import { completionGemini } from "../utils/llm/completionGemini";
+import { completionAnthropic } from "../utils/llm/completionAnthropic";
 
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/generate-title");
@@ -33,26 +35,46 @@ export default defineEventHandler(async (event) => {
   const systemPrompt =
     "Generate a short title for a chat based on the user's first message. Do not put quotes around the title.";
 
-  const history = [] as LocalMessage[];
+  const history = [userMessage];
 
   try {
     let title;
-    if (model.provider === "openai") {
-      title = await completionOpenAI({
-        history,
-        userMessage,
-        model: model.name,
-        systemPrompt: systemPrompt,
-      });
-    } else if (model.provider === "ollama") {
-      title = await completionOllama({
-        history,
-        userMessage,
-        model: model.name,
-        url: model.url,
-        systemPrompt: systemPrompt,
-      });
+    switch (model.provider) {
+      case "openai":
+        title = await completionOpenAI({
+          history,
+          model: model.name,
+          systemPrompt: systemPrompt,
+        });
+        break;
+      case "ollama":
+        title = await completionOllama({
+          history,
+          model: model.name,
+          url: model.url,
+          systemPrompt: systemPrompt,
+        });
+        break;
+      case "gemini":
+        title = await completionGemini({
+          history,
+          model: model.name,
+          systemPrompt: systemPrompt,
+        });
+        break;
+      case "anthropic":
+        title = await completionAnthropic({
+          history,
+          model: model.name,
+          systemPrompt: systemPrompt,
+        });
+        break;
+      default:
+        logger.error("POST /api/generate-title: Invalid provider");
+        setResponseStatus(event, 400);
+        return { message: "Invalid provider" };
     }
+
     return title;
   } catch (error) {
     logger.error(error, "POST /api/generate-title: Error generating title:");

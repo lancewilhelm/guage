@@ -305,7 +305,8 @@ async function updateChatAndGetResponse(
     history ||
     (chat.activeBranch
       .map((id: string) => chat.messages[id])
-      .filter(Boolean) as LocalMessage[]);
+      .filter(Boolean)
+      .slice(0, -1) as LocalMessage[]);
 
   await streamAndUpdateAssistantMessage({
     chatId,

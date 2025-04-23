@@ -13,12 +13,10 @@ export function getOpenAIClient() {
 
 export async function streamOpenAI({
   history,
-  userMessage,
   model,
   systemPrompt,
 }: {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: string;
   systemPrompt: string;
 }): Promise<ReadableStream> {
@@ -28,9 +26,8 @@ export async function streamOpenAI({
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const messages = history.concat([userMessage]);
         const formattedMessages: OpenAI.Chat.ChatCompletionMessageParam[] =
-          messages.map((msg) => ({
+          history.map((msg) => ({
             role: msg.role,
             content: msg.content,
           }));
