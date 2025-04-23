@@ -2,6 +2,7 @@ import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
 import { streamOpenAI } from "~~/server/utils/llm/streamOpenAi";
 import { streamOllama } from "~~/server/utils/llm/streamOllama";
+import { streamGemini } from "~~/server/utils/llm/streamGemini";
 import type { LocalMessage, Model } from "~/utils/db/local";
 
 export interface LLMRequest {
@@ -53,6 +54,14 @@ export default defineEventHandler(async (event) => {
     switch (model.provider) {
       case "openai":
         stream = await streamOpenAI({
+          history,
+          userMessage,
+          model: model.name,
+          systemPrompt,
+        });
+        break;
+      case "gemini":
+        stream = await streamGemini({
           history,
           userMessage,
           model: model.name,

@@ -6,7 +6,6 @@
 ![SQLite](https://img.shields.io/badge/SQLite-%231a202c?style=for-the-badge&logo=sqlite)
 ![Drizzle](https://img.shields.io/badge/Drizzle%20ORM-%231a202c?style=for-the-badge&logo=drizzle)
 
-
 A clean and simple front-end for large-language models.
 
 ## Notable Features
@@ -16,8 +15,11 @@ A clean and simple front-end for large-language models.
 - SQLite backend by default, Postgres optional
 - TypeScript
 - Tailwind CSS
-- Multiple LLM providers (OpenAI, Ollama, more coming)
-- Themes
+- Multiple LLM provider support (local and remote)
+  - Ollama
+  - OpenAI
+  - Gemini
+- Themes and fun things
 
 ## Usage
 
@@ -33,7 +35,14 @@ docker run -p 3000:3000 -v guage:/app/data ghcr.io/lancewilhelm/guage:stable
 
 This will run the app on port 3000 and create a persistent volume called "guage" to store the SQLite database. You can access the app at `http://localhost:3000`.
 
-#### With OpenAI API Key
+#### With LLM Provider API Key
+
+To use a remote provider api for llm inference, you can set an environmental variable at runtime with your key. Given that we are using Nuxt, we must prepend NUXT\_ to the key (I know...I hate it). Below are the currently supported keys:
+
+- `NUXT_OPENAI_API_KEY` for OpenAI
+- `NUXT_GEMINI_API_KEY` for Gemini
+
+##### Example
 
 If you want to use OpenAI's API, you can set the `NUXT_OPENAI_API_KEY` environment variable. This is required for the app to work with OpenAI.
 
@@ -80,12 +89,13 @@ cd guage
 ./init.sh
 ```
 
-3. (Optional) Add your OpenAI API key (optional) to the `.env` file:
+3. (Optional) Add your API keys for supported providers to the `.env` file:
 
 ```bash
 # .env
 AUTH_SECRET=
 OPENAI_API_KEY=
+GEMINI_API_KEY=
 ```
 
 4. Run the app

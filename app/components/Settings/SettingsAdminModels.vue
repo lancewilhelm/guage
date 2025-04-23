@@ -1,10 +1,12 @@
 <script setup lang="ts">
 interface Models {
   openai: string[];
+  gemini: string[];
   ollama: Record<string, string[]>;
 }
 const models = ref<Models>({
   openai: [],
+  gemini: [],
   ollama: {},
 });
 async function fetchModels(provider: keyof Models, url?: string) {
@@ -13,10 +15,11 @@ async function fetchModels(provider: keyof Models, url?: string) {
       `/api/models/ollama?url=${encodeURIComponent(url)}`,
     );
     models.value.ollama[url] = response.models;
-  } else if (provider === "openai") {
+  } else if (provider === "openai" || provider === "gemini") {
     const response = await $fetch<{ models: string[] }>(
       `/api/models/${provider}`,
     );
+    console.log(provider, response);
     models.value[provider] = response.models;
   }
 }
@@ -69,7 +72,10 @@ function checkModelAgainstEndpoint(model: string, url?: string) {
   if (url) {
     return models.value.ollama[url]?.some((m) => m === model);
   }
-  return models.value.openai.some((m) => m === model);
+  return (
+    models.value.openai.some((m) => m === model) ||
+    models.value.gemini.some((m) => m === model)
+  );
 }
 
 const ollamaUrlToAdd = ref("");
@@ -193,6 +199,7 @@ async function pullOllamaModel(url: string) {
 }
 
 const openaiAvailable = ref(false);
+const geminiAvailable = ref(false);
 // Check the ollama endpoint on mount
 onMounted(async () => {
   // Check if the ollama url is set
@@ -201,12 +208,14 @@ onMounted(async () => {
       testOllamaUrl(url);
     }
     // Fetch the models
-    const response = await $fetch<{ success: boolean; message: string }>(
-      "/api/openai",
-    );
-    if (response.success) {
+    const response = await $fetch<{ providers: string[] }>("/api/providers");
+    if (response.providers.includes("openai")) {
       openaiAvailable.value = true;
       fetchModels("openai");
+    }
+    if (response.providers.includes("gemini")) {
+      geminiAvailable.value = true;
+      fetchModels("gemini");
     }
   }
 });
@@ -214,6 +223,7 @@ onMounted(async () => {
 
 <template>
   <div class="w-full">
+    <!-- OpenAI -->
     <SettingsGroup
       v-if="openaiAvailable"
       title="openai"
@@ -231,7 +241,30 @@ onMounted(async () => {
           ]"
           @click="updateAvailableModels(model, 'openai')"
         >
-          <div class="truncate">{{ model }}</div>
+          <HoverScrollText>{{ model }}</HoverScrollText>
+        </div>
+      </div>
+    </SettingsGroup>
+
+    <!-- Gemini -->
+    <SettingsGroup
+      v-if="geminiAvailable"
+      title="gemini"
+      icon="simple-icons:googlegemini"
+    >
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3">
+        <div
+          v-for="model in models?.gemini.sort((a, b) => a.localeCompare(b))"
+          :key="model"
+          :class="[
+            'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
+            checkAvailableModel(model)
+              ? 'bg-(--main-color) text-(--bg-color)'
+              : 'text-(--text-color)',
+          ]"
+          @click="updateAvailableModels(model, 'gemini')"
+        >
+          <HoverScrollText>{{ model }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -331,7 +364,7 @@ onMounted(async () => {
             ]"
             @click="updateAvailableModels(model, 'ollama', url)"
           >
-            <div class="truncate">{{ model }}</div>
+            <HoverScrollText>{{ model }}</HoverScrollText>
             <Icon
               name="lucide:trash-2"
               class="text-(--text-color) ml-1"

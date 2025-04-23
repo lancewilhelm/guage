@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
     >
       <Icon
         v-if="currentModel"
-        :name="`simple-icons:${currentModel?.provider}`"
+        :name="getModelProviderIcon(currentModel.provider)"
         class="text-(--main-color) scale-125"
       />
       <div class="flex items-center gap-1">
@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
         )"
         :key="model.name"
         :class="[
-          'flex items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
+          'grid grid-cols-[20px_1fr] items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
           currentModel?.name === model.name &&
           currentModel?.provider === model.provider &&
           currentModel.url === model.url
@@ -106,11 +106,11 @@ onBeforeUnmount(() => {
         "
       >
         <Icon
-          :name="`simple-icons:${model.provider}`"
+          :name="getModelProviderIcon(model.provider)"
           class="text-(--main-color) scale-125"
         />
-        <div class="flex flex-col">
-          <div>{{ model.name }}</div>
+        <div class="flex flex-col overflow-hidden">
+          <HoverScrollText>{{ model.name }}</HoverScrollText>
           <div class="text-xs italic text-(--sub-color)">
             {{ model.url }}
           </div>

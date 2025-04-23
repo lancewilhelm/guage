@@ -13,7 +13,7 @@ const currentModelName = computed(() => {
 <template>
   <div v-if="model" class="flex items-center gap-1">
     <Icon
-      :name="`simple-icons:${model.provider}`"
+      :name="getModelProviderIcon(model.provider)"
       class="text-(--main-color) scale-90"
     />
     <div class="text-(--main-color) text-sm">

@@ -34,6 +34,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/main.css", "~/assets/css/hljs.css"],
   runtimeConfig: {
     openaiApiKey: process.env.OPENAI_API_KEY || "",
+    geminiApiKey: process.env.GEMINI_API_KEY || "",
     public: {
       debug: false,
       appVersion: "",
