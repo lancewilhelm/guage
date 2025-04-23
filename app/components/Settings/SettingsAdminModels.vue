@@ -80,7 +80,8 @@ function checkModelAgainstEndpoint(model: string, url?: string) {
   }
   return (
     models.value.openai.some((m) => m === model) ||
-    models.value.gemini.some((m) => m === model)
+    models.value.gemini.some((m) => m === model) ||
+    models.value.anthropic.some((m) => m === model)
   );
 }
 
