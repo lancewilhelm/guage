@@ -16,7 +16,6 @@ const fetchUsers = async () => {
   }
 
   users.value = data?.users || [];
-  console.log("Fetched users:", users.value);
   // Sort users by createdAt date (newest first)
   sortedUsers.value = [...users.value].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
