@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { admin } from "better-auth/plugins";
 import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { cloudDb } from "./db/cloud";
@@ -11,6 +12,7 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "guage",
   },
+  plugins: [admin()],
   database: drizzleAdapter(cloudDb, {
     provider: "sqlite",
     schema: {
@@ -40,7 +42,8 @@ export const auth = betterAuth({
           // Check if registration is allowed
           const response = await cloudDb.select().from(schema.globalSettings);
           const settings = response[0]?.settings as GlobalSettings;
-          const allowRegistration = settings.allowRegistration ?? false;
+          const allowRegistration =
+            settings === undefined || settings.allowRegistration;
 
           if (!allowRegistration) {
             throw new APIError("UNAUTHORIZED", {

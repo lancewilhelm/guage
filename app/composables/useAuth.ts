@@ -1,21 +1,10 @@
 import { defu } from "defu";
 import type { RouteLocationRaw } from "vue-router";
-import { inferAdditionalFields } from "better-auth/client/plugins";
+import { adminClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/vue";
 
 export const typedClient = createAuthClient({
-  plugins: [
-    inferAdditionalFields({
-      user: {
-        role: {
-          type: "string",
-          required: true,
-          defaultValue: "user",
-          input: false,
-        },
-      },
-    }),
-  ],
+  plugins: [adminClient()],
 });
 
 export type Session = typeof typedClient.$Infer.Session.session;
@@ -35,18 +24,7 @@ export function useAuth() {
     fetchOptions: {
       headers,
     },
-    plugins: [
-      inferAdditionalFields({
-        user: {
-          role: {
-            type: "string",
-            required: true,
-            defaultValue: "user",
-            input: false,
-          },
-        },
-      }),
-    ],
+    plugins: [adminClient()],
   });
 
   const options = defu(
@@ -92,6 +70,7 @@ export function useAuth() {
     loggedIn: computed(() => !!session.value),
     signIn: client.signIn,
     signUp: client.signUp,
+    admin: client.admin,
     changePassword: client.changePassword,
     changeEmail: client.changeEmail,
     async signOut() {

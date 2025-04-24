@@ -1,24 +1,21 @@
 <script setup lang="ts">
+import type { UserWithRole } from "better-auth/plugins";
 import { ref, onMounted } from "vue";
 
-interface User {
-  id: string;
-  email: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const users = ref<User[]>([]);
-const sortedUsers = ref<User[]>([]);
+const users = ref<UserWithRole[]>([]);
+const sortedUsers = ref<UserWithRole[]>([]);
 
 // Fetch users data
 const fetchUsers = async () => {
-  const response = await $fetch<{ users: User[] }>("/api/users", {
-    method: "GET",
-  });
+  const { admin } = useAuth();
+  const { data, error } = await admin.listUsers({ query: { limit: 100 } });
 
-  users.value = response.users;
+  if (error) {
+    logger.error("Error fetching users:", error);
+    return;
+  }
+
+  users.value = data?.users || [];
   // Sort users by createdAt date (newest first)
   sortedUsers.value = [...users.value].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -32,7 +29,7 @@ onMounted(fetchUsers);
 const createUserModalVisible = ref(false);
 const newUserEmail = ref("");
 const newUserPassword = ref("");
-const newUserRole = ref("user");
+const newUserRole = ref<"admin" | "user">("user");
 const createUserEmailInput = ref<HTMLInputElement | null>(null);
 
 async function createUser() {
@@ -41,15 +38,16 @@ async function createUser() {
     return;
   }
 
-  const { signUp } = useAuth();
-  const { error } = await signUp.email({
+  const { admin } = useAuth();
+  const { error } = await admin.createUser({
     email: newUserEmail.value,
     password: newUserPassword.value,
+    role: newUserRole.value,
     name: "",
   });
 
   if (error) {
-    console.error("Error creating user:", error);
+    alert(`Error creating user: ${error.message}`);
     return;
   }
 
@@ -75,15 +73,13 @@ async function deleteUser() {
     return;
   }
 
-  const { success } = await $fetch<{ success: boolean }>(`/api/users/delete`, {
-    method: "DELETE",
-    body: {
-      id: deleteUserId.value,
-    },
+  const { admin } = useAuth();
+  const { error } = await admin.removeUser({
+    userId: deleteUserId.value,
   });
 
-  if (!success) {
-    alert("Error deleting user");
+  if (error) {
+    alert(`Error deleting user: ${error.message}`);
     return;
   }
 
