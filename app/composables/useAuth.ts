@@ -64,6 +64,41 @@ export function useAuth() {
     });
   }
 
+  async function signOut() {
+    const res = await client.signOut();
+    session.value = null;
+    user.value = null;
+    loadTheme("guage");
+
+    // Reset all stores
+    const chatStore = useChatStore();
+    const userSettingsStore = useUserSettingsStore();
+    const globalSettingsStore = useGlobalSettingsStore();
+    const syncStore = useSyncStore();
+    const uiStore = useUiStore();
+    chatStore.$reset();
+    userSettingsStore.$reset();
+    globalSettingsStore.$reset();
+    syncStore.$reset();
+    uiStore.$reset();
+
+    // Clear the cookies
+    const storesToClear = [
+      "guage.sync",
+      "guage.userSettings",
+      "guage.globalSettings",
+      "guage.ui",
+    ];
+    for (const store of storesToClear) {
+      const cookie = useCookie(store);
+      cookie.value = null;
+    }
+
+    await navigateTo("/login");
+
+    return res;
+  }
+
   return {
     session,
     user,
@@ -71,42 +106,13 @@ export function useAuth() {
     signIn: client.signIn,
     signUp: client.signUp,
     admin: client.admin,
+    isAdmin: computed(() => {
+      if (!user.value) return false;
+      return user.value.role === "admin" || user.value.role === "owner";
+    }),
     changePassword: client.changePassword,
     changeEmail: client.changeEmail,
-    async signOut() {
-      const res = await client.signOut();
-      session.value = null;
-      user.value = null;
-      loadTheme("guage");
-
-      // Reset all stores
-      const chatStore = useChatStore();
-      const userSettingsStore = useUserSettingsStore();
-      const globalSettingsStore = useGlobalSettingsStore();
-      const syncStore = useSyncStore();
-      const uiStore = useUiStore();
-      chatStore.$reset();
-      userSettingsStore.$reset();
-      globalSettingsStore.$reset();
-      syncStore.$reset();
-      uiStore.$reset();
-
-      // Clear the cookies
-      const storesToClear = [
-        "guage.sync",
-        "guage.userSettings",
-        "guage.globalSettings",
-        "guage.ui",
-      ];
-      for (const store of storesToClear) {
-        const cookie = useCookie(store);
-        cookie.value = null;
-      }
-
-      await navigateTo("/login");
-
-      return res;
-    },
+    signOut,
     options,
     fetchSession,
     client,

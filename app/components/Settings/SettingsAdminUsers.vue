@@ -127,7 +127,14 @@ async function unbanUser(userId: string) {
   await fetchUsers();
 }
 
-const { user } = useAuth();
+function canEditUser(user: UserWithRole) {
+  const { user: currentUser } = useAuth();
+  if (!currentUser.value) return false;
+  if (user.id === currentUser.value.id) return false; // Can't edit self
+  if (user.role === "admin" && currentUser.value.role !== "owner") return false; // Can't edit admin if not owner
+  if (user.role === "owner") return false; // Can't edit owner
+  return true;
+}
 const globalSettingsStore = useGlobalSettingsStore();
 </script>
 
@@ -161,7 +168,7 @@ const globalSettingsStore = useGlobalSettingsStore();
                   {{ new Date(u.createdAt).toLocaleDateString() }}
                 </td>
                 <td class="px-6 py-1 whitespace-nowrap text-sm">
-                  <div v-if="u.id !== user?.id" class="flex gap-2">
+                  <div v-if="canEditUser(u)" class="flex gap-2">
                     <button
                       class="flex items-center bg-(--sub-alt-color) p-2 rounded-lg text-(--text-color)"
                       @click="() => console.log('Edit user', u.id)"

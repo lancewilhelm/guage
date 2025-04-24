@@ -77,7 +77,7 @@ const tabs: Record<string, Tab> = {
   },
 };
 
-const { user } = useAuth();
+const { isAdmin } = useAuth();
 </script>
 
 <template>
@@ -87,9 +87,7 @@ const { user } = useAuth();
       class="flex flex-wrap justify-center gap-4 px-4 py-2 border-t border-b border-(--sub-color) w-full settings-tab-bar"
     >
       <SettingsTabBarItem
-        v-for="tab in Object.values(tabs).filter(
-          (t) => !t.admin || user?.role === 'admin',
-        )"
+        v-for="tab in Object.values(tabs).filter((t) => !t.admin || isAdmin)"
         :key="tab.name"
         :is-active-tab="currentPageName === tab.name"
         :icon="tab.icon"

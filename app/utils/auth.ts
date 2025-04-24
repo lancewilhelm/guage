@@ -1,10 +1,11 @@
 import { betterAuth } from "better-auth";
-import { admin } from "better-auth/plugins";
+import { admin as baAdmin } from "better-auth/plugins";
 import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { cloudDb } from "./db/cloud";
 import * as schema from "./db/schema";
 import { count } from "drizzle-orm";
+import { ac, user, admin, owner } from "./permissions";
 
 export const auth = betterAuth({
   baseURL: getBaseURL(),
@@ -12,7 +13,16 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "guage",
   },
-  plugins: [admin()],
+  plugins: [
+    baAdmin({
+      ac,
+      roles: {
+        user,
+        admin,
+        owner,
+      },
+    }),
+  ],
   database: drizzleAdapter(cloudDb, {
     provider: "sqlite",
     schema: {
@@ -56,7 +66,7 @@ export const auth = betterAuth({
             .select({ count: count() })
             .from(schema.users);
           const isFirstUser = !userCount[0] || userCount[0].count === 0;
-          const role = isFirstUser ? "admin" : "user";
+          const role = isFirstUser ? "owner" : "user";
 
           return {
             data: {
