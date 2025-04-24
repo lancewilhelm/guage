@@ -16,6 +16,7 @@ const fetchUsers = async () => {
   }
 
   users.value = data?.users || [];
+  console.log("Fetched users:", users.value);
   // Sort users by createdAt date (newest first)
   sortedUsers.value = [...users.value].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
@@ -31,7 +32,6 @@ const newUserEmail = ref("");
 const newUserPassword = ref("");
 const newUserRole = ref<"admin" | "user">("user");
 const createUserEmailInput = ref<HTMLInputElement | null>(null);
-
 async function createUser() {
   if (!newUserEmail.value || !newUserPassword.value) {
     alert("Please fill in all fields");
@@ -93,8 +93,42 @@ async function deleteUser() {
   await fetchUsers();
 }
 
-const { user } = useAuth();
+// Ban user handlers
+const banUserModalVisible = ref(false);
+const banUserEmail = ref("");
+const banUserId = ref("");
+async function banUser() {
+  const { admin } = useAuth();
+  const { error } = await admin.banUser({
+    userId: banUserId.value,
+  });
+  if (error) {
+    alert(`Error banning user: ${error.message}`);
+    return;
+  }
+  // Reset the form
+  banUserModalVisible.value = false;
+  banUserEmail.value = "";
+  banUserId.value = "";
 
+  // Refetch users to update the list
+  await fetchUsers();
+}
+async function unbanUser(userId: string) {
+  const { admin } = useAuth();
+  const { error } = await admin.unbanUser({
+    userId,
+  });
+  if (error) {
+    alert(`Error unbanning user: ${error.message}`);
+    return;
+  }
+
+  // Refetch users to update the list
+  await fetchUsers();
+}
+
+const { user } = useAuth();
 const globalSettingsStore = useGlobalSettingsStore();
 </script>
 
@@ -139,11 +173,30 @@ const globalSettingsStore = useGlobalSettingsStore();
                       />
                     </button>
                     <button
-                      class="flex items-center bg-(--error-color)! p-2 rounded-lg text-(--bg-color)"
-                      @click="() => console.log('Disable user', u.id)"
+                      class="flex items-center p-2 rounded-lg text-(--bg-color)"
+                      :class="[
+                        u.banned ? 'bg-(--main-color)!' : 'bg-(--error-color)!',
+                      ]"
+                      @click="
+                        () => {
+                          if (u.banned) {
+                            unbanUser(u.id);
+                          } else {
+                            banUserModalVisible = true;
+                            banUserEmail = u.email;
+                            banUserId = u.id;
+                          }
+                        }
+                      "
                     >
                       <Icon
-                        name="lucide:octagon-pause"
+                        v-if="!u.banned"
+                        name="lucide:pause"
+                        class="text-(--bg-color) scale-125"
+                      />
+                      <Icon
+                        v-else
+                        name="lucide:play"
                         class="text-(--bg-color) scale-125"
                       />
                     </button>
@@ -206,6 +259,7 @@ const globalSettingsStore = useGlobalSettingsStore();
         "
       />
     </SettingsGroup>
+
     <!-- Create User Modal -->
     <ModalWindow
       :open="createUserModalVisible"
@@ -286,6 +340,36 @@ const globalSettingsStore = useGlobalSettingsStore();
         >
           delete account
         </button>
+      </div>
+    </ModalWindow>
+
+    <!-- Ban User Modal -->
+    <ModalWindow
+      :open="banUserModalVisible"
+      @close="
+        () => {
+          banUserModalVisible = false;
+        }
+      "
+    >
+      <div class="flex flex-col items-center justify-center gap-2">
+        <div class="text-(--text-color) text-lg text-center">
+          Are you sure you want to ban {{ banUserEmail }}?
+        </div>
+        <div class="flex gap-2">
+          <button
+            class="flex items-center gap-2 mt-2 bg-(--error-color) text-(--bg-color) p-2 rounded-lg px-4"
+            @click="banUser"
+          >
+            ban
+          </button>
+          <button
+            class="flex items-center gap-2 mt-2 bg-(--main-color) text-(--bg-color) p-2 rounded-lg px-4"
+            @click="banUserModalVisible = false"
+          >
+            cancel
+          </button>
+        </div>
       </div>
     </ModalWindow>
   </div>
