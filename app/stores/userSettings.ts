@@ -42,34 +42,32 @@ export interface UserSettings {
   funboxModes: FunboxMode[];
 }
 
-const defaultSettings: UserSettings = {
-  fontFamily: "Geist",
-  favoriteThemes: [],
-  themeSorting: {
-    sortedByName: false,
-    reverseSort: false,
-  },
-  model: undefined,
-  titleModel: undefined,
-  defaultSystemPrompt: "You are a helpful assistant.",
-  systemPrompts: {},
-  currentSystemPrompt: "default",
-  messageDisplayMode: "markdown",
-  chatSearchMode: "fuzzy",
-  funboxModes: [],
-};
+function getDefaultSettings(): UserSettings {
+  return {
+    fontFamily: "Geist",
+    favoriteThemes: [],
+    themeSorting: {
+      sortedByName: false,
+      reverseSort: false,
+    },
+    model: undefined,
+    titleModel: undefined,
+    defaultSystemPrompt: "You are a helpful assistant.",
+    systemPrompts: {},
+    currentSystemPrompt: "default",
+    messageDisplayMode: "markdown",
+    chatSearchMode: "fuzzy",
+    funboxModes: [],
+  };
+}
 
 export const useUserSettingsStore = defineStore(
   "userSettings",
   () => {
-    const settings = ref<UserSettings>(defaultSettings);
+    const settings = ref<UserSettings>(getDefaultSettings());
     function updateSettings(updated: Partial<UserSettings>) {
       if (Object.keys(updated).length === 0) return;
 
-      // Change theme if it is not the same as the current one
-      if (updated.theme && settings.value.theme !== updated.theme) {
-        loadTheme(updated.theme);
-      }
       // Update the settings
       settings.value = { ...settings.value, ...updated };
 
@@ -88,7 +86,7 @@ export const useUserSettingsStore = defineStore(
     };
 
     function $reset() {
-      settings.value = defaultSettings;
+      settings.value = getDefaultSettings();
       updatedAt.value = new Date(0);
       synced.value = true;
     }

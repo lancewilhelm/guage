@@ -8,11 +8,13 @@ export interface GlobalSettings {
   ollamaUrls: string[];
 }
 
-const defaultSettings: GlobalSettings = {
-  availableModels: [],
-  allowRegistration: false,
-  ollamaUrls: [],
-};
+function getDefaultSettings(): GlobalSettings {
+  return {
+    availableModels: [],
+    allowRegistration: false,
+    ollamaUrls: [],
+  };
+}
 
 // async function adminCheck() {
 //   const { user } = useAuth();
@@ -25,7 +27,7 @@ const defaultSettings: GlobalSettings = {
 export const useGlobalSettingsStore = defineStore(
   "globalSettings",
   () => {
-    const settings = ref<GlobalSettings>(defaultSettings);
+    const settings = ref<GlobalSettings>(getDefaultSettings());
     async function updateSettings(updated: Partial<GlobalSettings>) {
       // if (!(await adminCheck())) return;
 
@@ -49,7 +51,7 @@ export const useGlobalSettingsStore = defineStore(
     const updatedAt = ref<Date>(new Date(0));
 
     function $reset() {
-      settings.value = defaultSettings;
+      settings.value = getDefaultSettings();
       updatedAt.value = new Date(0);
       synced.value = true;
     }

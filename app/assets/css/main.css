@@ -91,13 +91,13 @@ hr {
 input {
   background-color: var(--sub-alt-color);
   border-radius: var(--border-radius);
-  padding: 0.25em;
+  padding: 0.5em;
 }
 
 textarea {
   background-color: var(--sub-alt-color);
   border-radius: var(--border-radius);
-  padding: 0.25em;
+  padding: 0.5em;
 }
 
 input:focus,
