@@ -108,11 +108,13 @@ const { width } = useWindowSize();
         <div class="flex flex-col w-full items-center gap-2">
           <div class="flex flex-col w-full gap-2">
             <div
-              v-for="[groupName, group] of Object.entries(sortedChats)"
+              v-for="[groupName, group] of Object.entries(sortedChats).filter(
+                ([_, group]) => group.length,
+              )"
               :key="groupName"
               class="flex flex-col w-full gap-2"
             >
-              <ChatListGroupTitle v-if="group.length" :title="groupName" />
+              <ChatListGroupTitle :title="groupName" />
               <ChatListItem
                 v-for="chat of group"
                 :key="chat.id"
