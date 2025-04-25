@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { dbMarkChatDeleted, dbUpdateChat } from "~/utils/db/local";
+import { dbUpdateChat } from "~/utils/db/local";
 const props = defineProps<{
   chat: ChatState;
 }>();
@@ -108,72 +108,11 @@ const chatStore = useChatStore();
         />
       </button>
     </div>
-    <DropDownMenu v-else>
-      <DropDownMenuButton>
-        <Icon
-          name="lucide:more-horizontal"
-          :class="[
-            'scale-125 chat-list-item-menu-button',
-            isHovered
-              ? 'text-(--main-color) chat-list-item-menu-button-hover'
-              : chatStore.currentChatId === chat.id
-                ? 'text-(--bg-color)'
-                : 'text-(--sub-alt-color)',
-          ]"
-        />
-      </DropDownMenuButton>
-      <DropDownMenuList>
-        <DropDownMenuItem
-          @click="
-            () => {
-              const newPinned = !chat.pinned;
-              chatStore.updateChatMetadata(chat.id, {
-                pinned: newPinned,
-              });
-              dbUpdateChat(chat.id, { pinned: newPinned });
-            }
-          "
-        >
-          <Icon
-            v-if="chat.pinned"
-            name="lucide:pin-off"
-            class="text-(--main-color) scale-125"
-          />
-          <Icon
-            v-else
-            name="lucide:pin"
-            class="text-(--main-color) scale-125"
-          />
-          {{ chat.pinned ? "Unpin" : "Pin" }}
-        </DropDownMenuItem>
-        <DropDownMenuItem
-          @click="
-            () => {
-              isRenaming = true;
-              nextTick(() => {
-                inputRef?.focus();
-              });
-            }
-          "
-        >
-          <Icon name="lucide:edit" class="text-(--main-color) scale-125" />
-          Rename
-        </DropDownMenuItem>
-        <DropDownMenuItem
-          @click="
-            () => {
-              chatStore.deleteChat(chat.id);
-              dbMarkChatDeleted(chat.id);
-              if (chatStore.currentChatId === chat.id) {
-                navigateTo('/chat');
-              }
-            }
-          "
-        >
-          <Icon name="lucide:trash" class="text-(--error-color) scale-125" />
-          Trash
-        </DropDownMenuItem>
-      </DropDownMenuList>
-    </DropDownMenu>
+    <ChatListItemDropdown
+      v-else
+      :chat="chat"
+      :is-hovered="isHovered"
+      @rename="isRenaming = true"
+    />
   </div>
 </template>
