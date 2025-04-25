@@ -7,6 +7,5 @@ export function getModelProviderIcon(provider?: string) {
     openai: "simple-icons:openai",
     anthropic: "simple-icons:anthropic",
   };
-  console.log(modelIcons[provider]);
   return modelIcons[provider] || "";
 }

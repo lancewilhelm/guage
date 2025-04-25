@@ -11,7 +11,6 @@ export async function completionGemini({
   systemPrompt: string;
 }) {
   const gemini = getGeminiClient();
-  console.log("history", history);
 
   try {
     const completion = await gemini.models.generateContent({

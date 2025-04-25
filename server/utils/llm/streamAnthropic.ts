@@ -60,7 +60,6 @@ export async function streamAnthropic({
           ),
         );
       } finally {
-        console.log("streaming finished");
         controller.close();
       }
     },
