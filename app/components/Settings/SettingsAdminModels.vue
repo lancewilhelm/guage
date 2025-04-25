@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import type { Model } from "~/utils/db/local";
+
 interface Models {
-  openai: string[];
-  gemini: string[];
-  anthropic: string[];
-  ollama: Record<string, string[]>;
+  openai: Model[];
+  gemini: Model[];
+  anthropic: Model[];
+  ollama: Record<string, Model[]>;
 }
 const models = ref<Models>({
   openai: [],
@@ -13,7 +15,7 @@ const models = ref<Models>({
 });
 async function fetchModels(provider: keyof Models, url?: string) {
   if (provider === "ollama" && url) {
-    const response = await $fetch<{ models: string[] }>(
+    const response = await $fetch<{ models: Model[] }>(
       `/api/models/ollama?url=${encodeURIComponent(url)}`,
     );
     models.value.ollama[url] = response.models;
@@ -22,10 +24,9 @@ async function fetchModels(provider: keyof Models, url?: string) {
     provider === "gemini" ||
     provider === "anthropic"
   ) {
-    const response = await $fetch<{ models: string[] }>(
+    const response = await $fetch<{ models: Model[] }>(
       `/api/models/${provider}`,
     );
-    console.log(provider, response);
     models.value[provider] = response.models;
   }
 }
@@ -33,55 +34,48 @@ const globalSettingsStore = useGlobalSettingsStore();
 const availableModels = computed(() => {
   return globalSettingsStore.settings.availableModels;
 });
-function checkAvailableModel(model: string, url?: string) {
-  if (url) {
+function checkAvailableModel(model: Model) {
+  if (model.url) {
     return availableModels.value.some(
-      (m) => m.name === model && m.provider === "ollama" && m.url === url,
+      (m) =>
+        m.name === model.name && m.provider === "ollama" && m.url === model.url,
     );
   }
-  return availableModels.value.some((m) => m.name === model);
+  return availableModels.value.some((m) => m.name === model.name);
 }
 
-function addModelToAvailableModels(
-  model: string,
-  provider: string,
-  url?: string,
-) {
+function addModelToAvailableModels(model: Model) {
   globalSettingsStore.updateSettings({
-    availableModels: [...availableModels.value, { name: model, provider, url }],
+    availableModels: [...availableModels.value, { ...model }],
   });
 }
-function removeModelFromAvailableModels(
-  model: string,
-  provider: string,
-  url?: string,
-) {
+function removeModelFromAvailableModels(model: Model) {
   globalSettingsStore.updateSettings({
     availableModels: availableModels.value.filter(
       (m) =>
-        (m.name !== model && m.url === url) ||
-        m.name !== model ||
-        m.provider !== provider ||
-        m.url !== url,
+        (m.name !== model.name && m.url === model.url) ||
+        m.name !== model.name ||
+        m.provider !== model.provider ||
+        m.url !== model.url,
     ),
   });
 }
-function updateAvailableModels(model: string, provider: string, url?: string) {
-  if (checkAvailableModel(model, url)) {
-    removeModelFromAvailableModels(model, provider, url);
+function updateAvailableModels(model: Model) {
+  if (checkAvailableModel(model)) {
+    removeModelFromAvailableModels(model);
   } else {
-    addModelToAvailableModels(model, provider, url);
+    addModelToAvailableModels(model);
   }
 }
 
-function checkModelAgainstEndpoint(model: string, url?: string) {
-  if (url) {
-    return models.value.ollama[url]?.some((m) => m === model);
+function checkModelAgainstEndpoint(model: Model) {
+  if (model.url) {
+    return models.value.ollama[model.url]?.some((m) => m.name === model.name);
   }
   return (
-    models.value.openai.some((m) => m === model) ||
-    models.value.gemini.some((m) => m === model) ||
-    models.value.anthropic.some((m) => m === model)
+    models.value.openai.some((m) => m.name === model.name) ||
+    models.value.gemini.some((m) => m.name === model.name) ||
+    models.value.anthropic.some((m) => m.name === model.name)
   );
 }
 
@@ -128,7 +122,7 @@ async function testOllamaUrl(url: string) {
 }
 
 const deleteOllamaModelModalVisible = ref(false);
-const ollamaModelToDelete = ref<{ name: string; url: string } | null>(null);
+const ollamaModelToDelete = ref<Model | null>(null);
 async function deleteOllamaModel() {
   const model = ollamaModelToDelete.value;
   if (!model?.url || !model.name) {
@@ -143,6 +137,8 @@ async function deleteOllamaModel() {
   );
 
   if (response.success) {
+    // Remove the model from the available models
+    removeModelFromAvailableModels(model);
     await fetchModels("ollama", model.url);
     deleteOllamaModelModalVisible.value = false;
   }
@@ -202,7 +198,7 @@ async function pullOllamaModel(url: string) {
   }
   modelToPull.value = {};
   isPulling.value[url] = false;
-  fetchModels("ollama");
+  fetchModels("ollama", url);
 }
 
 const openaiAvailable = ref(false);
@@ -245,17 +241,19 @@ onMounted(async () => {
         class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
       >
         <div
-          v-for="model in models?.openai.sort((a, b) => a.localeCompare(b))"
-          :key="model"
+          v-for="model in models?.openai.sort((a, b) =>
+            a.name.localeCompare(b.name),
+          )"
+          :key="model.name"
           :class="[
             'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
             checkAvailableModel(model)
               ? 'bg-(--main-color) text-(--bg-color)'
               : 'text-(--text-color)',
           ]"
-          @click="updateAvailableModels(model, 'openai')"
+          @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model }}</HoverScrollText>
+          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -270,17 +268,19 @@ onMounted(async () => {
         class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
       >
         <div
-          v-for="model in models?.gemini.sort((a, b) => a.localeCompare(b))"
-          :key="model"
+          v-for="model in models?.gemini.sort((a, b) =>
+            a.name.localeCompare(b.name),
+          )"
+          :key="model.name"
           :class="[
             'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
             checkAvailableModel(model)
               ? 'bg-(--main-color) text-(--bg-color)'
               : 'text-(--text-color)',
           ]"
-          @click="updateAvailableModels(model, 'gemini')"
+          @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model }}</HoverScrollText>
+          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -295,17 +295,19 @@ onMounted(async () => {
         class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
       >
         <div
-          v-for="model in models?.anthropic.sort((a, b) => a.localeCompare(b))"
-          :key="model"
+          v-for="model in models?.anthropic.sort((a, b) =>
+            a.name.localeCompare(b.name),
+          )"
+          :key="model.name"
           :class="[
             'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
             checkAvailableModel(model)
               ? 'bg-(--main-color) text-(--bg-color)'
               : 'text-(--text-color)',
           ]"
-          @click="updateAvailableModels(model, 'anthropic')"
+          @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model }}</HoverScrollText>
+          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -394,24 +396,24 @@ onMounted(async () => {
         >
           <div
             v-for="model in (models?.ollama[url] || []).sort((a, b) =>
-              a.localeCompare(b),
+              a.name.localeCompare(b.name),
             )"
-            :key="model"
+            :key="model.name"
             :class="[
               'flex items-center justify-between gap-2 border border-(--main-color) rounded-full text-center truncate px-3 cursor-pointer',
-              checkAvailableModel(model, url)
+              checkAvailableModel(model)
                 ? 'bg-(--main-color) text-(--bg-color)'
                 : 'text-(--text-color)',
             ]"
-            @click="updateAvailableModels(model, 'ollama', url)"
+            @click="updateAvailableModels(model)"
           >
-            <HoverScrollText>{{ model }}</HoverScrollText>
+            <HoverScrollText>{{ model.displayName }}</HoverScrollText>
             <Icon
               name="lucide:trash-2"
               class="text-(--text-color) ml-1"
               @click.stop.prevent="
                 () => {
-                  ollamaModelToDelete = { name: model, url };
+                  ollamaModelToDelete = model;
                   deleteOllamaModelModalVisible = true;
                 }
               "
@@ -421,17 +423,14 @@ onMounted(async () => {
       </div>
     </SettingsGroup>
     <SettingsGroup
-      v-if="
-        availableModels.filter((m) => !checkModelAgainstEndpoint(m.name, m.url))
-          .length
-      "
+      v-if="availableModels.filter((m) => !checkModelAgainstEndpoint(m)).length"
       title="leftover models"
       icon="lucide:alert-triangle"
       description="these models are currently not available via an api endpoint, but are still present in the system."
     >
       <div
         v-for="model in availableModels.filter(
-          (m) => !checkModelAgainstEndpoint(m.name, m.url),
+          (m) => !checkModelAgainstEndpoint(m),
         )"
         :key="model.name"
         class="flex items-center gap-2 mb-4"
@@ -443,11 +442,7 @@ onMounted(async () => {
           class="bg-(--bg-color) text-(--error-color) rounded px-1! py-1! cursor-pointer"
           @click.prevent.stop="
             () => {
-              removeModelFromAvailableModels(
-                model.name,
-                model.provider,
-                model.url,
-              );
+              removeModelFromAvailableModels(model);
             }
           "
         >

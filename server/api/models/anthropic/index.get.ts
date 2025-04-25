@@ -22,7 +22,11 @@ export default defineEventHandler(async (event) => {
 
   try {
     const modelsList = await anthropic.models.list();
-    const models = modelsList.data.map((m) => m.id);
+    const models = modelsList.data.map((m) => ({
+      name: m.id,
+      displayName: m.display_name,
+      provider: "anthropic",
+    }));
 
     return {
       models,

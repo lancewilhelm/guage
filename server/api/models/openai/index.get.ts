@@ -39,7 +39,11 @@ export default defineEventHandler(async (event) => {
     );
 
     return {
-      models: openaiModels.map((model) => model.id),
+      models: openaiModels.map((model) => ({
+        name: model.id,
+        displayName: model.id,
+        provider: "openai",
+      })),
     };
   } catch (error) {
     logger.error(error, "GET /api/models/openai: Error fetching models");

@@ -48,11 +48,17 @@ export default defineEventHandler(async (event) => {
         "GET /api/models/ollama: Error fetching Ollama models from the provided URL",
       );
     }
+    const models = ollamaModels.models.length
+      ? ollamaModels.models.map((model: OllamaModel) => ({
+          name: model.name,
+          displayName: model.name,
+          provider: "ollama",
+          url,
+        }))
+      : [];
 
     return {
-      models: ollamaModels.models.length
-        ? ollamaModels.models.map((model: OllamaModel) => model.name)
-        : [],
+      models,
     };
   } catch (error) {
     logger.error(error, "GET /api/models/ollama: Error fetching models");

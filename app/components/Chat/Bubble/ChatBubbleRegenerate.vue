@@ -82,6 +82,7 @@ watch(
             userSettingsStore.updateSettings({
               model: {
                 name: model.name,
+                displayName: model.displayName,
                 provider: model.provider,
                 url: model.url,
               },

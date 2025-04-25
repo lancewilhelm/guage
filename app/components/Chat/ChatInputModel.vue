@@ -47,7 +47,7 @@ onBeforeUnmount(() => {
       />
       <div class="flex items-center gap-1">
         <div v-if="currentModel" class="text-sm text-(--main-color)">
-          {{ currentModel.name }}
+          {{ currentModel.displayName }}
         </div>
         <div
           v-if="!currentModel && availableModels.length"
@@ -95,6 +95,7 @@ onBeforeUnmount(() => {
             userSettingsStore.updateSettings({
               model: {
                 name: model.name,
+                displayName: model.displayName,
                 provider: model.provider,
                 url: model.url,
               },
@@ -108,7 +109,7 @@ onBeforeUnmount(() => {
           class="text-(--main-color) scale-125"
         />
         <div class="flex flex-col overflow-hidden">
-          <HoverScrollText>{{ model.name }}</HoverScrollText>
+          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
           <div class="text-xs italic text-(--sub-color)">
             {{ model.url }}
           </div>

@@ -1,13 +1,9 @@
 <script setup lang="ts">
-const props = defineProps<{
-  model?: {
-    name: string;
-    provider: string;
-  };
+import type { Model } from "~/utils/db/local";
+
+defineProps<{
+  model?: Model;
 }>();
-const currentModelName = computed(() => {
-  return props.model?.name;
-});
 </script>
 
 <template>
@@ -17,7 +13,7 @@ const currentModelName = computed(() => {
       class="text-(--main-color) scale-90"
     />
     <div class="text-(--main-color) text-sm">
-      {{ currentModelName }}
+      {{ model.displayName }}
     </div>
   </div>
 </template>

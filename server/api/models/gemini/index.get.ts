@@ -31,7 +31,11 @@ export default defineEventHandler(async (event) => {
     );
     const models = response.models
       .filter((m) => m.name?.startsWith("models/gemini"))
-      .map((m) => m.name?.slice("models/".length));
+      .map((m) => ({
+        name: m.name?.slice("models/".length),
+        displayName: m.displayName,
+        provider: "gemini",
+      }));
 
     return {
       models,

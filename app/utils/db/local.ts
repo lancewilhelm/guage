@@ -7,6 +7,7 @@ import { triggerDebouncedSync } from "../sync/debounce";
 //------------------------//
 export interface Model {
   name: string;
+  displayName: string;
   provider: string;
   url?: string;
 }
