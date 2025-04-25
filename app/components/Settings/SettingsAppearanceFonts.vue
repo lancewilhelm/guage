@@ -3,7 +3,7 @@ const userSettingsStore = useUserSettingsStore();
 </script>
 
 <template>
-  <div class="w-full grid grid-cols-4 gap-2">
+  <div class="w-full grid grid-cols-2 md:grid-cols-4 gap-2">
     <button
       class="rounded-lg fira-code"
       :class="

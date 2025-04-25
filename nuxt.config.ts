@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   },
   ssr: true,
   compatibilityDate: "2025-04-12",
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   modules: [
     "@nuxt/eslint",
     "@nuxt/fonts",

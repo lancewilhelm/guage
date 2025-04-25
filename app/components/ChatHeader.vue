@@ -7,7 +7,9 @@ const { signOut } = useAuth();
   <div class="flex justify-between items-center gap-4 h-[40px] z-10 app-header">
     <div
       class="flex gap-4 items-center p-4 rounded-br-2xl app-header-left"
-      :class="!uiStore.chatListVisible ? 'bg-(--bg-color)' : ''"
+      :class="
+        !uiStore.chatListVisible ? 'backdrop-blur bg-(--bg-color)/50' : ''
+      "
     >
       <Icon
         v-if="!uiStore.chatListVisible"
@@ -24,7 +26,7 @@ const { signOut } = useAuth();
       />
     </div>
     <div
-      class="flex gap-4 items-center bg-(--bg-color) p-4 rounded-bl-2xl justify-self-end app-header-right"
+      class="flex gap-4 items-center backdrop-blur bg-(--bg-color)/50 p-4 rounded-bl-2xl justify-self-end app-header-right"
     >
       <Icon
         name="lucide:command"

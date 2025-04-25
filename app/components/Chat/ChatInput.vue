@@ -39,76 +39,30 @@ defineExpose({
   },
 });
 
+const isInputRowVisible = ref(true);
 const inputButtonRef = ref<HTMLButtonElement | null>(null);
 const emit = defineEmits(["chatContainerFocus"]);
+const { width } = useWindowSize();
 </script>
 
 <template>
-  <div
-    class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg mb-4 backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
-  >
-    <div class="flex flex-col gap-2 grow items-start chat-input-left">
-      <textarea
-        ref="chatInputRef"
-        v-model="inputValue"
-        class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea bg-inherit!"
-        placeholder="send a message..."
-        @input="resizeTextarea"
-        @keydown.enter="
-          (e) => {
-            if (isStreaming) return;
-            if (e.shiftKey) return;
-            e.preventDefault();
-            if (inputValue.trim() === '') return;
-            handleSubmitMessage(inputValue);
-            if (
-              useUserSettingsStore().settings.funboxModes.includes('confetti')
-            ) {
-              fireConfetti();
-            }
-            inputValue = '';
-            if (chatInputRef) {
-              chatInputRef.focus();
-            }
-            nextTick().then(() => {
-              resizeTextarea();
-            });
-          }
-        "
-        @keydown.esc="
-          () => {
-            if (inputButtonRef) {
-              inputButtonRef.blur();
-            }
-            if (chatInputRef) {
-              chatInputRef.blur();
-            }
-            emit('chatContainerFocus');
-          }
-        "
-      />
-      <div class="flex gap-2 items-center chat-input-bottom-row">
-        <ChatInputModel />
-        <ChatInputSystemPrompt />
-      </div>
-    </div>
-    <div class="flex items-center chat-input-right">
-      <button
-        ref="inputButtonRef"
-        class="input-button flex flex-shrink-0 items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) active:bg-(--sub-alt-color) cursor-pointer chat-input-button"
-        @mousedown.prevent="
-          () => {
-            if (inputButtonRef) {
-              inputButtonRef.blur();
-            }
-            if (chatInputRef) {
-              chatInputRef.focus();
-            }
-          }
-        "
-        @click="
-          () => {
-            if (!isStreaming) {
+  <div class="flex flex-col" :class="isInputRowVisible && 'mb-4 md:mb-8'">
+    <div
+      v-if="isInputRowVisible"
+      class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
+    >
+      <div class="flex flex-col gap-2 grow items-start chat-input-left">
+        <textarea
+          ref="chatInputRef"
+          v-model="inputValue"
+          class="input-box w-full p-1 resize-none focus:outline-none chat-input-textarea bg-inherit!"
+          placeholder="send a message..."
+          @input="resizeTextarea"
+          @keydown.enter="
+            (e) => {
+              if (isStreaming) return;
+              if (e.shiftKey) return;
+              e.preventDefault();
               if (inputValue.trim() === '') return;
               handleSubmitMessage(inputValue);
               if (
@@ -117,29 +71,98 @@ const emit = defineEmits(["chatContainerFocus"]);
                 fireConfetti();
               }
               inputValue = '';
-            } else {
-              if (!chatStore.currentChatId) return;
-              chatStore.chats[
-                chatStore.currentChatId
-              ]?.abortController?.abort();
+              if (chatInputRef) {
+                chatInputRef.focus();
+              }
+              nextTick().then(() => {
+                resizeTextarea();
+              });
             }
-            if (chatInputRef) {
-              chatInputRef.focus();
+          "
+          @keydown.esc="
+            () => {
+              if (inputButtonRef) {
+                inputButtonRef.blur();
+              }
+              if (chatInputRef) {
+                chatInputRef.blur();
+              }
+              emit('chatContainerFocus');
             }
+          "
+        />
+        <div class="flex gap-2 items-center chat-input-bottom-row">
+          <ChatInputModel />
+          <ChatInputSystemPrompt />
+        </div>
+      </div>
+      <div class="flex items-center chat-input-right">
+        <button
+          ref="inputButtonRef"
+          class="input-button flex flex-shrink-0 items-center justify-center rounded-full p-2 w-10 h-10 bg-(--main-color) text-(--bg-color) active:bg-(--sub-alt-color) cursor-pointer chat-input-button"
+          @mousedown.prevent="
+            () => {
+              if (inputButtonRef) {
+                inputButtonRef.blur();
+              }
+              if (chatInputRef) {
+                chatInputRef.focus();
+              }
+            }
+          "
+          @click="
+            () => {
+              if (!isStreaming) {
+                if (inputValue.trim() === '') return;
+                handleSubmitMessage(inputValue);
+                if (
+                  useUserSettingsStore().settings.funboxModes.includes(
+                    'confetti',
+                  )
+                ) {
+                  fireConfetti();
+                }
+                inputValue = '';
+              } else {
+                if (!chatStore.currentChatId) return;
+                chatStore.chats[
+                  chatStore.currentChatId
+                ]?.abortController?.abort();
+              }
+              if (chatInputRef) {
+                chatInputRef.focus();
+              }
+            }
+          "
+        >
+          <Icon
+            v-if="isStreaming"
+            name="fa6-solid:square"
+            class="text-(--bg-color)"
+          />
+          <Icon
+            v-else
+            name="lucide:arrow-up"
+            class="text-(--bg-color) scale-125"
+          />
+        </button>
+      </div>
+    </div>
+    <div
+      v-if="width < 448"
+      class="flex justify-center items-center w-[40px] h-[30px] bg-(--sub-color) self-center shadow-md z-10"
+      :class="isInputRowVisible ? 'rounded-b-full' : 'rounded-t-full'"
+    >
+      <Icon
+        name="lucide:chevron-down"
+        class="text-(--bg-color) scale-150"
+        :class="!isInputRowVisible && 'rotate-180'"
+        @click="
+          () => {
+            isInputRowVisible = !isInputRowVisible;
           }
         "
-      >
-        <Icon
-          v-if="isStreaming"
-          name="fa6-solid:square"
-          class="text-(--bg-color)"
-        />
-        <Icon
-          v-else
-          name="lucide:arrow-up"
-          class="text-(--bg-color) scale-125"
-        />
-      </button>
+      />
     </div>
   </div>
 </template>

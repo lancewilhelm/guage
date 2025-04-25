@@ -174,6 +174,8 @@ onMounted(() => {
 onBeforeUnmount(() => window.removeEventListener("keydown", handleKeyDown));
 
 const userSettingsStore = useUserSettingsStore();
+
+const { width } = useWindowSize();
 </script>
 
 <template>
@@ -183,11 +185,12 @@ const userSettingsStore = useUserSettingsStore();
     @click="closeSearch"
   >
     <div
-      class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] rounded-lg shadow-lg border border-(--sub-color) search-chats"
+      class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] m-4 rounded-lg shadow-lg border border-(--sub-color) search-chats"
       :style="{
-        translate: uiStore.chatListVisible
-          ? uiStore.chatListWidth / 2 + 'px'
-          : '0px',
+        translate:
+          uiStore.chatListVisible && width > 448
+            ? uiStore.chatListWidth / 2 + 'px'
+            : '0px',
       }"
       @click.stop
     >

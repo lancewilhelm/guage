@@ -90,7 +90,7 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
       </div>
       <div
         :class="[
-          'absolute left-0 right-0 pt-4 pb-4 chat-input-row pointer-events-none',
+          'absolute left-0 right-0 pt-4 chat-input-row pointer-events-none',
           routeId ? 'bottom-0' : 'bottom-1/2 transform translate-y-1/2',
         ]"
       >

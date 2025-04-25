@@ -72,7 +72,7 @@ const { width } = useWindowSize();
   >
     <div
       class="flex flex-col grow w-full chat-list"
-      :style="{ width: width < 448 ? '100%' : uiStore.chatListWidth + 'px' }"
+      :style="{ width: width < 448 ? '100vw' : uiStore.chatListWidth + 'px' }"
     >
       <div
         class="flex w-full h-[40px] items-center gap-3 px-4 shrink-0 chat-list-header"

@@ -16,7 +16,7 @@ defineProps<{
         <Icon
           v-if="typeof icon === 'string'"
           :name="icon"
-          class="text-(--main-color)"
+          class="text-(--main-color) shrink-0"
         />
         <component
           :is="icon"

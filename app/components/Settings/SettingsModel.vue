@@ -73,7 +73,7 @@ const globalSettingsStore = useGlobalSettingsStore();
         description="add additional system prompts. they will be available in the chat input."
       >
         <div
-          class="w-full h-[300px] grid grid-rows-[min-content_1fr] grid-cols-[1fr_2fr_min-content] gap-4"
+          class="w-full h-[300px] flex flex-col md:grid md:grid-rows-[min-content_1fr] md:grid-cols-[1fr_2fr_min-content] gap-4"
         >
           <div class="flex gap-2">
             <input v-model="newPromptTitle" placeholder="title" class="grow" />
@@ -81,8 +81,14 @@ const globalSettingsStore = useGlobalSettingsStore();
           <textarea
             v-model="newPromptValue"
             placeholder="prompt"
-            class="col-start-2 row-start-1 row-span-2"
+            class="col-start-2 row-start-1 row-span-2 grow"
           />
+          <button
+            class="bg-(--main-color) text-(--bg-color) rounded-lg col-start-3 row-start-1 row-span-2"
+            @click="addSystemPrompt"
+          >
+            <Icon name="lucide:plus" class="text-(--bg-color) scale-125" />
+          </button>
           <div class="w-full flex flex-col gap-2 overflow-y-auto">
             <div v-for="key in Object.keys(additionalPrompts)" :key="key">
               <div class="w-full flex gap-2 justify-between items-center">
@@ -114,12 +120,6 @@ const globalSettingsStore = useGlobalSettingsStore();
               </div>
             </div>
           </div>
-          <button
-            class="bg-(--main-color) text-(--bg-color) rounded-lg col-start-3 row-start-1 row-span-2"
-            @click="addSystemPrompt"
-          >
-            <Icon name="lucide:plus" class="text-(--bg-color) scale-125" />
-          </button>
         </div>
       </SettingsSubGroup>
       <SettingsSubGroup
