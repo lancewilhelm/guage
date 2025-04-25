@@ -134,19 +134,12 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
 
   // Handle editing of an assistant message
   if (editedMessage.role === "assistant") {
-    // Edit the assistant message
-    const updatedAssistantMessage = {
-      ...editedMessage,
-      updatedAt: new Date(),
-    };
-
     // Update the message in the store and database
-    chatStore.updateMessage(
-      chatStore.currentChatId,
-      editedMessage.id,
-      updatedAssistantMessage,
-    );
-    dbUpdateMessage(editedMessage.id, updatedAssistantMessage);
+    chatStore.updateMessage(chatStore.currentChatId, editedMessage.id, {
+      content: editedMessage.content,
+      updatedAt: new Date(),
+    });
+    dbUpdateMessage(editedMessage.id, { content: editedMessage.content });
     return;
   }
 
