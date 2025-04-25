@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import type { LocalMessage } from "~/utils/db/local";
+
+const props = defineProps<{
+  isButtonRowVisible: boolean;
+  message: LocalMessage;
+}>();
+
 const userSettingsStore = useUserSettingsStore();
 const globalSettingsStore = useGlobalSettingsStore();
 
-const currentModel = computed(() => userSettingsStore.settings.model);
 const availableModels = computed(
   () => globalSettingsStore.settings.availableModels,
 );
@@ -32,6 +38,16 @@ onBeforeUnmount(() => {
   document.removeEventListener("mousedown", handleClickOutside);
   document.removeEventListener("keydown", handleEscapeKey);
 });
+
+// Hide the popup when the button row is not visible
+watch(
+  () => props.isButtonRowVisible,
+  (newValue) => {
+    if (!newValue) {
+      popupVisible.value = false;
+    }
+  },
+);
 </script>
 
 <template>
@@ -40,36 +56,7 @@ onBeforeUnmount(() => {
       class="flex items-center gap-2 cursor-pointer chat-input-model-button"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
     >
-      <Icon
-        v-if="currentModel"
-        :name="getModelProviderIcon(currentModel.provider)"
-        class="text-(--main-color) scale-125"
-      />
-      <div class="flex items-center gap-1">
-        <div v-if="currentModel" class="text-sm text-(--main-color)">
-          {{ currentModel.name }}
-        </div>
-        <div
-          v-if="!currentModel && availableModels.length"
-          class="flex items-center gap-1"
-        >
-          <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
-          <div class="text-(--error-color)">no model selected</div>
-        </div>
-        <div v-if="!availableModels.length" class="flex items-center gap-1">
-          <Icon name="lucide:triangle-alert" class="text-(--error-color)" />
-          <div class="text-(--error-color)">no models available</div>
-        </div>
-        <Icon
-          v-if="availableModels.length"
-          name="lucide:chevron-up"
-          :class="[
-            'cursor-pointer hover:opacity-80 transition-transform ',
-            currentModel ? 'text-(--main-color)' : 'text-(--error-color)',
-            popupVisible ? 'rotate-180' : 'rotate-0 duration-200',
-          ]"
-        />
-      </div>
+      <Icon name="lucide:refresh-cw" />
     </div>
     <!-- popup -->
     <div
@@ -84,9 +71,9 @@ onBeforeUnmount(() => {
         :key="model.name"
         :class="[
           'grid grid-cols-[20px_1fr] items-center gap-2 px-3 py-2 cursor-pointer chat-input-model-item',
-          currentModel?.name === model.name &&
-          currentModel?.provider === model.provider &&
-          currentModel.url === model.url
+          message.model?.name === model.name &&
+          message.model?.provider === model.provider &&
+          message.model?.url === model.url
             ? 'bg-(--sub-color)/20'
             : 'hover:bg-(--sub-color)/10',
         ]"
@@ -99,6 +86,7 @@ onBeforeUnmount(() => {
                 url: model.url,
               },
             });
+            handleRegenerateMessage(message);
             popupVisible = false;
           }
         "

@@ -172,44 +172,41 @@ function resizeTextarea() {
               : 'flex-row chat-bubble-buttons-assistant',
           ]"
         >
-          <ChatBubbleResponseInfo :model="message.model" />
           <ChatBubbleVersions
             v-if="versionInfo && versionInfo.total > 1"
             :id="message.id"
             :version-info="versionInfo"
           />
-          <Icon
-            v-if="copied"
-            name="lucide:thumbs-up"
-            :class="[
-              'cursor-pointer',
-              isButtonRowVisible ? 'text-(--main-color)' : 'text-(--bg-color)',
-            ]"
-          />
-          <Icon
-            v-else
-            name="lucide:copy"
-            :class="[
-              'cursor-pointer',
-              isButtonRowVisible ? 'text-(--main-color)' : 'text-(--bg-color)',
-            ]"
-            @mousedown="copy(contentRef?.innerText || '')"
-          />
-          <Icon
-            name="lucide:edit"
-            :class="[
-              'cursor-pointer',
-              isButtonRowVisible ? 'text-(--main-color)' : 'text-(--bg-color)',
-            ]"
-            @click="
-              () => {
-                isEditing = true;
-                nextTick(() => {
-                  resizeTextarea();
-                });
-              }
-            "
-          />
+          <ChatBubbleResponseInfo :model="message.model" />
+          <div
+            class="flex gap-2 text-(--main-color)"
+            :class="isButtonRowVisible ? 'opacity-100' : 'opacity-0'"
+          >
+            <Icon v-if="copied" name="lucide:thumbs-up" />
+            <Icon
+              v-else
+              name="lucide:copy"
+              class="cursor-pointer"
+              @mousedown="copy(contentRef?.innerText || '')"
+            />
+            <Icon
+              name="lucide:edit"
+              class="cursor-pointer"
+              @click="
+                () => {
+                  isEditing = true;
+                  nextTick(() => {
+                    resizeTextarea();
+                  });
+                }
+              "
+            />
+            <ChatBubbleRegenerate
+              v-if="message.role === 'assistant'"
+              :message="message"
+              :is-button-row-visible="isButtonRowVisible"
+            />
+          </div>
         </div>
       </div>
     </div>

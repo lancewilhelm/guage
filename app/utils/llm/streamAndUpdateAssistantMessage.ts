@@ -4,12 +4,10 @@ import { sendMessageToLLM } from "./sendMessageToLLM";
 
 export async function streamAndUpdateAssistantMessage({
   chatId,
-  userMessageId,
   assistantMessageId,
   history,
 }: {
   chatId: string;
-  userMessageId: string;
   assistantMessageId: string;
   history: LocalMessage[];
 }) {
@@ -19,18 +17,11 @@ export async function streamAndUpdateAssistantMessage({
     return;
   }
 
-  const userMessage = chatStore.chats[chatId].messages[userMessageId];
-  if (!userMessage) {
-    logger.error("User message not found:", userMessageId);
-    return;
-  }
-
   const abortController = new AbortController();
   chatStore.setChatAbortController(chatId, abortController);
 
   try {
     await sendMessageToLLM({
-      userMessage: userMessage,
       history,
       signal: abortController.signal,
       onChunk: (partialText) => {

@@ -147,7 +147,6 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
   chatStore.setChatStreaming(chatStore.currentChatId, true);
 
   const parentId = editedMessage.parentId;
-  const history = getMessageHistoryUpToParent(chat, parentId);
 
   // Create and persist message pair
   const { userMessage, assistantMessage } = createMessagePair(
@@ -163,8 +162,74 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
     assistantMessage,
     parentId,
     chat,
-    history,
   );
+}
+
+/**
+ * Handles regenerating an assistant message in the chat
+ * This will create a new branch and stream the response
+ * @param targetMessage The edited message
+ */
+export async function handleRegenerateMessage(targetMessage: LocalMessage) {
+  const chatStore = useChatStore();
+  if (!chatStore.currentChatId) return;
+
+  const chat = chatStore.chats[chatStore.currentChatId];
+  if (!chat) return;
+
+  // Handle editing of a user message
+  chatStore.setChatStreaming(chatStore.currentChatId, true);
+
+  const parentId = targetMessage.parentId;
+
+  // Create and persist message pair
+  const assistantMessage = createAssistantMessage(
+    chatStore.currentChatId,
+    parentId,
+  );
+
+  // Update UI and storage
+  await updateChatAndGetResponse(
+    chatStore.currentChatId,
+    null,
+    assistantMessage,
+    parentId,
+    chat,
+  );
+}
+
+/**
+ * Creates a new assistant message
+ * @param chatId The chat ID
+ * @param parentId The parent message ID
+ * @returns The created assistant message
+ */
+function createAssistantMessage(chatId: string, parentId: string | null) {
+  const assistantMessageId = uuidv4();
+  const now = new Date();
+  const { user } = useAuth();
+  if (!user.value) {
+    throw new Error("User is not authenticated");
+  }
+
+  const assistantMessage: LocalMessage = {
+    id: assistantMessageId,
+    chatId,
+    userId: user.value.id,
+    content: "",
+    role: "assistant",
+    parentId,
+    childrenIds: [],
+    createdAt: now,
+    updatedAt: now,
+    synced: false,
+    model: useUserSettingsStore().settings.model,
+  };
+
+  // Persist messages to IndexedDB
+  dbCreateMessage([assistantMessage]);
+
+  return assistantMessage;
 }
 
 /**
@@ -245,24 +310,6 @@ function findLastAssistantMessageId(chat: ChatState): string | null {
 }
 
 /**
- * Gets the message history up to and including the parent message
- */
-function getMessageHistoryUpToParent(
-  chat: ChatState,
-  parentId: string | null,
-): LocalMessage[] {
-  if (!parentId || !chat) return [];
-
-  const parentIndex = chat.activeBranch.indexOf(parentId);
-  if (parentIndex === -1) return [];
-
-  return chat.activeBranch
-    .slice(0, parentIndex + 1)
-    .map((id: string) => chat.messages[id])
-    .filter(Boolean) as LocalMessage[];
-}
-
-/**
  * Updates chat with new messages, handles branch editing and streams response
  * @param chatId The chat ID
  * @param userMessage The user's message
@@ -273,14 +320,16 @@ function getMessageHistoryUpToParent(
  */
 async function updateChatAndGetResponse(
   chatId: string,
-  userMessage: LocalMessage,
+  userMessage: LocalMessage | null,
   assistantMessage: LocalMessage,
   parentId: string | null,
   chat: ChatState,
-  history?: LocalMessage[],
 ) {
   const chatStore = useChatStore();
   const now = new Date();
+  console.log("parentId:", parentId);
+  console.log("UserMessage:", userMessage);
+  console.log("AssistantMessage:", assistantMessage);
 
   if (!chatStore.chats[chatId]) return;
 
@@ -289,19 +338,26 @@ async function updateChatAndGetResponse(
     const parent = chat?.messages[parentId];
     if (parent) {
       const updatedChildren = parent.childrenIds
-        ? [...parent.childrenIds, userMessage.id]
-        : [userMessage.id];
+        ? [
+            ...parent.childrenIds,
+            userMessage ? userMessage.id : assistantMessage.id,
+          ]
+        : [userMessage ? userMessage.id : assistantMessage.id];
       dbUpdateMessage(parentId, { childrenIds: updatedChildren });
       chatStore.addMessage(chatId, { ...parent, childrenIds: updatedChildren });
     }
   }
 
   // Update state
-  chatStore.addMessage(chatId, userMessage);
+  if (userMessage) chatStore.addMessage(chatId, userMessage);
   chatStore.addMessage(chatId, assistantMessage);
 
   // Update the branch
-  chatStore.editBranch(chatId, parentId, userMessage.id);
+  chatStore.editBranch(
+    chatId,
+    parentId,
+    userMessage ? userMessage.id : assistantMessage.id,
+  );
 
   chatStore.updateChatMetadata(chatId, { updatedAt: now });
 
@@ -313,16 +369,13 @@ async function updateChatAndGetResponse(
   });
 
   // Stream the response
-  const messageHistory =
-    history ||
-    (chat.activeBranch
-      .map((id: string) => chat.messages[id])
-      .filter(Boolean)
-      .slice(0, -1) as LocalMessage[]);
+  const messageHistory = chat.activeBranch
+    .map((id: string) => chat.messages[id])
+    .filter(Boolean)
+    .slice(0, -1) as LocalMessage[];
 
   await streamAndUpdateAssistantMessage({
     chatId,
-    userMessageId: userMessage.id,
     assistantMessageId: assistantMessage.id,
     history: messageHistory,
   });
@@ -330,11 +383,12 @@ async function updateChatAndGetResponse(
   // Update chat title and timestamp
   const isFirstMessage =
     !chat.activeBranch.length ||
-    (chat.activeBranch.length === 2 &&
+    (userMessage &&
+      chat.activeBranch.length === 2 &&
       chat.activeBranch.includes(userMessage.id) &&
       chat.activeBranch.includes(assistantMessage.id));
 
-  if (isFirstMessage) {
+  if (isFirstMessage && userMessage) {
     const title = await generateChatTitle(userMessage);
     if (!title) return;
     dbUpdateChat(chatId, {

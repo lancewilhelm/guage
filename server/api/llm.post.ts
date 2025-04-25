@@ -8,7 +8,6 @@ import type { LocalMessage, Model } from "~/utils/db/local";
 
 export interface LLMRequest {
   history: LocalMessage[];
-  userMessage: LocalMessage;
   model: Model;
   systemPrompt: string;
 }
@@ -29,9 +28,8 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const { history, userMessage, model, systemPrompt }: LLMRequest =
-    await readBody(event);
-  logger.debug({ history, userMessage, model }, "Request body:");
+  const { history, model, systemPrompt }: LLMRequest = await readBody(event);
+  logger.debug({ history, model }, "Request body:");
 
   if (!model) {
     logger.error("POST /api/llm: Invalid request: No provider specified");
@@ -41,7 +39,7 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  if (!history || !Array.isArray(history) || !userMessage) {
+  if (!history || !Array.isArray(history)) {
     logger.error("POST /api/llm: Invalid request: messages are required");
     setResponseStatus(event, 400);
     return {
