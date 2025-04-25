@@ -28,13 +28,26 @@ function toggleDropdown() {
   }
 }
 
+const isMobile = computed(() => {
+  return window.innerWidth <= 448; // Tailwind's sm breakpoint
+});
 function setDropdownPosition() {
   if (dropdownTrigger.value) {
     const rect = dropdownTrigger.value.getBoundingClientRect();
+    const menuWidth = 100; // Approximate width in px, adjust as needed
+
+    const top = rect.bottom;
+    let left = rect.left;
+
+    if (isMobile.value) {
+      // Show to the left of the button
+      left = Math.max(8, rect.right - menuWidth); // 8px padding from edge
+    }
+
     dropdownStyle.value = {
       position: "fixed",
-      top: `${rect.bottom}px`,
-      left: `${rect.left}px`,
+      top: `${top}px`,
+      left: `${left}px`,
       zIndex: "9999",
     };
   }
@@ -78,7 +91,7 @@ const chatStore = useChatStore();
       class="flex items-center cursor-pointer"
       :class="{
         'opacity-0': !props.isHovered && !dropdownVisible,
-        'opacity-100': props.isHovered || dropdownVisible,
+        'opacity-100': props.isHovered || dropdownVisible || isMobile,
       }"
       @mousedown.prevent.stop="toggleDropdown"
       @dblclick.prevent.stop
