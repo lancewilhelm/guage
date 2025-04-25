@@ -40,6 +40,17 @@ export function useCommandPalette() {
       action: addCurrentThemeToFavorites,
     },
     {
+      label: "give me a random theme",
+      icon: "lucide:dice-5",
+      action: () => {
+        const randomTheme =
+          allThemes.value[Math.floor(Math.random() * allThemes.value.length)];
+        if (!randomTheme) return;
+        useUserSettingsStore().updateSettings({ theme: randomTheme.name });
+        closePalette();
+      },
+    },
+    {
       label: "font family",
       icon: "ri:font-family",
       options: getFontFamilyOptions(),
