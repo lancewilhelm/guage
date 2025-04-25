@@ -9,7 +9,7 @@
   --colorful-error-color: #ff0008;
 }
 
-#logo {
+.logo {
   background: linear-gradient(
     90deg,
     #60b6ce,
@@ -27,50 +27,6 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: rainbow-gradient 30s alternate ease-in-out infinite;
-}
-
-header #logo .top,
-.account .levelAndBar .level,
-[aria-label][data-balloon-pos]::after {
-  -webkit-text-fill-color: initial;
-}
-
-.textButton:hover,
-#restartTestButton:hover > i,
-#restartTestButton:hover > i,
-#showWordHistoryButton:hover > i,
-#saveScreenshotButton:hover > i,
-#restartTestButtonWithSameWordset:hover > i,
-#nextTestButton:hover > i,
-#practiseWordsButton:hover > i,
-#watchReplayButton:hover > i,
-#watchVideoAdButton:hover > i {
-  background: linear-gradient(
-    90deg,
-    #60b6ce,
-    #7ce3e1,
-    #b2e259,
-    #f6ee75,
-    #f5b83d,
-    #f49a98,
-    #ed7abd,
-    #dea2fa,
-    #a966f5
-  );
-  background-size: 500% auto;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: rainbow-gradient 5s alternate ease-in-out infinite;
-  transition: all 1s ease;
-}
-
-.current-theme.textButton {
-  animation: rainbow-infinite-loop 5s alternate ease-in-out infinite;
-}
-
-.current-theme.textButton:hover {
-  -webkit-text-fill-color: initial;
 }
 
 @keyframes rainbow {
@@ -168,39 +124,12 @@ header #logo .top,
     color: #ff000075;
   }
 }
-
-#words.flipped .word {
-  animation: rainbow-infinite-loop 30s linear infinite;
-}
-
-#words.flipped .word letter.correct {
-  color: var(--sub-color);
-}
-
-#words:not(.flipped) .word letter.correct {
-  animation: rainbow 7.5s ease-in-out forwards;
-}
-
-#liveStatsTextTop.timerMain,
-#liveStatsTextBottom.timerMain,
-#liveStatsMini.timerMain {
-  animation: rainbow-infinite-loop 30s linear infinite;
-}
-
-.word letter.incorrect {
-  animation: error-repeat 1s alternate ease-in-out infinite;
-}
-
-button:hover {
+button:hover,
+.input-row,
+.chat-bubble-user-content:hover,
+.command-palette,
+.search-chats {
   animation: glowing-button 2s alternate ease-in-out infinite;
-}
-
-.row .textButton:not(.active) {
-  color: #999999;
-}
-
-.textButton.active {
-  color: #111111;
 }
 
 @keyframes light-rainbow-infinite-loop {
