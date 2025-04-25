@@ -149,8 +149,8 @@ const { width } = useWindowSize();
       </div>
     </div>
     <div
-      v-if="width < 448"
-      class="flex justify-center items-center w-[40px] h-[30px] bg-(--sub-color) self-center shadow-md z-10"
+      v-if="width < 448 && chatStore.currentChatId"
+      class="flex justify-center items-center w-[40px] h-[25px] bg-(--sub-color) self-center shadow-md z-10"
       :class="isInputRowVisible ? 'rounded-b-full' : 'rounded-t-full'"
     >
       <Icon
