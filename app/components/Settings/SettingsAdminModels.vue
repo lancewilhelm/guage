@@ -253,7 +253,7 @@ onMounted(async () => {
           ]"
           @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
+          <HoverScrollText>{{ model.name }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -280,7 +280,7 @@ onMounted(async () => {
           ]"
           @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
+          <HoverScrollText>{{ model.name }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -307,7 +307,7 @@ onMounted(async () => {
           ]"
           @click="updateAvailableModels(model)"
         >
-          <HoverScrollText>{{ model.displayName }}</HoverScrollText>
+          <HoverScrollText>{{ model.name }}</HoverScrollText>
         </div>
       </div>
     </SettingsGroup>
@@ -407,7 +407,7 @@ onMounted(async () => {
             ]"
             @click="updateAvailableModels(model)"
           >
-            <HoverScrollText>{{ model.displayName }}</HoverScrollText>
+            <HoverScrollText>{{ model.name }}</HoverScrollText>
             <Icon
               name="lucide:trash-2"
               class="text-(--text-color) ml-1"
