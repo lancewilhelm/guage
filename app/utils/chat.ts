@@ -129,10 +129,29 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
   const chatStore = useChatStore();
   if (!chatStore.currentChatId) return;
 
-  chatStore.setChatStreaming(chatStore.currentChatId, true);
-
   const chat = chatStore.chats[chatStore.currentChatId];
   if (!chat) return;
+
+  // Handle editing of an assistant message
+  if (editedMessage.role === "assistant") {
+    // Edit the assistant message
+    const updatedAssistantMessage = {
+      ...editedMessage,
+      updatedAt: new Date(),
+    };
+
+    // Update the message in the store and database
+    chatStore.updateMessage(
+      chatStore.currentChatId,
+      editedMessage.id,
+      updatedAssistantMessage,
+    );
+    dbUpdateMessage(editedMessage.id, updatedAssistantMessage);
+    return;
+  }
+
+  // Handle editing of a user message
+  chatStore.setChatStreaming(chatStore.currentChatId, true);
 
   const parentId = editedMessage.parentId;
   const history = getMessageHistoryUpToParent(chat, parentId);
