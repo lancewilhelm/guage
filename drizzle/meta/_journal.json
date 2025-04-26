@@ -29,6 +29,13 @@
       "when": 1745461773685,
       "tag": "0003_flashy_deathbird",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1745629578340,
+      "tag": "0004_known_silver_fox",
+      "breakpoints": true
     }
   ]
 }

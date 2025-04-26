@@ -24,11 +24,15 @@ export async function streamAndUpdateAssistantMessage({
     await sendMessageToLLM({
       history,
       signal: abortController.signal,
-      onChunk: (partialText) => {
+      onMessage: (partialText) => {
         chatStore.updateMessage(chatId, assistantMessageId, {
           content: partialText,
         });
         dbUpdateMessage(assistantMessageId, { content: partialText });
+      },
+      onUsage: (usage) => {
+        chatStore.updateMessage(chatId, assistantMessageId, { usage });
+        dbUpdateMessage(assistantMessageId, { usage });
       },
       onError: (error) => {
         chatStore.updateMessage(chatId, assistantMessageId, { error });

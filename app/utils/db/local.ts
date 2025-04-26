@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
 import { triggerDebouncedSync } from "../sync/debounce";
+import type OpenAI from "openai";
 
 //------------------------//
 //         Types          //
@@ -10,6 +11,19 @@ export interface Model {
   displayName: string;
   provider: string;
   url?: string;
+}
+
+export interface Usage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  timeToFirstToken: number;
+  completionTime: number;
+  tokensPerSecond: number;
+  temperature: number;
+  loadDuration?: number;
+  promptTokensDetails?: OpenAI.Completions.CompletionUsage.PromptTokensDetails;
+  completionTokensDetails?: OpenAI.Completions.CompletionUsage.CompletionTokensDetails;
 }
 
 export interface LocalMessage {
@@ -26,6 +40,7 @@ export interface LocalMessage {
   error?: string;
   model?: Model;
   deleted?: boolean;
+  usage?: Usage;
 }
 
 export interface LocalChat {

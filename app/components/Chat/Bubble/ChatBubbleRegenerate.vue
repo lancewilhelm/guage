@@ -58,7 +58,8 @@ watch(
     >
       <Icon name="lucide:refresh-cw" />
     </div>
-    <!-- popup -->
+
+    <!-- Popup -->
     <div
       v-if="popupVisible && availableModels.length"
       ref="popupRef"

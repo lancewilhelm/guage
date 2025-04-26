@@ -1,5 +1,5 @@
 import { logger } from "~/utils/logger";
-import type { LocalMessage } from "~/utils/db/local";
+import type { LocalMessage, Usage } from "~/utils/db/local";
 
 interface OllamaMesageParam {
   role: "user" | "assistant" | "system";
@@ -43,6 +43,13 @@ export async function streamOllama({
         }));
         formattedMessages.unshift({ role: "system", content: systemPrompt });
 
+        const queryStartTime = performance.now();
+        let timeToFirstToken = 0;
+        let responseStartTime = 0;
+        let promptTokens = 0;
+        let completionTokens = 0;
+        let loadDuration = 0;
+
         const response = await fetch(`${url}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -66,7 +73,10 @@ export async function streamOllama({
           if (done) break;
 
           const decodedText = decoder.decode(value);
-          logger.debug(decodedText, "Ollama value:");
+          if (!timeToFirstToken) {
+            timeToFirstToken = performance.now() - queryStartTime;
+            responseStartTime = performance.now();
+          }
 
           // Split the text by newlines and parse each line as a separate JSON object
           const jsonObjects = decodedText
@@ -77,9 +87,13 @@ export async function streamOllama({
           for (const jsonText of jsonObjects) {
             try {
               const chunk = JSON.parse(jsonText) as OllamaResponse;
-              logger.debug(chunk, "Ollama chunk:");
 
-              if (chunk.done) return;
+              if (chunk.done) {
+                promptTokens = chunk.prompt_eval_count || 0;
+                completionTokens = chunk.eval_count || 0;
+                loadDuration = chunk.load_duration || 0;
+                break;
+              }
 
               const content = chunk?.message?.content;
               if (content) {
@@ -93,6 +107,21 @@ export async function streamOllama({
               console.warn("Failed to parse Ollama chunk", err, jsonText);
             }
           }
+
+          const completionTime = performance.now() - responseStartTime;
+          const usage: Usage | Partial<Usage> = {
+            promptTokens,
+            completionTokens,
+            totalTokens: promptTokens + completionTokens,
+            completionTime,
+            tokensPerSecond: (completionTokens / completionTime) * 1000,
+            timeToFirstToken,
+            temperature: 1,
+            loadDuration,
+          };
+          controller.enqueue(
+            encoder.encode(`event: usage\ndata: ${JSON.stringify(usage)}\n\n`),
+          );
         }
       } catch (error) {
         logger.error(error, "Error streaming from Ollama:");

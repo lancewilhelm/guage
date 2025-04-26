@@ -1,17 +1,19 @@
-import type { LocalMessage } from "~/utils/db/local";
+import type { LocalMessage, Usage } from "~/utils/db/local";
 import { parseSSEChunk } from "~/utils/chat";
 
 type SendMessageOptions = {
   history: LocalMessage[];
   provider?: "openai" | "ollama"; // extendable
-  onChunk?: (text: string) => void;
+  onMessage?: (text: string) => void;
+  onUsage?: (usage: Usage) => void;
   onError?: (error: string) => void;
   signal?: AbortSignal;
 };
 
 export async function sendMessageToLLM({
   history,
-  onChunk,
+  onMessage,
+  onUsage,
   onError,
   signal,
 }: SendMessageOptions): Promise<string> {
@@ -50,9 +52,12 @@ export async function sendMessageToLLM({
       if (event.eventType === "messageChunk") {
         const piece = JSON.parse(event.data);
         accumulated += piece;
-        onChunk?.(accumulated); // live update
+        onMessage?.(accumulated); // live update
       } else if (event.eventType === "error") {
         onError?.(event.data);
+      } else if (event.eventType === "usage") {
+        const usage = JSON.parse(event.data);
+        onUsage?.(usage);
       }
     }
   }

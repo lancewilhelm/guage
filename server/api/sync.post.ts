@@ -84,6 +84,7 @@ export default defineEventHandler(async (event) => {
             target: messages.id,
             set: {
               content: sql.raw("EXCLUDED.content"),
+              usage: sql.raw("EXCLUDED.usage"),
               childrenIds: sql.raw("EXCLUDED.children_ids"),
               updatedAt: sql.raw("EXCLUDED.updated_at"),
               deleted: sql.raw("EXCLUDED.deleted"),

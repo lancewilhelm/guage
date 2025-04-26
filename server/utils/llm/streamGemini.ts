@@ -1,6 +1,9 @@
 import { logger } from "~/utils/logger";
-import { GoogleGenAI } from "@google/genai";
-import type { LocalMessage } from "~/utils/db/local";
+import {
+  type GenerateContentResponseUsageMetadata,
+  GoogleGenAI,
+} from "@google/genai";
+import type { LocalMessage, Usage } from "~/utils/db/local";
 
 export function getGeminiClient() {
   const config = useRuntimeConfig();
@@ -39,16 +42,45 @@ export async function streamGemini({
           },
         });
 
+        const queryStartTime = performance.now();
+        let timeToFirstToken = 0;
+        let responseStartTime = 0;
+
         const completion = await chat.sendMessageStream({
           message: history[history.length - 1].content,
         });
 
+        let usageChunk: GenerateContentResponseUsageMetadata | undefined;
         for await (const chunk of completion) {
+          if (!timeToFirstToken) {
+            timeToFirstToken = performance.now() - queryStartTime;
+            responseStartTime = performance.now();
+          }
+          usageChunk = chunk.usageMetadata;
           const text = chunk.text || "";
           controller.enqueue(
             encoder.encode(
               `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,
             ),
+          );
+        }
+
+        if (usageChunk) {
+          const completionTime = performance.now() - responseStartTime;
+          const usage: Usage | Partial<Usage> = {
+            promptTokens: usageChunk.promptTokenCount,
+            completionTokens: usageChunk.candidatesTokenCount,
+            totalTokens:
+              (usageChunk.promptTokenCount ?? 0) +
+              (usageChunk.candidatesTokenCount ?? 0),
+            completionTime,
+            tokensPerSecond:
+              ((usageChunk.candidatesTokenCount ?? 0) / completionTime) * 1000,
+            timeToFirstToken,
+            temperature: 69,
+          };
+          controller.enqueue(
+            encoder.encode(`event: usage\ndata: ${JSON.stringify(usage)}\n\n`),
           );
         }
       } catch (error) {

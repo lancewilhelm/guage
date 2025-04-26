@@ -109,6 +109,7 @@ export const messages = sqliteTable("messages", {
   error: text("error"),
   deleted: integer("deleted", { mode: "boolean" }),
   model: text("model", { mode: "json" }),
+  usage: text("usage", { mode: "json" }),
 });
 
 // USER SETTINGS TABLE

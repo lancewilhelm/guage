@@ -1,6 +1,6 @@
 import { logger } from "~/utils/logger";
 import Anthropic from "@anthropic-ai/sdk";
-import type { LocalMessage } from "~/utils/db/local";
+import type { LocalMessage, Usage } from "~/utils/db/local";
 import type { MessageParam } from "@anthropic-ai/sdk/resources/index.mjs";
 
 export function getAnthropicClient() {
@@ -32,6 +32,12 @@ export async function streamAnthropic({
           content: msg.content,
         }));
 
+        const queryStartTime = performance.now();
+        let timeToFirstToken = 0;
+        let responseStartTime = 0;
+        let completionTokens = 0;
+        let promptTokens = 0;
+
         const completion = anthropic.messages.stream({
           max_tokens: 1024,
           model,
@@ -40,6 +46,10 @@ export async function streamAnthropic({
         });
 
         for await (const event of completion) {
+          if (!timeToFirstToken) {
+            timeToFirstToken = performance.now() - queryStartTime;
+            responseStartTime = performance.now();
+          }
           if (
             event.type === "content_block_delta" &&
             event.delta.type === "text_delta"
@@ -50,8 +60,27 @@ export async function streamAnthropic({
                 `event: messageChunk\ndata: ${JSON.stringify(text)}\n\n`,
               ),
             );
+          } else if (event.type === "message_start") {
+            promptTokens = event.message.usage.input_tokens;
+            completionTokens += event.message.usage.output_tokens;
+          } else if (event.type === "message_delta") {
+            completionTokens += event.usage.output_tokens;
           }
         }
+
+        const completionTime = performance.now() - responseStartTime;
+        const usage: Usage | Partial<Usage> = {
+          promptTokens,
+          completionTokens,
+          totalTokens: promptTokens + completionTokens,
+          completionTime,
+          tokensPerSecond: (completionTokens / completionTime) * 1000,
+          timeToFirstToken,
+          temperature: 1,
+        };
+        controller.enqueue(
+          encoder.encode(`event: usage\ndata: ${JSON.stringify(usage)}\n\n`),
+        );
       } catch (error) {
         logger.error(error, "Error streaming Claude");
         controller.enqueue(

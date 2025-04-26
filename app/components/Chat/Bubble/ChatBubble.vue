@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Imports
 import type { LocalMessage } from "~/utils/db/local";
 
 // Props
@@ -177,7 +176,10 @@ function resizeTextarea() {
             :id="message.id"
             :version-info="versionInfo"
           />
-          <ChatBubbleResponseInfo :model="message.model" />
+          <ChatBubbleResponseInfo
+            :model="message.model"
+            :usage="message.usage"
+          />
           <div
             class="flex gap-2 text-(--main-color)"
             :class="isButtonRowVisible ? 'opacity-100' : 'opacity-0'"

@@ -327,9 +327,6 @@ async function updateChatAndGetResponse(
 ) {
   const chatStore = useChatStore();
   const now = new Date();
-  console.log("parentId:", parentId);
-  console.log("UserMessage:", userMessage);
-  console.log("AssistantMessage:", assistantMessage);
 
   if (!chatStore.chats[chatId]) return;
 
