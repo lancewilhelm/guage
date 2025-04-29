@@ -111,7 +111,10 @@ export default defineEventHandler(async (event) => {
       }
 
       // Insert global settings (admin-only)
-      if (body.globalSettings && user.role === "admin") {
+      if (
+        body.globalSettings &&
+        (user.role === "admin" || user.role === "owner")
+      ) {
         const GLOBAL_SETTINGS_ID = "00000000-0000-0000-0000-000000000000";
         await cloudDb
           .insert(globalSettings)
