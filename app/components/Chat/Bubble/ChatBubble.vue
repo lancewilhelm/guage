@@ -145,6 +145,17 @@ function resizeTextarea() {
             :role="message.role"
             :updated-at="message.updatedAt"
           />
+          <div
+            v-if="message.files && message.files.length > 0"
+            class="flex flex-col gap-2 items-end"
+          >
+            <ChatInputFileItem
+              v-for="file in message.files"
+              :key="file.name"
+              :file="file"
+              :show-delete-button="false"
+            />
+          </div>
         </div>
         <div
           v-if="!message.content && !message.error"

@@ -9,6 +9,7 @@ import {
   type LocalMessage,
   type LocalChat,
   type Model,
+  type MessageFile,
 } from "./db/local";
 import { v4 as uuidv4 } from "uuid";
 import type { ChatState } from "~/stores/chat";
@@ -70,7 +71,10 @@ export function parseSSEChunk(chunk: string): SSEChunk[] {
  * @param userInput The input string from user
  * @param router The router instance
  */
-export async function handleSubmitMessage(userInput: string) {
+export async function handleSubmitMessage(
+  userInput: string,
+  files?: MessageFile[],
+) {
   if (!userInput?.trim()) return;
 
   // Get the necessary references
@@ -108,6 +112,7 @@ export async function handleSubmitMessage(userInput: string) {
     chatIdToUse,
     userInput,
     parentId,
+    files,
   );
 
   // Update UI and storage
@@ -243,6 +248,7 @@ function createMessagePair(
   chatId: string,
   content: string,
   parentId: string | null,
+  files?: MessageFile[],
 ): { userMessage: LocalMessage; assistantMessage: LocalMessage } {
   const userMessageId = uuidv4();
   const assistantMessageId = uuidv4();
@@ -269,6 +275,7 @@ function createMessagePair(
     createdAt: now,
     updatedAt: now,
     synced: false,
+    files: [...(files || [])],
   };
 
   const assistantMessage: LocalMessage = {
@@ -316,7 +323,6 @@ function findLastAssistantMessageId(chat: ChatState): string | null {
  * @param assistantMessage The assistant's message
  * @param parentId The parent message ID
  * @param chat The chat state
- * @param history The chat history
  */
 async function updateChatAndGetResponse(
   chatId: string,
@@ -371,10 +377,25 @@ async function updateChatAndGetResponse(
     .filter(Boolean)
     .slice(0, -1) as LocalMessage[];
 
+  // Expand any attached files in the user messages
+  const messageHistoryWithFiles = messageHistory.map((m) => {
+    if (m.files?.length) {
+      return {
+        ...m,
+        content:
+          m.content +
+          "\n\n" +
+          "Attached files:\n" +
+          m.files.map((file) => file.name + "\n\n" + file.text).join("\n"),
+      };
+    }
+    return m;
+  });
+
   await streamAndUpdateAssistantMessage({
     chatId,
     assistantMessageId: assistantMessage.id,
-    history: messageHistory,
+    history: messageHistoryWithFiles,
   });
 
   // Update chat title and timestamp

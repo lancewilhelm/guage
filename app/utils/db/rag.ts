@@ -29,7 +29,7 @@ const connectToLanceDB = async () => {
 connectToLanceDB();
 
 // --- Basic Text Splitter Function ---
-function simpleTextSplitter(
+export function simpleTextSplitter(
   text: string,
   chunkSize: number,
   chunkOverlap: number,
@@ -88,7 +88,7 @@ function simpleTextSplitter(
 }
 
 // --- Generate Embeddings Function ---
-async function generateEmbeddings(texts: string[]) {
+export async function generateEmbeddings(texts: string[]) {
   try {
     const openai = getOpenAIClient(); // Ensure client is initialized
     const response = await openai.embeddings.create({
@@ -171,10 +171,10 @@ export async function ingestDocumentForRAG(
       text: chunk,
       vector: embeddings[index], // Associate chunk with its embedding
       metadata: {
-        filename: originalFilename,
+        chunkIndex: index,
+        source: originalFilename,
         userId: userId,
-        // Add other metadata here, e.g., original page number if available
-        // chunkIndex: index, // Optional: store the index of the chunk
+        createdAt: new Date().toISOString(),
       },
     }));
     logger.debug(`Prepared ${dataToInsert.length} data points for insertion.`);
@@ -208,5 +208,37 @@ export async function ingestDocumentForRAG(
   }
 }
 
-// Export the splitter and embedding functions if you want to test them separately
-// export { simpleTextSplitter, generateEmbeddings };
+export async function retreiveDocumentsFromCollection(
+  collectionName: string,
+  query: string,
+) {
+  try {
+    const db = await connectToLanceDB();
+    const tables = await db.tableNames();
+    if (!tables.includes(collectionName)) {
+      logger.warn(`Collection "${collectionName}" does not exist.`);
+      return [];
+    }
+
+    // Create the query embedding
+    const queryEmbedding = await generateEmbeddings([query]);
+    if (!queryEmbedding || !queryEmbedding[0]) {
+      logger.error(`Failed to generate embedding for query "${query}".`);
+      return [];
+    }
+
+    // Perform the search
+    const table = await db.openTable(collectionName);
+    const documents = await table.search(queryEmbedding[0]).limit(5).toArray(); // Retrieve all documents
+    logger.debug(
+      { documents },
+      `Retrieved ${documents.length} documents from "${collectionName}".`,
+    );
+    return documents;
+  } catch (error) {
+    logger.error(
+      { error, collectionName },
+      "Failed to retrieve documents from collection",
+    );
+  }
+}

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { MessageFile } from "~/utils/db/local";
+
 const inputValue = ref("");
 const chatInputRef = ref<HTMLTextAreaElement | null>(null);
 const chatStore = useChatStore();
@@ -43,10 +45,25 @@ const isInputRowVisible = ref(true);
 const inputButtonRef = ref<HTMLButtonElement | null>(null);
 const emit = defineEmits(["chatContainerFocus"]);
 const { width } = useWindowSize();
+
+// Handle file uploads
+const uploadedFiles = ref<MessageFile[]>([]);
 </script>
 
 <template>
-  <div class="flex flex-col" :class="isInputRowVisible && 'mb-4 md:mb-8'">
+  <div class="flex flex-col gap-1" :class="isInputRowVisible && 'mb-4 md:mb-8'">
+    <div class="mx-4 flex gap-2">
+      <ChatInputFileItem
+        v-for="file in uploadedFiles"
+        :key="file.name"
+        :file="file"
+        @delete-file="
+          () => {
+            uploadedFiles = uploadedFiles.filter((f) => f.name !== file.name);
+          }
+        "
+      />
+    </div>
     <div
       v-if="isInputRowVisible"
       class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
@@ -64,13 +81,14 @@ const { width } = useWindowSize();
               if (e.shiftKey) return;
               e.preventDefault();
               if (inputValue.trim() === '') return;
-              handleSubmitMessage(inputValue);
+              handleSubmitMessage(inputValue, uploadedFiles);
               if (
                 useUserSettingsStore().settings.funboxModes.includes('confetti')
               ) {
                 fireConfetti();
               }
               inputValue = '';
+              uploadedFiles = [];
               if (chatInputRef) {
                 chatInputRef.focus();
               }
@@ -94,7 +112,18 @@ const { width } = useWindowSize();
         <div class="flex gap-2 items-center chat-input-bottom-row">
           <ChatInputModel />
           <ChatInputSystemPrompt />
-          <ChatInputFileUpload />
+          <ChatInputFileUpload
+            @file-uploaded="
+              (file) => {
+                if (uploadedFiles.map((f) => f.name).includes(file.name)) {
+                  uploadedFiles = uploadedFiles.filter(
+                    (f) => f.name !== file.name,
+                  );
+                }
+                uploadedFiles.push(file);
+              }
+            "
+          />
         </div>
       </div>
       <div class="flex items-center chat-input-right">
@@ -115,7 +144,7 @@ const { width } = useWindowSize();
             () => {
               if (!isStreaming) {
                 if (inputValue.trim() === '') return;
-                handleSubmitMessage(inputValue);
+                handleSubmitMessage(inputValue, uploadedFiles);
                 if (
                   useUserSettingsStore().settings.funboxModes.includes(
                     'confetti',
@@ -124,6 +153,7 @@ const { width } = useWindowSize();
                   fireConfetti();
                 }
                 inputValue = '';
+                uploadedFiles = [];
               } else {
                 if (!chatStore.currentChatId) return;
                 chatStore.chats[

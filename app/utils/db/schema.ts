@@ -110,6 +110,7 @@ export const messages = sqliteTable("messages", {
   deleted: integer("deleted", { mode: "boolean" }),
   model: text("model", { mode: "json" }),
   usage: text("usage", { mode: "json" }),
+  files: text("files", { mode: "json" }),
 });
 
 // USER SETTINGS TABLE

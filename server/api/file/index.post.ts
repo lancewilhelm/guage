@@ -3,7 +3,7 @@ import { logger } from "~/utils/logger";
 import { ingestDocumentForRAG } from "~/utils/db/rag";
 
 export default defineEventHandler(async (event) => {
-  logger.info("POST /api/rag/document");
+  logger.info("POST /api/file");
 
   // Ensure the user is authenticated
   const session = await auth.api.getSession({
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("POST /api/rag/document: Unauthorized access attempt");
+    logger.error("POST /api/file: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
     // Check if any parts were found
     if (!formDataParts || formDataParts.length === 0) {
-      logger.error("POST /api/rag/document: No form data parts received");
+      logger.error("POST /api/file: No form data parts received");
       throw createError({
         statusCode: 400,
         statusMessage: "Invalid request: No form data received",
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     if (chatIdPart && chatIdPart.data) {
       chatId = chatIdPart.data.toString("utf-8");
     } else {
-      logger.error("POST /api/rag/document: No chatId part found");
+      logger.error("POST /api/file: No chatId part found");
       setResponseStatus(event, 400);
       return {
         message: "Invalid request: No chatId provided",
@@ -51,7 +51,7 @@ export default defineEventHandler(async (event) => {
     // Check if the file part exists and has data
     if (!filePart || !filePart.data || !filePart.filename) {
       logger.error(
-        "POST /api/rag/document: No document file part found or data missing",
+        "POST /api/file: No document file part found or data missing",
       );
       setResponseStatus(event, 400);
       return {
@@ -74,7 +74,7 @@ export default defineEventHandler(async (event) => {
 
     if (!response || !response.success) {
       logger.error(
-        `POST /api/rag/document: Failed to ingest document "${originalFilename}"`,
+        `POST /api/file: Failed to ingest document "${originalFilename}"`,
       );
       setResponseStatus(event, 500);
       return {

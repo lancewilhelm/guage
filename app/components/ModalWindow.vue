@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   open: boolean;
+  shiftForChatList?: boolean;
 }>();
 
 // Add event listener for escape key to close the modal
@@ -23,16 +24,23 @@ const emit = defineEmits(["close"]);
 </script>
 
 <template>
-  <div
-    v-if="open"
-    class="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50"
-    @click="emit('close')"
-  >
+  <Teleport to="body">
     <div
-      class="bg-(--bg-color) border border-(--main-color) max-w-[60%] p-4 rounded-lg shadow-lg"
-      @click.stop
+      v-if="open"
+      class="fixed top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center z-50"
+      @click="emit('close')"
     >
-      <slot />
+      <div
+        class="bg-(--bg-color) border border-(--main-color) max-w-[60%] p-4 rounded-lg shadow-lg"
+        :style="
+          shiftForChatList && useUiStore().chatListVisible
+            ? 'margin-left: ' + useUiStore().chatListWidth + 'px'
+            : ''
+        "
+        @click.stop
+      >
+        <slot />
+      </div>
     </div>
-  </div>
+  </Teleport>
 </template>

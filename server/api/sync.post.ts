@@ -85,6 +85,7 @@ export default defineEventHandler(async (event) => {
             set: {
               content: sql.raw("EXCLUDED.content"),
               usage: sql.raw("EXCLUDED.usage"),
+              files: sql.raw("EXCLUDED.files"),
               childrenIds: sql.raw("EXCLUDED.children_ids"),
               updatedAt: sql.raw("EXCLUDED.updated_at"),
               deleted: sql.raw("EXCLUDED.deleted"),

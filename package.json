@@ -45,7 +45,7 @@
     "lowlight": "^3.3.0",
     "nuxt": "^3.16.2",
     "openai": "^4.95.0",
-    "pdf-parse": "^1.1.1",
+    "pdfreader": "^3.0.7",
     "pinia": "^3.0.2",
     "pinia-plugin-persistedstate": "^4.2.0",
     "pino": "^9.6.0",

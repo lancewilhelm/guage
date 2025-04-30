@@ -26,6 +26,13 @@ export interface Usage {
   completionTokensDetails?: OpenAI.Completions.CompletionUsage.CompletionTokensDetails;
 }
 
+export interface MessageFile {
+  name: string;
+  type: string;
+  size: number;
+  text: string;
+}
+
 export interface LocalMessage {
   id: string;
   chatId: string;
@@ -41,6 +48,7 @@ export interface LocalMessage {
   model?: Model;
   deleted?: boolean;
   usage?: Usage;
+  files?: MessageFile[];
 }
 
 export interface LocalChat {
@@ -50,9 +58,9 @@ export interface LocalChat {
   createdAt: Date;
   updatedAt: Date;
   synced: boolean;
-  deleted?: boolean;
   pinned: boolean;
   activeBranch: string[];
+  deleted?: boolean;
 }
 
 //------------------------//
@@ -88,10 +96,28 @@ export const localDb = new ChatDatabase();
  */
 export async function dbCreateMessage(message: LocalMessage | LocalMessage[]) {
   try {
+    // Create a serializable version of the message by creating a fresh object
+    const prepareMessageForStorage = (msg: LocalMessage): LocalMessage => {
+      const preparedMessage = { ...msg };
+
+      if (preparedMessage.files && preparedMessage.files.length > 0) {
+        preparedMessage.files = preparedMessage.files.map((file) => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          text: file.text,
+        }));
+      }
+
+      return preparedMessage;
+    };
+
     if (Array.isArray(message)) {
-      await localDb.messagesTable.bulkPut(message);
+      const preparedMessages = message.map(prepareMessageForStorage);
+      await localDb.messagesTable.bulkPut(preparedMessages);
     } else {
-      await localDb.messagesTable.put(message);
+      const preparedMessage = prepareMessageForStorage(message);
+      await localDb.messagesTable.put(preparedMessage);
     }
   } catch (error) {
     logger.error("Failed to insert message(s) in local DB:", error);
