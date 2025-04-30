@@ -48,6 +48,7 @@ const { width } = useWindowSize();
 
 // Handle file uploads
 const uploadedFiles = ref<MessageFile[]>([]);
+const globalSettingsStore = useGlobalSettingsStore();
 </script>
 
 <template>
@@ -113,6 +114,7 @@ const uploadedFiles = ref<MessageFile[]>([]);
           <ChatInputModel />
           <ChatInputSystemPrompt />
           <ChatInputFileUpload
+            v-if="globalSettingsStore.settings.allowFileUpload"
             @file-uploaded="
               (file) => {
                 if (uploadedFiles.map((f) => f.name).includes(file.name)) {

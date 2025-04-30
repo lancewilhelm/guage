@@ -254,9 +254,8 @@ const globalSettingsStore = useGlobalSettingsStore();
     </SettingsGroup>
     <SettingsGroup title="allow registration" icon="lucide:lock">
       <SettingsToggleItem
+        description="allow users to register themselves at /register"
         :value="globalSettingsStore.settings.allowRegistration"
-        true-label="registration allowed"
-        false-label="registration not allowed"
         @toggle="
           globalSettingsStore.updateSettings({
             allowRegistration: !globalSettingsStore.settings.allowRegistration,

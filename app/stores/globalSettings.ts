@@ -5,6 +5,7 @@ import { triggerDebouncedSync } from "~/utils/sync/debounce";
 export interface GlobalSettings {
   availableModels: Model[];
   allowRegistration: boolean;
+  allowFileUpload: boolean;
   ollamaUrls: string[];
 }
 
@@ -12,6 +13,7 @@ function getDefaultSettings(): GlobalSettings {
   return {
     availableModels: [],
     allowRegistration: false,
+    allowFileUpload: false,
     ollamaUrls: [],
   };
 }

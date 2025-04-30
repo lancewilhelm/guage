@@ -12,7 +12,7 @@ const emit = defineEmits(["toggle"]);
 
 <template>
   <div
-    class="grid grid-cols-[auto_min-content_auto] grid-rows-2 items-center gap-2"
+    class="w-full grid grid-cols-[1fr_min-content] grid-rows-2 items-center gap-2"
   >
     <div v-if="title" class="row-start-1 col-start-1">{{ title }}</div>
     <div v-if="description" class="row-start-2 col-start-1 italic">
@@ -34,7 +34,7 @@ const emit = defineEmits(["toggle"]);
         ]"
       />
     </button>
-    <div class="row-span-2 italic">
+    <div class="row-span-2 italic justify-self-end">
       <div v-if="value" class="text-sm">
         {{ trueLabel }}
       </div>
