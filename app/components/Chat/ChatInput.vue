@@ -94,6 +94,7 @@ const { width } = useWindowSize();
         <div class="flex gap-2 items-center chat-input-bottom-row">
           <ChatInputModel />
           <ChatInputSystemPrompt />
+          <ChatInputFileUpload />
         </div>
       </div>
       <div class="flex items-center chat-input-right">

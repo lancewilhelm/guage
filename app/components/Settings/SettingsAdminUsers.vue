@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { UserWithRole } from "better-auth/plugins";
-import { ref, onMounted } from "vue";
 
 const users = ref<UserWithRole[]>([]);
 const sortedUsers = ref<UserWithRole[]>([]);

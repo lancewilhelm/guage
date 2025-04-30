@@ -25,6 +25,12 @@ const tabs: Record<string, Tab> = {
     icon: "lucide:bot",
     path: "/settings/admin/models",
   },
+  rag: {
+    name: "rag",
+    component: resolveComponent("SettingsAdminRAG"),
+    icon: "lucide:library",
+    path: "/settings/admin/rag",
+  },
   users: {
     name: "users",
     component: resolveComponent("SettingsAdminUsers"),
