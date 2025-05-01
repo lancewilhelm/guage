@@ -63,7 +63,7 @@ defineExpose({
 // uiStore
 const uiStore = useUiStore();
 const topPadding = 40;
-const bottomPadding = computed(() => uiStore.inputHeight + 110);
+const bottomPadding = computed(() => uiStore.inputHeight + 120);
 
 watch(bottomPadding, () => {
   if (containerRef.value && isNearBottom.value) {

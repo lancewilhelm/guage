@@ -52,8 +52,8 @@ const globalSettingsStore = useGlobalSettingsStore();
 </script>
 
 <template>
-  <div class="flex flex-col gap-1" :class="isInputRowVisible && 'mb-4 md:mb-8'">
-    <div class="mx-4 flex gap-2">
+  <div class="flex flex-col" :class="isInputRowVisible && 'mb-4 md:mb-8'">
+    <div v-if="isInputRowVisible" class="mx-4 flex gap-2">
       <ChatInputFileItem
         v-for="file in uploadedFiles"
         :key="file.name"
@@ -67,7 +67,7 @@ const globalSettingsStore = useGlobalSettingsStore();
     </div>
     <div
       v-if="isInputRowVisible"
-      class="input-row flex gap-2 p-2 mx-4 border border-(--sub-color) rounded-lg backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
+      class="input-row flex gap-2 p-2 mx-4 mt-1 border border-(--sub-color) rounded-lg backdrop-blur-lg bg-(--bg-color)/60 shadow-md chat-input"
     >
       <div class="flex flex-col gap-2 grow items-start chat-input-left">
         <textarea
