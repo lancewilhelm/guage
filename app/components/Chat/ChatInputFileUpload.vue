@@ -67,11 +67,14 @@ const emit = defineEmits<{
     class="hidden"
     @change="handleFileChange"
   />
-  <button
+  <div
     aria-label="Upload file"
-    class="p-1! rounded-lg m-0!"
+    tabindex="0"
+    class="flex p-1 rounded-lg cursor-pointer focus-outline"
     @click="triggerFileInput"
+    @keydown.enter="triggerFileInput"
+    @keydown.space="triggerFileInput"
   >
     <Icon name="lucide:paperclip" class="cursor-pointer text-(--main-color)" />
-  </button>
+  </div>
 </template>

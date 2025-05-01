@@ -42,8 +42,24 @@ onBeforeUnmount(() => {
     class="relative chat-input-model"
   >
     <div
-      class="flex items-center gap-1 cursor-pointer"
+      class="flex items-center gap-1 cursor-pointer focus-outline rounded"
+      tabindex="0"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
+      @keydown.enter="
+        () => {
+          popupVisible = !popupVisible;
+        }
+      "
+      @keydown.esc.stop.prevent="
+        () => {
+          popupVisible = false;
+        }
+      "
+      @keydown.space="
+        () => {
+          popupVisible = !popupVisible;
+        }
+      "
     >
       <div class="text-sm text-(--main-color)">
         {{ currentPrompt }}

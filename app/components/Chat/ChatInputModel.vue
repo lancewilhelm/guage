@@ -37,8 +37,24 @@ onBeforeUnmount(() => {
 <template>
   <div class="relative chat-input-model">
     <div
-      class="flex items-center gap-2 cursor-pointer chat-input-model-button"
+      class="flex items-center gap-2 cursor-pointer chat-input-model-button focus-outline rounded"
+      tabindex="0"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
+      @keydown.enter="
+        () => {
+          popupVisible = !popupVisible;
+        }
+      "
+      @keydown.esc.stop.prevent="
+        () => {
+          popupVisible = false;
+        }
+      "
+      @keydown.space="
+        () => {
+          popupVisible = !popupVisible;
+        }
+      "
     >
       <Icon
         v-if="currentModel"

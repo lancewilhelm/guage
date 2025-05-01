@@ -131,7 +131,7 @@ button:active:focus {
 }
 
 button:focus {
-  outline: 3px solid var(--main-color);
+  outline: 2px solid var(--main-color);
   outline-offset: 3px;
 }
 
@@ -182,4 +182,9 @@ tr:last-child td {
   background-color: var(--main-color);
   color: var(--bg-color);
   outline: 3px solid var(--sub-color);
+}
+
+.focus-outline:focus {
+  outline: 2px solid var(--main-color);
+  outline-offset: 3px;
 }
