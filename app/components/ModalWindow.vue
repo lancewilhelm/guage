@@ -31,7 +31,7 @@ const emit = defineEmits(["close"]);
       @click="emit('close')"
     >
       <div
-        class="bg-(--bg-color) border border-(--main-color) max-w-[60%] p-4 rounded-lg shadow-lg"
+        class="bg-(--bg-color) border border-(--main-color) m-4 md:max-w-[80%] lg:max-w-[60%] p-4 rounded-lg shadow-lg"
         :style="
           shiftForChatList && useUiStore().chatListVisible
             ? 'margin-left: ' + useUiStore().chatListWidth + 'px'
