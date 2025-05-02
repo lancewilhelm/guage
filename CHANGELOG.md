@@ -2,6 +2,52 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/lancewilhelm/guage/compare/v0.1.2...v0.1.3) (2025-05-02)
+
+
+### Features
+
+* about section in SettingsGeneral ([989ca6d](https://github.com/lancewilhelm/guage/commits/989ca6dad4f4fdc34c6eca410bee84366d29867d))
+* adding banning user capability to admin user panel ([0d97461](https://github.com/lancewilhelm/guage/commits/0d974616427aec5885ea5d7b3225dd094c0d2f27))
+* adding global setting to control file upload ability ([cdeb24c](https://github.com/lancewilhelm/guage/commits/cdeb24cbb47e5471a284c0e6595bb6eb9dc51d38))
+* adding owner role to permissions ([4df1a5c](https://github.com/lancewilhelm/guage/commits/4df1a5cf63cd07c8a4973dd66fef2187b28d6365))
+* anthropic support, completion support for gemini, cleaning ([b8231b7](https://github.com/lancewilhelm/guage/commits/b8231b7973eb4804a9df2d8f9cbef012888f76d5))
+* font family setting ([195302e](https://github.com/lancewilhelm/guage/commits/195302e74ab0b09dd9fa3c109ae2ea5d34c52601))
+* funbox confetti and snow ([a22e320](https://github.com/lancewilhelm/guage/commits/a22e320207dacfda1c360413606a0fcb62b1f3f6))
+* gemini support ([fef379b](https://github.com/lancewilhelm/guage/commits/fef379b9ce5a45315578b6555875905038976dde))
+* message response information ([8964ea4](https://github.com/lancewilhelm/guage/commits/8964ea444f6e738b5e71a3a3372674738c71af98))
+* mobile option to hide chat input, other mobile optimizations ([db5dde1](https://github.com/lancewilhelm/guage/commits/db5dde1a5620c28d6ccbafe02fe56ca076186597))
+* moved to better-auth admin plugin for better admin functionality ([dc979e1](https://github.com/lancewilhelm/guage/commits/dc979e1e7faa01ce4ba80ce179316a97f192f435))
+* notachat themes, improvments to css classes ([cdde848](https://github.com/lancewilhelm/guage/commits/cdde848421ba833efa762c71b12d08b1d29cfde4))
+* pretty print of model names that have them ([7bfc845](https://github.com/lancewilhelm/guage/commits/7bfc845119202e0bf81af734e9bcbe4f4b95bb13))
+* proper handling of editing assistant messages ([1431d6b](https://github.com/lancewilhelm/guage/commits/1431d6b08a10f186f0be29413868f1f434dd1f31))
+* random theme giver in command palette ([f2fdbac](https://github.com/lancewilhelm/guage/commits/f2fdbac1b98da25b008cc754dcd4cce47f7d0412))
+* regeneration of llm responses, refactor of chat utils ([339e907](https://github.com/lancewilhelm/guage/commits/339e907cfae9ac9ff70c1f901acba249861e3be9))
+* simple ingestion of text documents into lancedb ([6b97885](https://github.com/lancewilhelm/guage/commits/6b97885a96b121564d2e6557781645978197a35c))
+* uploading text files directly to chat ([1727f4e](https://github.com/lancewilhelm/guage/commits/1727f4edff12d17a2bdaab6c4b4566f291937c63))
+
+
+### Bug Fixes
+
+* actual proper handling of editing assistant messages now ([479bbfb](https://github.com/lancewilhelm/guage/commits/479bbfb5d53d6165cad7017ebb5be6dc28211abe))
+* adding owner ability to sync global settings ([0b3c5a4](https://github.com/lancewilhelm/guage/commits/0b3c5a4c64b30f85b2a2fb754ce788b261bd3487))
+* chatlistitemdropdown mobile move menu to the left ([5bcf182](https://github.com/lancewilhelm/guage/commits/5bcf18245af6bd3aa459f4b982730daaf4535c09))
+* **ChatList:** removing display of empty chat list groups which renders gap padding ([fa12472](https://github.com/lancewilhelm/guage/commits/fa124721953f0e0a952ed63b0b54701ee7338c85))
+* **dbNuke:** only delete user's messages and chats, not all local indexed db messages and chats ([7e89659](https://github.com/lancewilhelm/guage/commits/7e89659e620fac646868ccbe4defdfe165dcc983))
+* ensuring drizzle-kit push runs for all docker-entrypoint.sh runs ([8c4b7f3](https://github.com/lancewilhelm/guage/commits/8c4b7f3a5cfe9e5d1a70fadec6744292ffe977d0))
+* global inject of all font families ([cd1c578](https://github.com/lancewilhelm/guage/commits/cd1c5780d7eb9bb7f8ed2295f6ee480566eda62e))
+* hiding hide chat input button on new chat screen ([c1a04b9](https://github.com/lancewilhelm/guage/commits/c1a04b9b0ab23da4332851509b0bd8eb25b64688))
+* leftover models checking against anthropic models ([10612b5](https://github.com/lancewilhelm/guage/commits/10612b5c946b5bcc8bd08390f06634441efda9a3))
+* mobile chat list behavior after new layout ([9d928e1](https://github.com/lancewilhelm/guage/commits/9d928e1dff4c0bef45e60e2a632d73649f3944c3))
+* mobile style for new file icons ([c735dba](https://github.com/lancewilhelm/guage/commits/c735dbad2ed22b26e4fe283d8e97cf091faf6073))
+* overflowing handling of chatlist with new layout ([3612f5d](https://github.com/lancewilhelm/guage/commits/3612f5d05fecd4a9aea0ca5c78f94ea7095cdbad))
+* pinia SSR settings state bleed between users, other small improvments ([370b125](https://github.com/lancewilhelm/guage/commits/370b12552e53599122c66ca8735c58fe1692d101))
+* removing broken Georgia font links ([1f50141](https://github.com/lancewilhelm/guage/commits/1f50141baf1322960063e4a8b4d3022481d5e2e9))
+* removing console log from provider icon ([aa13233](https://github.com/lancewilhelm/guage/commits/aa13233231c857024907418c019c5bf6b3f00c49))
+* removing fetchUsers log in SettingsAdminUsers ([5a01e45](https://github.com/lancewilhelm/guage/commits/5a01e452a4184ca1a7d8968918187ff3797a3a15))
+* removing other console logs ([8db2f53](https://github.com/lancewilhelm/guage/commits/8db2f53637dac1162bde51d5953dddd404e04636))
+* **SettingsAdminModels:** truncation of model name, left alignment, not hiding trash can ([dadf725](https://github.com/lancewilhelm/guage/commits/dadf72557723ea42272d939399804caa1920e01c))
+
 ### [0.1.2](https://github.com/lancewilhelm/guage/compare/v0.1.1...v0.1.2) (2025-04-21)
 
 
