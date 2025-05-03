@@ -14,7 +14,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { ChatState } from "~/stores/chat";
 import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAssistantMessage";
-// import { useUserSettingsStore } from "~/store/userSettingsStore";
+import { retreiveKnowledge } from "./db/rag";
 
 /**
  * Generate a title from the assistant's response
@@ -264,6 +264,8 @@ function createMessagePair(
     throw new Error("User is not authenticated");
   }
 
+  const knowledge = useUserSettingsStore().settings.activeKnowledge;
+
   const userMessage: LocalMessage = {
     id: userMessageId,
     chatId,
@@ -276,6 +278,7 @@ function createMessagePair(
     updatedAt: now,
     synced: false,
     files: [...(files || [])],
+    knowledge,
   };
 
   const assistantMessage: LocalMessage = {
@@ -290,6 +293,7 @@ function createMessagePair(
     updatedAt: now,
     synced: false,
     model,
+    knowledge,
   };
 
   // Persist messages to IndexedDB
@@ -351,6 +355,20 @@ async function updateChatAndGetResponse(
     }
   }
 
+  // Handle RAG if applicable
+  if (assistantMessage.knowledge && userMessage?.content) {
+    const knowledge = useKnowledgeStore().knowledge;
+    const knowledgeName = knowledge[assistantMessage.knowledge]?.name;
+    if (!knowledgeName) {
+      throw new Error("Knowledge name is not set");
+    }
+    const retrievedKnowledge = await retreiveKnowledge(
+      knowledgeName,
+      userMessage.content,
+    );
+    console.log("retrievedKnowledge:", retrievedKnowledge);
+  }
+
   // Update state
   if (userMessage) chatStore.addMessage(chatId, userMessage);
   chatStore.addMessage(chatId, assistantMessage);
@@ -372,13 +390,13 @@ async function updateChatAndGetResponse(
   });
 
   // Stream the response
-  const messageHistory = chat.activeBranch
+  let messageHistory = chat.activeBranch
     .map((id: string) => chat.messages[id])
     .filter(Boolean)
     .slice(0, -1) as LocalMessage[];
 
   // Expand any attached files in the user messages
-  const messageHistoryWithFiles = messageHistory.map((m) => {
+  messageHistory = messageHistory.map((m) => {
     if (m.files?.length) {
       return {
         ...m,
@@ -395,7 +413,7 @@ async function updateChatAndGetResponse(
   await streamAndUpdateAssistantMessage({
     chatId,
     assistantMessageId: assistantMessage.id,
-    history: messageHistoryWithFiles,
+    history: messageHistory,
   });
 
   // Update chat title and timestamp

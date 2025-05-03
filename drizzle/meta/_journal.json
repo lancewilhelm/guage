@@ -43,6 +43,34 @@
       "when": 1746044362058,
       "tag": "0005_round_shinko_yamashiro",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1746216778343,
+      "tag": "0006_ambiguous_moonstone",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1746216910017,
+      "tag": "0007_right_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1746217094955,
+      "tag": "0008_sticky_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1746304582978,
+      "tag": "0009_thin_punisher",
+      "breakpoints": true
     }
   ]
 }

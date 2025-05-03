@@ -35,6 +35,7 @@ export interface UserSettings {
   model?: Model;
   titleModel?: Model;
   defaultSystemPrompt?: string;
+  activeKnowledge?: string;
   systemPrompts: Record<string, string>;
   currentSystemPrompt?: keyof UserSettings["systemPrompts"] | "default";
   messageDisplayMode: MessageDisplayMode;

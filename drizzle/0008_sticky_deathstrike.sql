@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `knowledge_name_unique` ON `knowledge` (`name`);

@@ -126,6 +126,7 @@ const globalSettingsStore = useGlobalSettingsStore();
               }
             "
           />
+          <ChatInputKnowledge />
         </div>
       </div>
       <div class="flex items-center chat-input-right">

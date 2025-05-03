@@ -84,7 +84,7 @@ const chatContainerScrollRef = ref<HTMLDivElement | null>(null);
       v-if="(!uiStore.chatListVisible && width < 448) || width >= 448"
       class="flex h-full w-full col-start-2 overflow-hidden relative"
     >
-      <ChatHeader class="absolute top-0 w-full" />
+      <AppHeader class="absolute top-0 w-full" />
       <div ref="chatContainerScrollRef" class="flex flex-grow overflow-hidden">
         <ChatContainer ref="chatContainerRef" />
       </div>

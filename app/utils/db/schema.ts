@@ -111,6 +111,8 @@ export const messages = sqliteTable("messages", {
   model: text("model", { mode: "json" }),
   usage: text("usage", { mode: "json" }),
   files: text("files", { mode: "json" }),
+  knowledge: text("knowledge"),
+  retrievedKnowledge: text("retrieved_knowledge", { mode: "json" }),
 });
 
 // USER SETTINGS TABLE
@@ -131,6 +133,25 @@ export const globalSettings = sqliteTable("global_settings", {
     .$defaultFn(() => new Date()),
 });
 
+// KNOWLEDGE TABLE
+export const knowledge = sqliteTable("knowledge", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
+  name: text("name").notNull().unique(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull(),
+  details: text("details", { mode: "json" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 // TYPE
 export type InsertChats = InferInsertModel<typeof chats>;
 export type InsertMessages = InferInsertModel<typeof messages>;
@@ -141,3 +162,4 @@ export type SelectChats = InferSelectModel<typeof chats>;
 export type SelectMessages = InferSelectModel<typeof messages>;
 export type SelectUserSettings = InferSelectModel<typeof userSettings>;
 export type SelectGlobalSettings = InferSelectModel<typeof globalSettings>;
+export type SelectKnowledge = InferSelectModel<typeof knowledge>;
