@@ -100,26 +100,15 @@ export const localDb = new ChatDatabase();
 export async function dbCreateMessage(message: LocalMessage | LocalMessage[]) {
   try {
     // Create a serializable version of the message by creating a fresh object
-    const prepareMessageForStorage = (msg: LocalMessage): LocalMessage => {
-      const preparedMessage = { ...msg };
-
-      if (preparedMessage.files && preparedMessage.files.length > 0) {
-        preparedMessage.files = preparedMessage.files.map((file) => ({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          text: file.text,
-        }));
-      }
-
-      return preparedMessage;
+    const prepare = (msg: LocalMessage): LocalMessage => {
+      return JSON.parse(JSON.stringify(msg)) as LocalMessage;
     };
 
     if (Array.isArray(message)) {
-      const preparedMessages = message.map(prepareMessageForStorage);
+      const preparedMessages = message.map(prepare);
       await localDb.messagesTable.bulkPut(preparedMessages);
     } else {
-      const preparedMessage = prepareMessageForStorage(message);
+      const preparedMessage = prepare(message);
       await localDb.messagesTable.put(preparedMessage);
     }
   } catch (error) {
