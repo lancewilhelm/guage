@@ -32,6 +32,42 @@ export function useCommandPalette() {
   const allThemes = computed<Theme[]>(() => sortedThemesList);
 
   const options = ref<Option[]>([
+    {
+      label: "new chat",
+      icon: "lucide:message-square-plus",
+      action: goToNewChat,
+    },
+    {
+      label: "search chats",
+      icon: "lucide:search",
+      action: () => {
+        useUiStore().setChatSearchVisible(true);
+        useUiStore().setCommandPaletteVisible(false);
+      },
+    },
+    {
+      label: "knowledge",
+      icon: "lucide:library",
+      action: () => {
+        useUiStore().setCommandPaletteVisible(false);
+        navigateTo("/knowledge");
+      },
+    },
+    {
+      label: "model",
+      icon: "lucide:cpu",
+      options: getModelOptions(),
+    },
+    {
+      label: "system prompt",
+      icon: "lucide:message-square",
+      options: getPromptOptions(),
+    },
+    {
+      label: "title generator model",
+      icon: "lucide:book-a",
+      options: getTitleModelOptions(),
+    },
     { label: "theme", icon: "lucide:palette" },
     { label: "favorite themes", icon: "lucide:star" },
     {
@@ -59,34 +95,6 @@ export function useCommandPalette() {
       label: "message display mode",
       icon: "lucide:message-square-text",
       options: getMessageDisplayModeOptions(),
-    },
-    {
-      label: "model",
-      icon: "lucide:cpu",
-      options: getModelOptions(),
-    },
-    {
-      label: "title generator model",
-      icon: "lucide:book-a",
-      options: getTitleModelOptions(),
-    },
-    {
-      label: "system prompt",
-      icon: "lucide:message-square",
-      options: getPromptOptions(),
-    },
-    {
-      label: "new chat",
-      icon: "lucide:message-square-plus",
-      action: goToNewChat,
-    },
-    {
-      label: "search chats",
-      icon: "lucide:search",
-      action: () => {
-        useUiStore().setChatSearchVisible(true);
-        useUiStore().setCommandPaletteVisible(false);
-      },
     },
     {
       label: "funbox",

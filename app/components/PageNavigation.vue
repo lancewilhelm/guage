@@ -1,14 +1,33 @@
 <script setup lang="ts">
+const chatStore = useChatStore();
 const pages = {
   chat: {
     name: "chat",
+    action: () => {
+      if (chatStore.currentChatId) {
+        navigateTo(`/chat/${chatStore.currentChatId}`);
+      } else {
+        navigateTo("/chat");
+      }
+    },
     url: "/chat",
     icon: "lucide:message-square",
   },
   knowledge: {
     name: "knowledge",
+    action: () => {
+      navigateTo("/knowledge");
+    },
     url: "/knowledge",
     icon: "lucide:library",
+  },
+  settings: {
+    name: "settings",
+    action: () => {
+      navigateTo("/settings");
+    },
+    url: "/settings",
+    icon: "lucide:settings",
   },
 };
 
@@ -106,12 +125,7 @@ onBeforeUnmount(() => {
             ? 'bg-(--sub-color)/20'
             : 'hover:bg-(--sub-color)/10',
         ]"
-        @click="
-          () => {
-            navigateTo(page.url);
-            popupVisible = false;
-          }
-        "
+        @click="page.action()"
       >
         <Icon :name="page.icon" class="text-(--main-color) scale-125" />
         <div class="flex flex-col overflow-hidden">

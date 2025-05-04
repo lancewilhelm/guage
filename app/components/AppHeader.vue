@@ -1,6 +1,5 @@
 <script setup lang="ts">
 const uiStore = useUiStore();
-const { signOut } = useAuth();
 const route = useRoute();
 </script>
 
@@ -39,16 +38,6 @@ const route = useRoute();
         @click="
           uiStore.setCommandPaletteVisible(!uiStore.commandPaletteVisible)
         "
-      />
-      <Icon
-        name="lucide:settings"
-        class="text-(--main-color) cursor-pointer scale-125 header-icon"
-        @mousedown="navigateTo('/settings')"
-      />
-      <Icon
-        name="lucide:log-out"
-        class="text-(--main-color) cursor-pointer scale-125 header-icon"
-        @click="signOut"
       />
     </div>
   </div>

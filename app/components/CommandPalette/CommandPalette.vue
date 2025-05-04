@@ -67,9 +67,10 @@ watch(
     <div
       class="flex flex-col backdrop-blur-lg bg-(--bg-color)/80 w-[600px] h-[600px] m-4 rounded-lg shadow-lg font-mono command-palette border border-(--sub-color)"
       :style="{
-        translate: uiStore.chatListVisible
-          ? uiStore.chatListWidth / 2 + 'px'
-          : '0px',
+        translate:
+          uiStore.chatListVisible && route.path.startsWith('/chat')
+            ? uiStore.chatListWidth / 2 + 'px'
+            : '0px',
       }"
       @click.stop
     >
