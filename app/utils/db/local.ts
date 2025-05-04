@@ -2,7 +2,7 @@ import Dexie, { type EntityTable } from "dexie";
 import { v4 as uuidv4 } from "uuid";
 import { triggerDebouncedSync } from "../sync/debounce";
 import type OpenAI from "openai";
-import type { KnowledgeChunk } from "./rag";
+import type { KnowledgeDocumentResponse } from "../../../server/utils/db/rag";
 
 //------------------------//
 //         Types          //
@@ -50,8 +50,8 @@ export interface LocalMessage {
   deleted?: boolean;
   usage?: Usage;
   files?: MessageFile[];
-  knowledge?: string;
-  retrievedKnowledge?: KnowledgeChunk[];
+  knowledge?: KnowledgeState;
+  retrievedKnowledge?: KnowledgeDocumentResponse[];
 }
 
 export interface LocalChat {

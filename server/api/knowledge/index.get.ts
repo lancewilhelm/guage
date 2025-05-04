@@ -1,6 +1,6 @@
 import { logger } from "@/utils/logger";
 import { auth } from "@/utils/auth";
-import { cloudDb } from "~/utils/db/cloud";
+import { cloudDb } from "~~/server/utils/db/cloud";
 import { knowledge } from "~/utils/db/schema";
 import { eq } from "drizzle-orm";
 

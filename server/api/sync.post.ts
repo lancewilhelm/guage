@@ -1,4 +1,4 @@
-import { cloudDb } from "~/utils/db/cloud";
+import { cloudDb } from "~~/server/utils/db/cloud";
 import { logger } from "~/utils/logger";
 import {
   chats,

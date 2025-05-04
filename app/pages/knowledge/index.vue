@@ -40,8 +40,8 @@ onMounted(async () => {
                 {{ database.name }}
               </div>
               <div class="text-(--sub-color)">{{ database.provider }}</div>
-              <div class="">Documents: {{ database.details.documents }}</div>
-              <div class="">Chunks: {{ database.details.chunks }}</div>
+              <div class="">Documents: {{ database.documents }}</div>
+              <div class="">Chunks: {{ database.chunks }}</div>
             </div>
             <div
               v-if="Object.keys(knowledge).length === 0"

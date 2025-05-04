@@ -86,8 +86,8 @@ async function uploadFiles() {
           uploadStatus.value = `Error: ${event.data}`;
         } else if (event.eventType === "success") {
           const data = JSON.parse(event.data);
-          const { createKnowledge } = useKnowledgeStore();
-          createKnowledge(
+          const { updateKnowledge } = useKnowledgeStore();
+          updateKnowledge(
             data.id,
             data.dbName,
             provider.value,

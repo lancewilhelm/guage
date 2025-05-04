@@ -111,7 +111,7 @@ export const messages = sqliteTable("messages", {
   model: text("model", { mode: "json" }),
   usage: text("usage", { mode: "json" }),
   files: text("files", { mode: "json" }),
-  knowledge: text("knowledge"),
+  knowledge: text("knowledge", { mode: "json" }),
   retrievedKnowledge: text("retrieved_knowledge", { mode: "json" }),
 });
 
@@ -143,7 +143,8 @@ export const knowledge = sqliteTable("knowledge", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   provider: text("provider").notNull(),
-  details: text("details", { mode: "json" }),
+  documents: integer("documents").notNull(),
+  chunks: integer("chunks").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

@@ -14,7 +14,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import type { ChatState } from "~/stores/chat";
 import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAssistantMessage";
-import { retreiveKnowledge } from "./db/rag";
+import type { KnowledgeDocumentResponse } from "~~/server/utils/db/rag";
 
 /**
  * Generate a title from the assistant's response
@@ -265,6 +265,9 @@ function createMessagePair(
   }
 
   const knowledge = useUserSettingsStore().settings.activeKnowledge;
+  const activeKnowledge = knowledge
+    ? useKnowledgeStore().knowledge[knowledge]
+    : undefined;
 
   const userMessage: LocalMessage = {
     id: userMessageId,
@@ -278,7 +281,7 @@ function createMessagePair(
     updatedAt: now,
     synced: false,
     files: [...(files || [])],
-    knowledge,
+    knowledge: activeKnowledge,
   };
 
   const assistantMessage: LocalMessage = {
@@ -293,7 +296,7 @@ function createMessagePair(
     updatedAt: now,
     synced: false,
     model,
-    knowledge,
+    knowledge: activeKnowledge,
   };
 
   // Persist messages to IndexedDB
@@ -355,20 +358,6 @@ async function updateChatAndGetResponse(
     }
   }
 
-  // Handle RAG if applicable
-  if (assistantMessage.knowledge && userMessage?.content) {
-    const knowledge = useKnowledgeStore().knowledge;
-    const knowledgeName = knowledge[assistantMessage.knowledge]?.name;
-    if (!knowledgeName) {
-      throw new Error("Knowledge name is not set");
-    }
-    const retrievedKnowledge = await retreiveKnowledge(
-      knowledgeName,
-      userMessage.content,
-    );
-    console.log("retrievedKnowledge:", retrievedKnowledge);
-  }
-
   // Update state
   if (userMessage) chatStore.addMessage(chatId, userMessage);
   chatStore.addMessage(chatId, assistantMessage);
@@ -389,11 +378,56 @@ async function updateChatAndGetResponse(
     updatedAt: now,
   });
 
-  // Stream the response
+  // Handle RAG if applicable
+  if (assistantMessage.knowledge && userMessage?.content) {
+    const knowledgeName = assistantMessage.knowledge.name;
+    const response = await $fetch<{ knowledge: KnowledgeDocumentResponse[] }>(
+      "/api/knowledge/document",
+      {
+        method: "GET",
+        params: {
+          knowledgeName,
+          type: "vector",
+          query: userMessage.content,
+        },
+      },
+    );
+    if (!response) {
+      throw new Error("Failed to retrieve knowledge");
+    }
+
+    assistantMessage.retrievedKnowledge = response.knowledge;
+    dbUpdateMessage(assistantMessage.id, {
+      retrievedKnowledge: response.knowledge,
+    });
+    chatStore.updateMessage(chatId, assistantMessage.id, {
+      retrievedKnowledge: response.knowledge,
+    });
+  }
+
   let messageHistory = chat.activeBranch
     .map((id: string) => chat.messages[id])
-    .filter(Boolean)
-    .slice(0, -1) as LocalMessage[];
+    .filter(Boolean) as LocalMessage[];
+
+  // Add any retreived knowledge to the user messages
+  messageHistory = messageHistory.map((m, i, arr) => {
+    if (m.role === "user" && m.knowledge) {
+      const retrievedKnowledge = arr[i + 1]?.retrievedKnowledge;
+      if (retrievedKnowledge) {
+        return {
+          ...m,
+          content:
+            m.content +
+            "\n\n" +
+            "Respond the user's message above using the following retreived knowledge if applicable. Include citations to the document name when referencing the retreived knowledge:\n" +
+            retrievedKnowledge
+              .map((doc) => `- ${doc.source}:\n\n${doc.text}`)
+              .join("\n"),
+        };
+      }
+    }
+    return m;
+  });
 
   // Expand any attached files in the user messages
   messageHistory = messageHistory.map((m) => {
@@ -409,6 +443,9 @@ async function updateChatAndGetResponse(
     }
     return m;
   });
+
+  // Remove the assistant message from the history
+  messageHistory = messageHistory.slice(0, -1);
 
   await streamAndUpdateAssistantMessage({
     chatId,

@@ -1,5 +1,5 @@
 import { auth } from "~/utils/auth"; // path to your auth file
-import { cloudDb } from "~/utils/db/cloud";
+import { cloudDb } from "~~/server/utils/db/cloud";
 import { users } from "~/utils/db/schema";
 import { count } from "drizzle-orm";
 

@@ -1,6 +1,6 @@
 import { logger } from "@/utils/logger";
 import { auth } from "@/utils/auth";
-import { deleteKnowledgeDB } from "~/utils/db/rag";
+import { deleteKnowledgeDB } from "~~/server/utils/db/rag";
 
 export default defineEventHandler(async (event) => {
   logger.debug("DELETE /api/knowledge");
@@ -18,10 +18,10 @@ export default defineEventHandler(async (event) => {
     };
   }
 
-  const { id }: { id: string } = await readBody(event);
+  const { id, name }: { id: string; name: string } = await readBody(event);
 
   try {
-    deleteKnowledgeDB(id);
+    deleteKnowledgeDB(id, name);
     return { success: true };
   } catch (error) {
     logger.error("DELETE /api/knowledge: Error deleting knowledge", error);

@@ -71,6 +71,13 @@
       "when": 1746304582978,
       "tag": "0009_thin_punisher",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1746378758122,
+      "tag": "0010_happy_madame_masque",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
 import type { MultiPartData } from "h3";
-import { streamIngestFile } from "~/utils/db/rag";
+import { streamIngestFile } from "~~/server/utils/db/rag";
 
 export default defineEventHandler(async (event) => {
   logger.info("POST /api/knowledge/document"); // Updated log path to match frontend

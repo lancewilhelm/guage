@@ -191,6 +191,16 @@ function resizeTextarea() {
             :model="message.model"
             :usage="message.usage"
           />
+          <ChatBubbleRetrievedKnowledge
+            v-if="
+              message.role === 'assistant' &&
+              message.knowledge &&
+              message.retrievedKnowledge &&
+              message.retrievedKnowledge.length > 0
+            "
+            :knowledge="message.knowledge"
+            :retrieved-knowledge="message.retrievedKnowledge"
+          />
           <div
             class="flex gap-2 text-(--main-color)"
             :class="isButtonRowVisible ? 'opacity-100' : 'opacity-0'"

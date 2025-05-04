@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { admin as baAdmin } from "better-auth/plugins";
 import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { cloudDb } from "./db/cloud";
+import { cloudDb } from "~~/server/utils/db/cloud";
 import * as schema from "./db/schema";
 import { count } from "drizzle-orm";
 import { ac, user, admin, owner } from "./permissions";

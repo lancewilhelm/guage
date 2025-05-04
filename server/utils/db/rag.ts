@@ -1,25 +1,24 @@
-import * as lancedb from "@lancedb/lancedb";
 import { logger } from "~/utils/logger"; // Assuming your logger utility
 import type { MultiPartData } from "h3";
 import { cloudDb } from "./cloud";
-import { knowledge } from "./schema";
+import { knowledge } from "../../../app/utils/db/schema";
 import { v4 as uuidv4 } from "uuid";
-import { eq } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
+import type { Connection } from "@lancedb/lancedb";
 
 // --- Configuration ---
 const DB_PATH = process.env.LANCEDB_PATH || "data/vector.db"; // Use environment variable for path
-const EMBEDDING_MODEL = "text-embedding-3-small"; // Or 'text-embedding-3-small'/'large'
-
-// Basic splitter configuration
-const CHUNK_SIZE = 500; // Max characters per chunk
-const CHUNK_OVERLAP = 0; // Characters of overlap between chunks
+const EMBEDDING_MODEL = "text-embedding-3-small";
+const CHUNK_SIZE = 500;
+const CHUNK_OVERLAP = 0;
 
 // --- Initialize LanceDB Connection ---
-// Use a promise to ensure the connection is established before use
-let ragDb: lancedb.Connection;
+let ragDb: Connection;
 async function connectToLanceDB() {
   if (!ragDb) {
     try {
+      // dynamically import the native addon at runtime
+      const lancedb = await import("@lancedb/lancedb");
       ragDb = await lancedb.connect(DB_PATH);
       logger.debug(`Connected to LanceDB at ${DB_PATH}`);
     } catch (error) {
@@ -42,42 +41,32 @@ export function simpleTextSplitter(
   if (!text) return [];
 
   const chunks: string[] = [];
-  const sentences = text.split(/(?<=[.!?])\s+|\n+/); // Split by sentence endings or newlines
-
+  const sentences = text.split(/(?<=[.!?])\s+|\n+/);
   let currentChunk = "";
+
   for (const sentence of sentences) {
-    // If adding the next sentence exceeds chunk size, push the current chunk
     if (
       currentChunk.length + sentence.length + (currentChunk ? 1 : 0) >
       chunkSize
     ) {
       if (currentChunk) {
-        // Only push if currentChunk is not empty
         chunks.push(currentChunk.trim());
       }
-      // Start a new chunk, potentially adding overlap from the end of the previous one
       currentChunk = currentChunk
         .slice(Math.max(0, currentChunk.length - chunkOverlap))
         .trim();
-      if (currentChunk) {
-        currentChunk += " "; // Add space if overlap exists
-      }
+      if (currentChunk) currentChunk += " ";
       currentChunk += sentence;
     } else {
-      // Otherwise, add the sentence to the current chunk
-      if (currentChunk) {
-        currentChunk += " "; // Add space between sentences
-      }
+      if (currentChunk) currentChunk += " ";
       currentChunk += sentence;
     }
   }
 
-  // Add the last chunk if it's not empty
   if (currentChunk) {
     chunks.push(currentChunk.trim());
   }
 
-  // Basic fallback for very long single lines/sentences that exceed chunk size
   if (chunks.length === 1 && chunks[0] && chunks[0].length > chunkSize) {
     logger.warn(
       `Single chunk exceeding size ${chunkSize}. Falling back to simple character split.`,
@@ -89,22 +78,19 @@ export function simpleTextSplitter(
     return fallbackChunks.filter((c) => c.trim().length > 0);
   }
 
-  return chunks.filter((c) => c.trim().length > 0); // Filter out any empty chunks
+  return chunks.filter((c) => c.trim().length > 0);
 }
 
 // --- Generate Embeddings Function ---
 export async function generateEmbeddings(texts: string[]) {
   try {
-    const openai = getOpenAIClient(); // Ensure client is initialized
+    const openai = getOpenAIClient();
     const response = await openai.embeddings.create({
       model: EMBEDDING_MODEL,
-      input: texts, // Pass the array of texts
+      input: texts,
     });
 
-    // The response contains an array of embedding objects
-    // We need to extract the 'embedding' array from each object
     const embeddings = response.data.map((item) => item.embedding);
-
     if (embeddings.length !== texts.length) {
       logger.error(
         `Embedding mismatch: Expected ${texts.length} embeddings, got ${embeddings.length}`,
@@ -125,20 +111,22 @@ export async function generateEmbeddings(texts: string[]) {
 }
 
 export interface KnowledgeChunk {
+  id: string;
   text: string;
-  vector: number[] | undefined;
-  metadata: {
-    chunkIndex: number;
-    source: string;
-    userId: string;
-    createdAt: string;
-  };
+  chunkIndex: number;
+  source: string;
+  userId: string;
+  createdAt: string;
   [key: string]: unknown;
+}
+
+export interface KnowledgeChunkWithVector extends KnowledgeChunk {
+  vector: number[] | undefined;
 }
 
 export async function addDocumentstoLocalDB(
   dbName: string,
-  dataToInsert: KnowledgeChunk[],
+  dataToInsert: KnowledgeChunkWithVector[],
 ) {
   try {
     const db = await connectToLanceDB();
@@ -174,7 +162,6 @@ export async function processDocument(
   );
 
   try {
-    // 1. Split the text
     const chunks = simpleTextSplitter(
       rawTextContent,
       CHUNK_SIZE,
@@ -192,9 +179,8 @@ export async function processDocument(
     }
     logger.debug(`Split document into ${chunks.length} chunks.`);
 
-    // 2. Generate embeddings for all chunks
     const embeddings = await generateEmbeddings(chunks);
-    if (!embeddings || embeddings.length === 0) {
+    if (!embeddings?.length) {
       logger.error(
         `Failed to generate embeddings for document "${originalFilename}".`,
       );
@@ -205,17 +191,17 @@ export async function processDocument(
       };
     }
 
-    // 3. Prepare data for insertion
-    const dataToInsert: KnowledgeChunk[] = chunks.map((chunk, index) => ({
-      text: chunk,
-      vector: embeddings[index], // Associate chunk with its embedding
-      metadata: {
+    const dataToInsert: KnowledgeChunkWithVector[] = chunks.map(
+      (chunk, index) => ({
+        id: uuidv4(),
+        text: chunk,
+        vector: embeddings[index],
         chunkIndex: index,
         source: originalFilename,
         userId: userId,
         createdAt: new Date().toISOString(),
-      },
-    }));
+      }),
+    );
     logger.debug(`Prepared ${dataToInsert.length} data points for insertion.`);
 
     return dataToInsert;
@@ -241,10 +227,9 @@ export async function streamIngestFile(
     async start(controller) {
       try {
         if (provider === "local") {
-          const dataToInsert: KnowledgeChunk[] = [];
+          const dataToInsert: KnowledgeChunkWithVector[] = [];
           for (const [index, filePart] of fileParts.entries()) {
-            const originalFilename: string = filePart.filename || "unknown.txt"; // Fallback name
-            const fileType: string | undefined = filePart.type; // MIME type
+            const originalFilename: string = filePart.filename || "unknown.txt";
             const fileContent: Buffer = filePart.data;
             controller.enqueue(
               encoder.encode(
@@ -252,7 +237,7 @@ export async function streamIngestFile(
               ),
             );
             logger.debug(
-              `Processing file: "${originalFilename}", Type: "${fileType}", Size: ${fileContent.length}`,
+              `Processing file: "${originalFilename}", Size: ${fileContent.length}`,
             );
             const processedData = await processDocument(
               fileContent.toString(),
@@ -260,16 +245,16 @@ export async function streamIngestFile(
               dbName,
               userId,
             );
-            if (processedData) {
-              dataToInsert.push(...(processedData as KnowledgeChunk[]));
-            }
+            if (processedData)
+              dataToInsert.push(
+                ...(processedData as KnowledgeChunkWithVector[]),
+              );
           }
+
           if (dataToInsert.length > 0) {
             await addDocumentstoLocalDB(dbName, dataToInsert);
-            const id = uuidv4();
             const now = new Date();
-            await recordDatabase(
-              id,
+            const response = await recordDatabase(
               dbName,
               userId,
               provider,
@@ -280,7 +265,7 @@ export async function streamIngestFile(
             );
             controller.enqueue(
               encoder.encode(
-                `event: success\ndata: ${JSON.stringify({ id, dbName, documents: fileParts.length, chunks: dataToInsert.length, createdAt: now, updatedAt: now })}\n\n`,
+                `event: success\ndata: ${JSON.stringify({ ...response })}\n\n`,
               ),
             );
           }
@@ -301,7 +286,6 @@ export async function streamIngestFile(
 }
 
 export async function recordDatabase(
-  id: string,
   dbName: string,
   userId: string,
   provider: string,
@@ -311,16 +295,41 @@ export async function recordDatabase(
   updatedAt: Date,
 ) {
   try {
-    const details = { documents, chunks };
-    await cloudDb.insert(knowledge).values({
-      id,
-      userId,
-      name: dbName,
-      provider,
-      details,
-      createdAt,
-      updatedAt,
-    });
+    // first check if the database exists
+    let id = uuidv4();
+    const resCheck = await cloudDb
+      .select()
+      .from(knowledge)
+      .where(eq(knowledge.name, dbName));
+    if (resCheck.length > 0) {
+      id = resCheck[0].id;
+      documents = resCheck[0].documents + documents;
+      chunks = resCheck[0].chunks + chunks;
+    }
+
+    // then insert or update the database information
+    const resInsert = await cloudDb
+      .insert(knowledge)
+      .values({
+        id,
+        userId,
+        name: dbName,
+        provider,
+        documents,
+        chunks,
+        createdAt,
+        updatedAt,
+      })
+      .onConflictDoUpdate({
+        target: knowledge.id,
+        set: {
+          documents: sql.raw("EXCLUDED.documents"),
+          chunks: sql.raw("EXCLUDED.chunks"),
+          updatedAt: sql.raw("EXCLUDED.updated_at"),
+        },
+      })
+      .returning();
+    return resInsert[0];
   } catch (error) {
     logger.error(
       { error, dbName, userId, provider },
@@ -329,26 +338,31 @@ export async function recordDatabase(
   }
 }
 
-export async function deleteKnowledgeDB(id: string) {
+export async function deleteKnowledgeDB(id: string, name: string) {
   try {
-    // Delete from the cloud database
-    await cloudDb.delete(knowledge).where(eq(knowledge.id, id));
-
-    // Delete from the local LanceDB
     const db = await connectToLanceDB();
     const tables = await db.tableNames();
-    if (tables.includes(id)) {
-      await db.dropTable(id);
-      logger.debug(`Deleted collection "${id}".`);
+    if (tables.includes(name)) {
+      await cloudDb.delete(knowledge).where(eq(knowledge.id, id));
+      await db.dropTable(name);
+      logger.debug(`Deleted collection ${id}: ${name}.`);
     } else {
-      logger.warn(`Collection "${id}" does not exist.`);
+      logger.warn(`Collection ${id}: ${name} does not exist.`);
     }
   } catch (error) {
     logger.error({ error, id }, "Failed to delete knowledge DB");
   }
 }
 
-export async function retreiveKnowledge(collectionName: string, query: string) {
+export interface KnowledgeDocumentResponse extends KnowledgeChunk {
+  _distance: number;
+}
+
+export async function retrieveKnowledge(
+  collectionName: string,
+  type: "all" | "vector",
+  query?: string,
+) {
   try {
     const db = await connectToLanceDB();
     const tables = await db.tableNames();
@@ -357,21 +371,51 @@ export async function retreiveKnowledge(collectionName: string, query: string) {
       return [];
     }
 
-    // Create the query embedding
-    const queryEmbedding = await generateEmbeddings([query]);
-    if (!queryEmbedding || !queryEmbedding[0]) {
-      logger.error(`Failed to generate embedding for query "${query}".`);
-      return [];
-    }
+    if (type === "vector" && query) {
+      const queryEmbeddings = await generateEmbeddings([query]);
+      if (!queryEmbeddings) {
+        logger.error(`Failed to generate embedding for query "${query}".`);
+        return [];
+      }
 
-    // Perform the search
-    const table = await db.openTable(collectionName);
-    const documents = await table.search(queryEmbedding[0]).limit(5).toArray(); // Retrieve all documents
-    logger.debug(
-      { documents },
-      `Retrieved ${documents.length} documents from "${collectionName}".`,
-    );
-    return documents;
+      const table = await db.openTable(collectionName);
+      const queryEmbedding = queryEmbeddings[0];
+      if (!queryEmbedding) {
+        logger.error(`No embedding generated for query "${query}".`);
+        return [];
+      }
+      const documents = (await table
+        .search(queryEmbedding)
+        .limit(5)
+        .toArray()) as KnowledgeDocumentResponse[];
+
+      logger.debug(
+        { documents },
+        `Retrieved ${documents.length} documents from "${collectionName}".`,
+      );
+
+      // remove the vector from the response
+      const remappedDocuments = documents.map((doc) => {
+        const { vector: _, ...rest } = doc;
+        return rest;
+      });
+      return remappedDocuments;
+    } else if (type === "all") {
+      const table = await db.openTable(collectionName);
+      const documents = await table.query().toArray();
+
+      logger.debug(
+        { documents },
+        `Retrieved ${documents.length} documents from "${collectionName}".`,
+      );
+
+      // remove the vector from the response
+      const remappedDocuments = documents.map((doc) => {
+        const { vector: _, ...rest } = doc;
+        return rest;
+      }) as KnowledgeDocumentResponse[];
+      return remappedDocuments;
+    }
   } catch (error) {
     logger.error(
       { error, collectionName },

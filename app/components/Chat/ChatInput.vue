@@ -49,6 +49,11 @@ const { width } = useWindowSize();
 // Handle file uploads
 const uploadedFiles = ref<MessageFile[]>([]);
 const globalSettingsStore = useGlobalSettingsStore();
+
+// Knowledge
+const knowledge = computed(() => {
+  return useKnowledgeStore().knowledge;
+});
 </script>
 
 <template>
@@ -126,7 +131,9 @@ const globalSettingsStore = useGlobalSettingsStore();
               }
             "
           />
-          <ChatInputKnowledge />
+          <ChatInputKnowledge
+            v-if="knowledge && Object.keys(knowledge).length"
+          />
         </div>
       </div>
       <div class="flex items-center chat-input-right">
