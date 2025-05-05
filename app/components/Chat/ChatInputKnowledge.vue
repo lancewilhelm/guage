@@ -41,7 +41,7 @@ onBeforeUnmount(() => {
       class="flex p-1 rounded-lg cursor-pointer focus-outline"
       :class="
         activeKnowledge === undefined
-          ? 'bg-(--bg-color) text-(--main-color)'
+          ? 'text-(--main-color)'
           : 'bg-(--main-color) text-(--bg-color)'
       "
       @mousedown.stop.prevent="() => (popupVisible = !popupVisible)"
