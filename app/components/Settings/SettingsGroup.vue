@@ -10,7 +10,7 @@ defineProps<{
     <div
       class="flex w-full items-center justify-between gap-3 text-(--main-color) text-xl settings-group-header"
     >
-      <div class="flex items-center gap-1 settings-group-title">
+      <div class="flex items-center gap-1 settings-group-title text-nowrap">
         <Icon
           v-if="typeof icon === 'string'"
           :name="icon"

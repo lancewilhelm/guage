@@ -7,6 +7,7 @@ export interface GlobalSettings {
   allowRegistration: boolean;
   allowFileUpload: boolean;
   ollamaUrls: string[];
+  lmStudioEnabled: boolean;
 }
 
 function getDefaultSettings(): GlobalSettings {
@@ -15,6 +16,7 @@ function getDefaultSettings(): GlobalSettings {
     allowRegistration: false,
     allowFileUpload: false,
     ollamaUrls: [],
+    lmStudioEnabled: false,
   };
 }
 

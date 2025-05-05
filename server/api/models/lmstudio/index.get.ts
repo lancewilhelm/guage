@@ -1,9 +1,8 @@
 import { logger } from "@/utils/logger";
 import { auth } from "@/utils/auth";
-import { getAnthropicClient } from "~~/server/utils/llm/streamAnthropic";
 
 export default defineEventHandler(async (event) => {
-  logger.debug("GET /api/models/anthropic");
+  logger.debug("GET /api/models/lmstudio");
 
   // Ensure the user is authenticated
   const session = await auth.api.getSession({
@@ -11,28 +10,28 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!session) {
-    logger.error("GET /api/models/anthropic: Unauthorized access attempt");
+    logger.error("GET /api/models/lmstudio: Unauthorized access attempt");
     setResponseStatus(event, 401);
     return {
       message: "Unauthorized",
     };
   }
 
-  const anthropic = getAnthropicClient();
+  const lmStudio = getLMStudioClient();
 
   try {
-    const modelsList = await anthropic.models.list();
-    const models = modelsList.data.map((m) => ({
-      name: m.id,
-      displayName: m.display_name,
-      provider: "anthropic",
+    const modelsList = await lmStudio.system.listDownloadedModels();
+    const models = modelsList.map((m) => ({
+      name: m.modelKey,
+      displayName: m.displayName,
+      provider: "lmstudio",
     }));
 
     return {
       models,
     };
   } catch (error) {
-    logger.error(error, "GET /api/models/anthropic: Error fetching models");
+    logger.error(error, "GET /api/models/lmstudio: Error fetching models");
     setResponseStatus(event, 500);
     return {
       message: "Failed to fetch models",

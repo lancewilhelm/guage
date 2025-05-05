@@ -5,12 +5,14 @@ interface Models {
   openai: Model[];
   gemini: Model[];
   anthropic: Model[];
+  lmstudio: Model[];
   ollama: Record<string, Model[]>;
 }
 const models = ref<Models>({
   openai: [],
   gemini: [],
   anthropic: [],
+  lmstudio: [],
   ollama: {},
 });
 async function fetchModels(provider: keyof Models, url?: string) {
@@ -22,7 +24,8 @@ async function fetchModels(provider: keyof Models, url?: string) {
   } else if (
     provider === "openai" ||
     provider === "gemini" ||
-    provider === "anthropic"
+    provider === "anthropic" ||
+    provider === "lmstudio"
   ) {
     const response = await $fetch<{ models: Model[] }>(
       `/api/models/${provider}`,
@@ -204,6 +207,10 @@ async function pullOllamaModel(url: string) {
 const openaiAvailable = ref(false);
 const geminiAvailable = ref(false);
 const anthropicAvailable = ref(false);
+const lmStudioEnabled = computed(
+  () => globalSettingsStore.settings.lmStudioEnabled,
+);
+
 // Check the ollama endpoint on mount
 onMounted(async () => {
   // Check if the ollama url is set
@@ -211,22 +218,37 @@ onMounted(async () => {
     for (const url of globalSettingsStore.settings.ollamaUrls) {
       testOllamaUrl(url);
     }
-    // Fetch the models
-    const response = await $fetch<{ providers: string[] }>("/api/providers");
-    if (response.providers.includes("openai")) {
-      openaiAvailable.value = true;
-      fetchModels("openai");
-    }
-    if (response.providers.includes("gemini")) {
-      geminiAvailable.value = true;
-      fetchModels("gemini");
-    }
-    if (response.providers.includes("anthropic")) {
-      anthropicAvailable.value = true;
-      fetchModels("anthropic");
-    }
+  }
+
+  // Check if the lm studio is available
+  if (lmStudioEnabled.value) {
+    fetchModels("lmstudio");
+  }
+  // Fetch the models
+  const response = await $fetch<{ providers: string[] }>("/api/providers");
+  if (response.providers.includes("openai")) {
+    openaiAvailable.value = true;
+    fetchModels("openai");
+  }
+  if (response.providers.includes("gemini")) {
+    geminiAvailable.value = true;
+    fetchModels("gemini");
+  }
+  if (response.providers.includes("anthropic")) {
+    anthropicAvailable.value = true;
+    fetchModels("anthropic");
   }
 });
+
+// Watch for lm studio enabled
+watch(
+  () => globalSettingsStore.settings.lmStudioEnabled,
+  (newValue) => {
+    if (newValue) {
+      fetchModels("lmstudio");
+    }
+  },
+);
 </script>
 
 <template>
@@ -312,6 +334,43 @@ onMounted(async () => {
       </div>
     </SettingsGroup>
 
+    <!-- LMStudio -->
+    <SettingsGroup title="lm studio" icon="local:lmstudio">
+      <div>
+        <SettingsToggleItem
+          title="enable LM Studio"
+          description="only connects to local lm studio instance for now"
+          :value="lmStudioEnabled"
+          @toggle="
+            () =>
+              globalSettingsStore.updateSettings({
+                lmStudioEnabled: !lmStudioEnabled,
+              })
+          "
+        />
+        <div
+          v-if="lmStudioEnabled"
+          class="w-full grid grid-cols-2 md:grid-cols-3 gap-2 text-nowrap mb-3"
+        >
+          <div
+            v-for="model in models?.lmstudio.sort((a, b) =>
+              a.name.localeCompare(b.name),
+            )"
+            :key="model.name"
+            :class="[
+              'flex  border border-(--main-color) rounded-full px-3 cursor-pointer ',
+              checkAvailableModel(model)
+                ? 'bg-(--main-color) text-(--bg-color)'
+                : 'text-(--text-color)',
+            ]"
+            @click="updateAvailableModels(model)"
+          >
+            <HoverScrollText>{{ model.name }}</HoverScrollText>
+          </div>
+        </div>
+      </div>
+    </SettingsGroup>
+    <!-- Ollama -->
     <SettingsGroup title="ollama" icon="simple-icons:ollama">
       <div class="flex items-center gap-2 mb-4">
         <div class="text-(--main-color)">add url</div>
@@ -422,6 +481,8 @@ onMounted(async () => {
         </div>
       </div>
     </SettingsGroup>
+
+    <!-- Leftover Models -->
     <SettingsGroup
       v-if="availableModels.filter((m) => !checkModelAgainstEndpoint(m)).length"
       title="leftover models"

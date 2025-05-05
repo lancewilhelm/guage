@@ -6,6 +6,7 @@ export function getModelProviderIcon(provider?: string) {
     gemini: "simple-icons:googlegemini",
     openai: "simple-icons:openai",
     anthropic: "simple-icons:anthropic",
+    lmstudio: "local:lmstudio",
   };
   return modelIcons[provider] || "";
 }

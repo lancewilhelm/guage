@@ -72,6 +72,13 @@ export default defineEventHandler(async (event) => {
           systemPrompt,
         });
         break;
+      case "lmstudio":
+        stream = await streamLMStudio({
+          history,
+          model: model.name,
+          systemPrompt,
+        });
+        break;
       case "ollama":
         if (!model.url) {
           logger.error("POST /api/llm: Invalid request: No URL specified");
