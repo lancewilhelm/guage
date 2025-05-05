@@ -17,6 +17,7 @@ A clean and simple front-end for large-language models.
 - Tailwind CSS
 - Multiple LLM provider support (local and remote)
   - Ollama
+  - LM Studio (localhost only atm)
   - OpenAI
   - Gemini
   - Anthropic
