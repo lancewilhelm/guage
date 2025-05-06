@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LocalMessage, Usage } from "~/utils/db/local";
 import type { MessageParam } from "@anthropic-ai/sdk/resources/index.mjs";
 
+// Client generator
 export function getAnthropicClient() {
   const config = useRuntimeConfig();
   const apiKey = config.anthropicApiKey;
@@ -12,6 +13,7 @@ export function getAnthropicClient() {
   return new Anthropic({ apiKey });
 }
 
+// Streaming completion
 export async function streamAnthropic({
   history,
   model,
