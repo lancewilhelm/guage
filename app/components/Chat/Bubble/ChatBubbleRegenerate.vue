@@ -48,11 +48,20 @@ watch(
     }
   },
 );
+
+const iconRef = ref<HTMLElement | null>(null);
+const renderBelow = computed(() => {
+  if (!iconRef.value) return false;
+  const iconRect = iconRef.value.getBoundingClientRect();
+
+  return iconRect.y < 240;
+});
 </script>
 
 <template>
   <div class="relative chat-input-model">
     <div
+      ref="iconRef"
       class="flex items-center gap-2 cursor-pointer chat-input-model-button"
       @mousedown.stop.prevent="popupVisible = !popupVisible"
     >
@@ -63,7 +72,8 @@ watch(
     <div
       v-if="popupVisible && availableModels.length"
       ref="popupRef"
-      class="absolute bottom-full mb-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-model-popup overflow-y-auto"
+      class="absolute my-2 left-0 bg-(--bg-color) border border-(--sub-color) rounded-lg shadow-lg w-60 max-h-60 z-10 chat-input-model-popup overflow-y-auto"
+      :class="renderBelow ? 'top-full' : 'bottom-full'"
     >
       <div
         v-for="model in availableModels.sort((a, b) =>
