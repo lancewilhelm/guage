@@ -28,7 +28,7 @@ export async function completionAnthropic({
       throw new Error("Invalid response from Anthropic");
     }
   } catch (error) {
-    logger.error(error, "Error getiting completion from OpenAI");
+    logger.error(error, "Error getiting completion from Anthropic");
     throw new Error("Internal server error");
   }
 }

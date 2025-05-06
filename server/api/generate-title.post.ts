@@ -3,6 +3,7 @@ import { auth } from "~/utils/auth";
 import type { LocalMessage, Model } from "~/utils/db/local";
 import { completionOpenAI } from "../utils/llm/completionOpenAi";
 import { completionOllama } from "../utils/llm/completionOllama";
+import { completionLMStudio } from "../utils/llm/completionLMStudio";
 import { completionGemini } from "../utils/llm/completionGemini";
 import { completionAnthropic } from "../utils/llm/completionAnthropic";
 
@@ -64,6 +65,13 @@ export default defineEventHandler(async (event) => {
         break;
       case "anthropic":
         title = await completionAnthropic({
+          history,
+          model: model.name,
+          systemPrompt: systemPrompt,
+        });
+        break;
+      case "lmstudio":
+        title = await completionLMStudio({
           history,
           model: model.name,
           systemPrompt: systemPrompt,
