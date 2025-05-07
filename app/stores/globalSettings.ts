@@ -15,7 +15,7 @@ function getDefaultSettings(): GlobalSettings {
     availableModels: [],
     allowRegistration: false,
     allowFileUpload: false,
-    ollamaUrls: [],
+    ollamaUrls: ["http://localhost:11434"],
     lmStudioEnabled: false,
   };
 }
