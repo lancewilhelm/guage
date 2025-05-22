@@ -19,9 +19,7 @@ export async function fetchLMStudioModels() {
       provider: "lmstudio",
     }));
 
-    return {
-      models,
-    };
+    return models;
   } catch (error) {
     logger.error(error, "GET /api/models/lmstudio: Error fetching models");
     throw new Error("Failed to fetch models");

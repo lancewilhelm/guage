@@ -40,7 +40,7 @@ export async function fetchOpenAIModels() {
       provider: "openai",
     }));
 
-    return { models };
+    return models;
   } catch (error) {
     logger.error(error, "GET /api/models/openai: Error fetching models");
     throw new Error("Failed to fetch models");

@@ -28,7 +28,8 @@ import {
 export interface LLMProvider {
   id: string;
   displayName: string;
-  fetchModels: (url?: string) => Promise<{ models: Model[] }>;
+  icon: string;
+  fetchModels: (url?: string) => Promise<Model[]>;
   complete: (opts: {
     history: LocalMessage[];
     model: string;
@@ -47,6 +48,7 @@ export const providers: Record<string, LLMProvider> = {
   openai: {
     id: "openai",
     displayName: "OpenAI",
+    icon: "simple-icons:openai",
     fetchModels: fetchOpenAIModels,
     complete: async ({ history, model, systemPrompt }) =>
       completionOpenAI({ history, model, systemPrompt }),
@@ -60,6 +62,7 @@ export const providers: Record<string, LLMProvider> = {
   anthropic: {
     id: "anthropic",
     displayName: "Anthropic",
+    icon: "simple-icons:anthropic",
     fetchModels: fetchAnthropicModels,
     complete: async ({ history, model, systemPrompt }) =>
       completionAnthropic({ history, model, systemPrompt }),
@@ -73,6 +76,7 @@ export const providers: Record<string, LLMProvider> = {
   gemini: {
     id: "gemini",
     displayName: "Gemini",
+    icon: "simple-icons:googlegemini",
     fetchModels: fetchGeminiModels,
     complete: async ({ history, model, systemPrompt }) =>
       completionGemini({ history, model, systemPrompt }),
@@ -86,6 +90,7 @@ export const providers: Record<string, LLMProvider> = {
   lmstudio: {
     id: "lmstudio",
     displayName: "LM Studio",
+    icon: "local:lmstudio",
     fetchModels: fetchLMStudioModels,
     complete: async ({ history, model, systemPrompt }) =>
       completionLMStudio({ history, model, systemPrompt }),
@@ -99,6 +104,7 @@ export const providers: Record<string, LLMProvider> = {
   ollama: {
     id: "ollama",
     displayName: "Ollama",
+    icon: "simple-icons:ollama",
     fetchModels: fetchOllamaModels,
     complete: async ({ history, model, systemPrompt, url }) =>
       completionOllama({ history, model, systemPrompt, url }),

@@ -54,17 +54,60 @@ export const useGlobalSettingsStore = defineStore(
 
     const updatedAt = ref<Date>(new Date(0));
 
+    function checkAvailableModel(model: Model) {
+      if (model.url) {
+        return settings.value.availableModels.some(
+          (m) =>
+            m.name === model.name &&
+            m.provider === "ollama" &&
+            m.url === model.url,
+        );
+      }
+      return settings.value.availableModels.some((m) => m.name === model.name);
+    }
+
+    function addModelToAvailableModels(model: Model) {
+      updateSettings({
+        availableModels: [...settings.value.availableModels, { ...model }],
+      });
+    }
+
+    function removeModelFromAvailableModels(model: Model) {
+      updateSettings({
+        availableModels: settings.value.availableModels.filter(
+          (m) =>
+            (m.name !== model.name && m.url === model.url) ||
+            m.name !== model.name ||
+            m.provider !== model.provider ||
+            m.url !== model.url,
+        ),
+      });
+    }
+
+    function updateAvailableModels(model: Model) {
+      if (checkAvailableModel(model)) {
+        removeModelFromAvailableModels(model);
+      } else {
+        addModelToAvailableModels(model);
+      }
+    }
+
     function $reset() {
       settings.value = getDefaultSettings();
       updatedAt.value = new Date(0);
       synced.value = true;
     }
+
     return {
       settings,
       updatedAt,
       updateSettings,
       synced,
       setSynced,
+      checkAvailableModel,
+      addModelToAvailableModels,
+      removeModelFromAvailableModels,
+      updateAvailableModels,
       $reset,
     };
   },
