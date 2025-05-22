@@ -46,7 +46,7 @@ function resizeTextarea() {
   <div
     v-if="message"
     :class="[
-      'flex cursor-default w-full',
+      'flex cursor-default w-full pb-4',
       message.role === 'user'
         ? 'flex-row-reverse chat-bubble-user'
         : 'flex-row chat-bubble-assistant',
