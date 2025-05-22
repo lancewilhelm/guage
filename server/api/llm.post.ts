@@ -1,9 +1,5 @@
 import { auth } from "~/utils/auth";
 import { logger } from "~/utils/logger";
-import { streamOpenAI } from "~~/server/utils/llm/streamOpenAi";
-import { streamOllama } from "~~/server/utils/llm/streamOllama";
-import { streamGemini } from "~~/server/utils/llm/streamGemini";
-import { streamAnthropic } from "~~/server/utils/llm/streamAnthropic";
 import type { LocalMessage, Model } from "~/utils/db/local";
 
 export interface LLMRequest {
@@ -48,58 +44,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    let stream: ReadableStream;
-
-    switch (model.provider) {
-      case "openai":
-        stream = await streamOpenAI({
-          history,
-          model: model.name,
-          systemPrompt,
-        });
-        break;
-      case "gemini":
-        stream = await streamGemini({
-          history,
-          model: model.name,
-          systemPrompt,
-        });
-        break;
-      case "anthropic":
-        stream = await streamAnthropic({
-          history,
-          model: model.name,
-          systemPrompt,
-        });
-        break;
-      case "lmstudio":
-        stream = await streamLMStudio({
-          history,
-          model: model.name,
-          systemPrompt,
-        });
-        break;
-      case "ollama":
-        if (!model.url) {
-          logger.error("POST /api/llm: Invalid request: No URL specified");
-          setResponseStatus(event, 400);
-          return {
-            message: "Invalid request: No URL specified",
-          };
-        }
-        stream = await streamOllama({
-          history,
-          model: model.name,
-          url: model.url,
-          systemPrompt,
-        });
-        break;
-      default:
-        throw createError({
-          statusCode: 400,
-          message: "Unknown provider",
-        });
-    }
+    const stream = await providers[model.provider]?.stream({
+      history,
+      model: model.name,
+      systemPrompt,
+      url: model.url,
+    });
 
     setHeaders(event, {
       "Content-Type": "text/event-stream",
