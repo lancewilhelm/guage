@@ -25,7 +25,6 @@ export default defineEventHandler(async (event) => {
 
   const provider = getQuery(event).provider as string | undefined;
   const urls = getQuery(event).urls as string[] | undefined;
-  console.log("urls", urls);
   if (!provider) {
     logger.error("GET /api/models: Missing provider");
     setResponseStatus(event, 400);

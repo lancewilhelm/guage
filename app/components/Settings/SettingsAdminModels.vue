@@ -4,14 +4,12 @@ import { providers } from "~/utils/llm/providers";
 
 async function fetchModels(provider: string, urls?: string[]) {
   if (provider === "ollama" && urls) {
-    console.log("fetchModels urls", urls);
     const response = await $fetch<Model[]>("/api/models", {
       query: {
         provider: "ollama",
         urls,
       },
     });
-    console.log("fetchModels response", response);
     return response.sort((a, b) => a.name.localeCompare(b.name));
   } else {
     const response = await $fetch<Model[]>("/api/models", {

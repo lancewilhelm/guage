@@ -113,7 +113,6 @@ async function pullOllamaModel(url: string) {
     return;
   }
   const model = modelToPull.value[url];
-  console.log("pullOllamaModel", url, model);
   if (!model) {
     return;
   }
