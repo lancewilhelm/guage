@@ -10,6 +10,7 @@ export const providers: ProviderMeta[] = [
   { id: "openai", displayName: "OpenAI", icon: "simple-icons:openai" },
   { id: "gemini", displayName: "Gemini", icon: "simple-icons:googlegemini" },
   { id: "anthropic", displayName: "Anthropic", icon: "simple-icons:anthropic" },
+  { id: "cerebras", displayName: "Cerebras", icon: "local:cerebras" },
   {
     id: "lmstudio",
     displayName: "LM Studio",

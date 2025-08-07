@@ -24,6 +24,11 @@ import {
   completionOllama,
   streamOllama,
 } from "~~/server/utils/llm/completionOllama";
+import {
+  fetchCerebrasModels,
+  completionCerebras,
+  streamCerebras,
+} from "~~/server/utils/llm/completionCerebras";
 
 export interface LLMProvider {
   id: string;
@@ -114,6 +119,20 @@ export const providers: Record<string, LLMProvider> = {
         model,
         systemPrompt,
         url,
+      }),
+  },
+  cerebras: {
+    id: "cerebras",
+    displayName: "Cerebras",
+    icon: "local:cerebras",
+    fetchModels: fetchCerebrasModels,
+    complete: async ({ history, model, systemPrompt }) =>
+      completionCerebras({ history, model, systemPrompt }),
+    stream: async ({ history, model, systemPrompt }) =>
+      streamCerebras({
+        history,
+        model,
+        systemPrompt,
       }),
   },
 };

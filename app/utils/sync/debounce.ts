@@ -1,13 +1,24 @@
-import { useSyncStore } from "~/stores/sync";
 import { debounce } from "../debounce";
 
 const DEBOUNCE_MS = 500;
 
-const _triggerSync = () => {
-  const sync = useSyncStore();
-  if (!sync.isSyncing) {
-    sync.sync();
-  }
-};
+let _debouncedSync: (() => void) | null = null;
 
-export const triggerDebouncedSync = debounce(_triggerSync, DEBOUNCE_MS);
+export const triggerDebouncedSync = () => {
+  // Lazy initialization to avoid store access during module load
+  if (!_debouncedSync) {
+    const _triggerSync = () => {
+      // Import store only when actually needed using dynamic import
+      import("~/stores/sync").then(({ useSyncStore }) => {
+        const sync = useSyncStore();
+        if (!sync.isSyncing) {
+          sync.sync();
+        }
+      });
+    };
+
+    _debouncedSync = debounce(_triggerSync, DEBOUNCE_MS);
+  }
+
+  _debouncedSync();
+};

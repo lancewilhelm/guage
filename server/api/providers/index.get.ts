@@ -3,6 +3,8 @@ import { auth } from "@/utils/auth";
 import { globalSettings } from "~/utils/db/schema";
 import { and, eq, type InferSelectModel } from "drizzle-orm";
 import type { GlobalSettings } from "~/stores/globalSettings";
+import { getLMStudioClient } from "~~/server/utils/llm/completionLMStudio";
+import { cloudDb } from "~~/server/utils/db/cloud";
 
 export default defineEventHandler(async (event) => {
   logger.debug("GET /api/providers");
@@ -34,6 +36,10 @@ export default defineEventHandler(async (event) => {
   // Anthropic
   if (config.anthropicApiKey) {
     providers.push("anthropic");
+  }
+  // Cerebras
+  if (config.cerebrasApiKey) {
+    providers.push("cerebras");
   }
   // LM Studio
   const lmStudio = getLMStudioClient();

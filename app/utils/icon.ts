@@ -7,6 +7,7 @@ export function getModelProviderIcon(provider?: string) {
     openai: "simple-icons:openai",
     anthropic: "simple-icons:anthropic",
     lmstudio: "local:lmstudio",
+    cerebras: "local:cerebras",
   };
   return modelIcons[provider] || "";
 }
