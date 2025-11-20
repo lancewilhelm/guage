@@ -40,8 +40,8 @@ export default defineEventHandler(async (event) => {
         and(
           eq(chats.id, chatId),
           eq(chats.userId, userId),
-          isNull(chats.deleted)
-        )
+          isNull(chats.deleted),
+        ),
       )
       .limit(1);
 
@@ -56,7 +56,7 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event);
 
     // Build update object with only allowed fields
-    const updateData: any = {
+    const updateData: Record<string, string | boolean | string[] | Date> = {
       updatedAt: new Date(),
     };
 
@@ -73,10 +73,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Update the chat
-    await cloudDb
-      .update(chats)
-      .set(updateData)
-      .where(eq(chats.id, chatId));
+    await cloudDb.update(chats).set(updateData).where(eq(chats.id, chatId));
 
     logger.debug(`PATCH /api/chats/${chatId}: Updated chat for user ${userId}`);
 

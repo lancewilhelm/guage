@@ -1,8 +1,8 @@
 import {
-  dbRetrieveChat,
-  dbRetrieveChats,
-  dbRetrieveMessages,
-} from "~/utils/db/local";
+  apiRetrieveChat,
+  apiRetrieveChats,
+  apiRetrieveMessages,
+} from "~/utils/api/chat";
 
 export function useChatLoader() {
   const chatStore = useChatStore();
@@ -12,19 +12,17 @@ export function useChatLoader() {
     // Check if the app is running in the client
     if (import.meta.server) return;
 
-    const allChats = await dbRetrieveChats();
+    const allChats = await apiRetrieveChats();
     if (allChats.length) {
       allChats.forEach((chat) => {
-        if (!chat.deleted) {
-          chatStore.createChat(
-            chat.id,
-            chat.title,
-            chat.createdAt,
-            chat.updatedAt,
-            chat.activeBranch,
-            chat.pinned,
-          );
-        }
+        chatStore.createChat(
+          chat.id,
+          chat.title,
+          chat.createdAt,
+          chat.updatedAt,
+          chat.activeBranch,
+          chat.pinned,
+        );
       });
     }
   }
@@ -33,7 +31,7 @@ export function useChatLoader() {
     // Check if the app is running in the client
     if (import.meta.server) return;
 
-    const chat = await dbRetrieveChat(chatId);
+    const chat = await apiRetrieveChat(chatId);
     if (!chat) {
       return false;
     }
@@ -56,7 +54,7 @@ export function useChatLoader() {
 
     // Load messages only if the chat is not empty
     if (!chatStore.chats[chatId]?.messages.length) {
-      const messages = await dbRetrieveMessages(chatId);
+      const messages = await apiRetrieveMessages(chatId);
       for (const message of messages) {
         chatStore.addMessage(chatId, message);
       }

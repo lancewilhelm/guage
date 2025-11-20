@@ -40,13 +40,15 @@ export default defineEventHandler(async (event) => {
         and(
           eq(messages.id, messageId),
           eq(messages.userId, userId),
-          isNull(messages.deleted)
-        )
+          isNull(messages.deleted),
+        ),
       )
       .limit(1);
 
     if (!existingMessage.length) {
-      logger.warn(`PATCH /api/messages/${messageId}: Message not found or unauthorized`);
+      logger.warn(
+        `PATCH /api/messages/${messageId}: Message not found or unauthorized`,
+      );
       setResponseStatus(event, 404);
       return {
         message: "Message not found",
@@ -56,7 +58,10 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event);
 
     // Build update object with only allowed fields
-    const updateData: any = {
+    const updateData: Record<
+      string,
+      string | string[] | Date | object | null | undefined
+    > = {
       updatedAt: new Date(),
     };
 
@@ -101,17 +106,22 @@ export default defineEventHandler(async (event) => {
     // Update the chat's updatedAt timestamp
     await cloudDb
       .update(chats)
-      .set({ updatedAt: updateData.updatedAt })
+      .set({ updatedAt: updateData.updatedAt as Date })
       .where(eq(chats.id, existingMessage[0].chatId));
 
-    logger.debug(`PATCH /api/messages/${messageId}: Updated message for user ${userId}`);
+    logger.debug(
+      `PATCH /api/messages/${messageId}: Updated message for user ${userId}`,
+    );
 
     return {
       success: true,
       data: { ...existingMessage[0], ...updateData },
     };
   } catch (error) {
-    logger.error(error, `PATCH /api/messages/${messageId}: Error updating message`);
+    logger.error(
+      error,
+      `PATCH /api/messages/${messageId}: Error updating message`,
+    );
     setResponseStatus(event, 500);
     return {
       success: false,
