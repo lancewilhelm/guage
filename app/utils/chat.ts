@@ -1,16 +1,18 @@
 import { logger } from "~/utils/logger";
 import { useChatStore } from "~/stores/chat";
 import {
-  dbCreateChat,
-  dbCreateMessage,
-  dbUpdateChat,
-  dbUpdateMessage,
   dbRetrieveMessages,
   type LocalMessage,
   type LocalChat,
   type Model,
   type MessageFile,
 } from "./db/local";
+import {
+  apiCreateChat,
+  apiCreateMessage,
+  apiUpdateMessage,
+  apiUpdateChat,
+} from "./api/chat";
 import { v4 as uuidv4 } from "uuid";
 import type { ChatState } from "~/stores/chat";
 import { streamAndUpdateAssistantMessage } from "./llm/streamAndUpdateAssistantMessage";
@@ -83,13 +85,15 @@ export async function handleSubmitMessage(
   // If there's no chat ID, create a new chat
   let chatIdToUse = chatStore.currentChatId;
   if (!chatIdToUse) {
-    const newChat = await dbCreateChat();
+    const newChat = await apiCreateChat();
     if (newChat) {
       chatStore.createChat(
         newChat.id,
         newChat.title,
         newChat.createdAt,
         newChat.updatedAt,
+        newChat.activeBranch,
+        newChat.pinned,
       );
       chatStore.setCurrentChatId(newChat.id);
       chatIdToUse = newChat.id;
@@ -108,7 +112,7 @@ export async function handleSubmitMessage(
   const parentId = findLastAssistantMessageId(chat);
 
   // Create and persist message pair
-  const { userMessage, assistantMessage } = createMessagePair(
+  const { userMessage, assistantMessage } = await createMessagePair(
     chatIdToUse,
     userInput,
     parentId,
@@ -144,7 +148,7 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
       content: editedMessage.content,
       updatedAt: new Date(),
     });
-    dbUpdateMessage(editedMessage.id, { content: editedMessage.content });
+    apiUpdateMessage(editedMessage.id, { content: editedMessage.content });
     return;
   }
 
@@ -154,7 +158,7 @@ export async function handleEditMessage(editedMessage: LocalMessage) {
   const parentId = editedMessage.parentId;
 
   // Create and persist message pair
-  const { userMessage, assistantMessage } = createMessagePair(
+  const { userMessage, assistantMessage } = await createMessagePair(
     chatStore.currentChatId,
     editedMessage.content,
     parentId,
@@ -188,7 +192,7 @@ export async function handleRegenerateMessage(targetMessage: LocalMessage) {
   const parentId = targetMessage.parentId;
 
   // Create and persist message pair
-  const assistantMessage = createAssistantMessage(
+  const assistantMessage = await createAssistantMessage(
     chatStore.currentChatId,
     parentId,
   );
@@ -209,7 +213,7 @@ export async function handleRegenerateMessage(targetMessage: LocalMessage) {
  * @param parentId The parent message ID
  * @returns The created assistant message
  */
-function createAssistantMessage(chatId: string, parentId: string | null) {
+async function createAssistantMessage(chatId: string, parentId: string | null) {
   const assistantMessageId = uuidv4();
   const now = new Date();
   const { user } = useAuth();
@@ -231,8 +235,22 @@ function createAssistantMessage(chatId: string, parentId: string | null) {
     model: useUserSettingsStore().settings.model,
   };
 
-  // Persist messages to IndexedDB
-  dbCreateMessage([assistantMessage]);
+  // Persist messages to the server
+  await apiCreateMessage({
+    id: assistantMessage.id,
+    chatId: assistantMessage.chatId,
+    parentId: assistantMessage.parentId,
+    childrenIds: assistantMessage.childrenIds,
+    content: assistantMessage.content,
+    role: assistantMessage.role,
+    synced: true,
+    error: assistantMessage.error,
+    model: assistantMessage.model,
+    usage: assistantMessage.usage,
+    files: assistantMessage.files,
+    knowledge: assistantMessage.knowledge,
+    retrievedKnowledge: assistantMessage.retrievedKnowledge,
+  });
 
   return assistantMessage;
 }
@@ -244,12 +262,12 @@ function createAssistantMessage(chatId: string, parentId: string | null) {
  * @param parentId The parent message ID
  * @returns The user and assistant messages
  */
-function createMessagePair(
+async function createMessagePair(
   chatId: string,
   content: string,
   parentId: string | null,
   files?: MessageFile[],
-): { userMessage: LocalMessage; assistantMessage: LocalMessage } {
+): Promise<{ userMessage: LocalMessage; assistantMessage: LocalMessage }> {
   const userMessageId = uuidv4();
   const assistantMessageId = uuidv4();
   const userSettingsStore = useUserSettingsStore();
@@ -299,8 +317,38 @@ function createMessagePair(
     knowledge: activeKnowledge,
   };
 
-  // Persist messages to IndexedDB
-  dbCreateMessage([{ ...userMessage }, { ...assistantMessage }]);
+  // Persist messages to the server
+  await apiCreateMessage({
+    id: userMessage.id,
+    chatId: userMessage.chatId,
+    parentId: userMessage.parentId,
+    childrenIds: userMessage.childrenIds,
+    content: userMessage.content,
+    role: userMessage.role,
+    synced: true,
+    error: userMessage.error,
+    model: userMessage.model,
+    usage: userMessage.usage,
+    files: userMessage.files,
+    knowledge: userMessage.knowledge,
+    retrievedKnowledge: userMessage.retrievedKnowledge,
+  });
+
+  await apiCreateMessage({
+    id: assistantMessage.id,
+    chatId: assistantMessage.chatId,
+    parentId: assistantMessage.parentId,
+    childrenIds: assistantMessage.childrenIds,
+    content: assistantMessage.content,
+    role: assistantMessage.role,
+    synced: true,
+    error: assistantMessage.error,
+    model: assistantMessage.model,
+    usage: assistantMessage.usage,
+    files: assistantMessage.files,
+    knowledge: assistantMessage.knowledge,
+    retrievedKnowledge: assistantMessage.retrievedKnowledge,
+  });
 
   return { userMessage, assistantMessage };
 }
@@ -353,7 +401,7 @@ async function updateChatAndGetResponse(
             userMessage ? userMessage.id : assistantMessage.id,
           ]
         : [userMessage ? userMessage.id : assistantMessage.id];
-      dbUpdateMessage(parentId, { childrenIds: updatedChildren });
+      await apiUpdateMessage(parentId, { childrenIds: updatedChildren });
       chatStore.addMessage(chatId, { ...parent, childrenIds: updatedChildren });
     }
   }
@@ -371,9 +419,9 @@ async function updateChatAndGetResponse(
 
   chatStore.updateChatMetadata(chatId, { updatedAt: now });
 
-  // Make sure we update the local DB with the new active branch immediately
+  // Make sure we update the chat with the new active branch immediately
   const updatedBranch = chatStore.chats[chatId].activeBranch;
-  dbUpdateChat(chatId, {
+  await apiUpdateChat(chatId, {
     activeBranch: [...updatedBranch],
     updatedAt: now,
   });
@@ -397,7 +445,7 @@ async function updateChatAndGetResponse(
     }
 
     assistantMessage.retrievedKnowledge = response.knowledge;
-    dbUpdateMessage(assistantMessage.id, {
+    await apiUpdateMessage(assistantMessage.id, {
       retrievedKnowledge: response.knowledge,
     });
     chatStore.updateMessage(chatId, assistantMessage.id, {
@@ -464,14 +512,14 @@ async function updateChatAndGetResponse(
   if (isFirstMessage && userMessage) {
     const title = await generateChatTitle(userMessage);
     if (!title) return;
-    dbUpdateChat(chatId, {
+    await apiUpdateChat(chatId, {
       title,
       updatedAt: now,
       activeBranch: [...chatStore.chats[chatId].activeBranch],
     });
     chatStore.updateChatMetadata(chatId, { title, updatedAt: now });
   } else {
-    dbUpdateChat(chatId, {
+    await apiUpdateChat(chatId, {
       updatedAt: now,
       activeBranch: [...chatStore.chats[chatId].activeBranch],
     });

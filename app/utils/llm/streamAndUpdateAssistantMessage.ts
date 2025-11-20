@@ -1,4 +1,5 @@
-import { type LocalMessage, dbUpdateMessage } from "~/utils/db/local";
+import type { LocalMessage } from "~/utils/db/local";
+import { apiUpdateMessage } from "~/utils/api/chat";
 import { useChatStore } from "~/stores/chat";
 import { sendMessageToLLM } from "./sendMessageToLLM";
 
@@ -28,15 +29,26 @@ export async function streamAndUpdateAssistantMessage({
         chatStore.updateMessage(chatId, assistantMessageId, {
           content: partialText,
         });
-        dbUpdateMessage(assistantMessageId, { content: partialText });
+        apiUpdateMessage(assistantMessageId, { content: partialText }).catch(
+          (err) => {
+            logger.error(
+              "Failed to update message content during streaming:",
+              err,
+            );
+          },
+        );
       },
       onUsage: (usage) => {
         chatStore.updateMessage(chatId, assistantMessageId, { usage });
-        dbUpdateMessage(assistantMessageId, { usage });
+        apiUpdateMessage(assistantMessageId, { usage }).catch((err) => {
+          logger.error("Failed to update message usage during streaming:", err);
+        });
       },
       onError: (error) => {
         chatStore.updateMessage(chatId, assistantMessageId, { error });
-        dbUpdateMessage(assistantMessageId, { error });
+        apiUpdateMessage(assistantMessageId, { error }).catch((err) => {
+          logger.error("Failed to update message error during streaming:", err);
+        });
       },
     });
   } catch (err) {
@@ -46,8 +58,10 @@ export async function streamAndUpdateAssistantMessage({
       chatStore.updateMessage(chatId, assistantMessageId, {
         error: `Error streaming response: ${err}`,
       });
-      dbUpdateMessage(assistantMessageId, {
+      apiUpdateMessage(assistantMessageId, {
         error: `Error streaming response: ${err}`,
+      }).catch((updateErr) => {
+        logger.error("Failed to update message error:", updateErr);
       });
     }
   } finally {

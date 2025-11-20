@@ -1,11 +1,11 @@
-export default defineNuxtPlugin(async () => {
-  if (import.meta.server) return;
+// export default defineNuxtPlugin(async () => {
+//   if (import.meta.server) return;
 
-  const syncStore = useSyncStore();
+//   const syncStore = useSyncStore();
 
-  syncStore.sync();
+//   syncStore.sync();
 
-  window.addEventListener("focus", () => {
-    syncStore.sync();
-  });
-});
+//   window.addEventListener("focus", () => {
+//     syncStore.sync();
+//   });
+// });

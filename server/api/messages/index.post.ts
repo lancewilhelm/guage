@@ -35,11 +35,11 @@ export default defineEventHandler(async (event) => {
       };
     }
 
-    if (!body.content) {
-      logger.error("POST /api/messages: Missing content");
+    if (!body.content && body.role === "user") {
+      logger.error("POST /api/messages: Missing content for user message");
       setResponseStatus(event, 400);
       return {
-        message: "content is required",
+        message: "content is required for user messages",
       };
     }
 
@@ -59,13 +59,15 @@ export default defineEventHandler(async (event) => {
         and(
           eq(chats.id, body.chatId),
           eq(chats.userId, userId),
-          isNull(chats.deleted)
-        )
+          isNull(chats.deleted),
+        ),
       )
       .limit(1);
 
     if (!chat.length) {
-      logger.warn(`POST /api/messages: Chat ${body.chatId} not found or unauthorized`);
+      logger.warn(
+        `POST /api/messages: Chat ${body.chatId} not found or unauthorized`,
+      );
       setResponseStatus(event, 404);
       return {
         message: "Chat not found",
@@ -84,7 +86,6 @@ export default defineEventHandler(async (event) => {
       createdAt: now,
       updatedAt: now,
       error: body.error || null,
-      deleted: false,
       model: body.model || null,
       usage: body.usage || null,
       files: body.files || null,
@@ -100,7 +101,9 @@ export default defineEventHandler(async (event) => {
       .set({ updatedAt: now })
       .where(eq(chats.id, body.chatId));
 
-    logger.debug(`POST /api/messages: Created message ${newMessage.id} in chat ${body.chatId}`);
+    logger.debug(
+      `POST /api/messages: Created message ${newMessage.id} in chat ${body.chatId}`,
+    );
 
     return {
       success: true,

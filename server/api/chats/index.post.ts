@@ -4,6 +4,7 @@ import { chats } from "~/utils/db/schema";
 import type { InsertChats } from "~/utils/db/schema";
 import { auth } from "~/utils/auth";
 import { v4 as uuidv4 } from "uuid";
+import { eq } from "drizzle-orm";
 
 export default defineEventHandler(async (event) => {
   logger.debug("POST /api/chats");
@@ -36,16 +37,29 @@ export default defineEventHandler(async (event) => {
       createdAt: now,
       updatedAt: now,
       pinned: false,
-      deleted: false,
     };
 
     await cloudDb.insert(chats).values(newChat);
 
-    logger.debug(`POST /api/chats: Created chat ${newChat.id} for user ${userId}`);
+    // Query the chat back to ensure it's committed and visible
+    const chatId = newChat.id as string;
+    const insertedChat = await cloudDb
+      .select()
+      .from(chats)
+      .where(eq(chats.id, chatId))
+      .limit(1);
+
+    if (!insertedChat.length) {
+      throw new Error("Failed to verify chat creation");
+    }
+
+    logger.debug(
+      `POST /api/chats: Created chat ${newChat.id} for user ${userId}`,
+    );
 
     return {
       success: true,
-      data: newChat,
+      data: insertedChat[0],
     };
   } catch (error) {
     logger.error(error, "POST /api/chats: Error creating chat");
