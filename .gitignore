@@ -25,3 +25,6 @@ logs
 
 # data
 data/
+
+# Mise en place
+mise.toml
